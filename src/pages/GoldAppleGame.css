@@ -1,0 +1,214 @@
+/* ── GoldAppleGame.css ── */
+
+/* ─── 全螢幕遊戲覆蓋層 ──────────────────────────────────────── */
+.gag-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 9100;
+  overflow: hidden;
+  user-select: none;
+  /* iOS Safari fix：強制 overlay 進入自己的 GPU 合成層，
+     避免 will-change:transform 的子元素被渲染到背景後面 */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  isolation: isolate;
+}
+
+/* ─── 抬頭顯示（倒計時 + 提示）────────────────────────────── */
+.gag-hud {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.65);
+  border: 2px solid gold;
+  border-radius: 40px;
+  padding: 8px 28px;
+  z-index: 10;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.gag-timer {
+  font-size: 2.6rem;
+  font-weight: 900;
+  color: gold;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.gag-timer-unit {
+  font-size: 1rem;
+  color: #fff;
+  margin-left: -4px;
+}
+
+.gag-hint {
+  font-size: 1rem;
+  color: #ffd700;
+  margin-left: 8px;
+}
+
+/* ─── 蘋果位置包裝器（由 JS 控制 transform）─────────────────── */
+.gag-apple-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+  cursor: pointer;
+  pointer-events: all;
+}
+
+/* ─── 蘋果圖片（CSS hover 效果，不影響 JS transform）─────────── */
+.gag-apple-img {
+  display: block;
+  width: 48px;
+  height: 48px;
+  pointer-events: all;
+  transition: filter 0.08s, transform 0.08s;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.85))
+          drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
+}
+
+.gag-apple-img:hover {
+  filter: drop-shadow(0 0 20px gold) drop-shadow(0 0 6px #fff);
+  transform: scale(1.12);
+}
+
+/* 遊戲二：大蘋果 */
+.gag-apple-img.big {
+  width: 100px;
+  height: 100px;
+}
+
+/* 平板/手機：蘋果再放大一點 */
+@media (max-width: 1024px) {
+  .gag-apple-img {
+    width: 56px;
+    height: 56px;
+  }
+  .gag-apple-img.big {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+/* ─── 「慢了 N 秒」提示 ──────────────────────────────────────── */
+.gag-late {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(180, 0, 0, 0.88);
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: bold;
+  padding: 18px 36px;
+  border-radius: 16px;
+  text-align: center;
+  z-index: 20;
+  pointer-events: none;
+  animation: gag-fadein 0.2s ease;
+}
+
+/* ─── 遊戲結果卡片 ───────────────────────────────────────────── */
+.gag-result {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+  border: 3px solid gold;
+  border-radius: 20px;
+  padding: 32px 44px;
+  color: #fff;
+  text-align: center;
+  min-width: 320px;
+  max-width: 520px;
+  z-index: 20;
+  box-shadow: 0 0 40px rgba(255, 215, 0, 0.35);
+  animation: gag-fadein 0.3s ease;
+  cursor: pointer;
+
+  /* ⭐ 新增：避免整張卡爆掉 */
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 標題 */
+.gag-result h2 {
+  font-size: 1.9rem;
+  color: gold;
+  margin: 0 0 16px;
+}
+
+/* ⭐ 重點：可滾動區域 */
+.gag-result ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+  text-align: left;
+
+  max-height: 300px;     /* 控制高度 */
+  overflow-y: auto;
+
+  /* ⭐ 讓滾動更順 */
+  scroll-behavior: smooth;
+}
+
+/* 每一列 */
+.gag-result ul li {
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.15);
+}
+
+/* 自己高亮 */
+.gag-result ul li.me {
+  color: gold;
+  font-weight: bold;
+}
+
+/* ⭐ scrollbar 美化 */
+.gag-result ul::-webkit-scrollbar {
+  width: 6px;
+}
+
+.gag-result ul::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gag-result ul::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 0, 0.5);
+  border-radius: 4px;
+}
+
+.gag-result ul::-webkit-scrollbar-thumb:hover {
+  background: gold;
+}
+
+/* 贏家名字 */
+.gag-result .gag-winner-name {
+  font-size: 1.4rem;
+  color: gold;
+  font-weight: bold;
+}
+
+.gag-result .gag-dismiss-hint {
+  margin-top: 18px;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+/* ─── 動畫 ───────────────────────────────────────────────────── */
+@keyframes gag-fadein {
+  from { opacity: 0; transform: translate(-50%, -46%); }
+  to   { opacity: 1; transform: translate(-50%, -50%); }
+}

@@ -1,0 +1,354 @@
+// WhackAppleGame.jsx — 打金蘋果遊戲（打地鼠風格）
+// Socket events:
+//   in:  whackGameStart { duration, reward }
+//   in:  whackGameEnd   { scores: { [name]: count } }
+//   out: catchWhackApple { token }
+import { useState, useEffect, useRef, useCallback } from "react";
+import "./WhackAppleGame.css";
+
+const HOLE_COUNT = 9; // 3×3 grid
+
+function rand(min, max) { return min + Math.random() * (max - min); }
+
+// ─── 主元件 ──────────────────────────────────────────────────────────────────
+export default function WhackAppleGame({ socket, token, name, setApples }) {
+  const [phase, setPhase]         = useState("idle"); // idle | playing | result
+  const [timeLeft, setTimeLeft]   = useState(0);
+  const [reward, setReward]       = useState(1);
+  const [holes, setHoles]         = useState(() =>
+    Array.from({ length: HOLE_COUNT }, () => ({ up: false, whacked: false }))
+  );
+  const [myScore, setMyScore]     = useState(0);
+  const [combo, setCombo]         = useState(0);
+  const [hitEffects, setHitEffects] = useState([]); // [{ id, x, y }]
+  const [result, setResult]       = useState(null);  // { [name]: count }
+
+  // ── refs ──────────────────────────────────────────────────────────────────
+  const phaseRef    = useRef("idle");
+  const timerRef    = useRef(null);
+  const holeTimers  = useRef([]);
+  const myScoreRef  = useRef(0);
+  const comboRef    = useRef(0);
+  const comboTimer  = useRef(null);
+  const hitIdRef           = useRef(0);
+  const upCountRef         = useRef(0);   // 目前彈出中的蘋果數
+  const maxConcurrentRef   = useRef(4);   // 目前上限（隨難度遞增）
+  const initConcurrentRef  = useRef(4);   // 開場同時蘋果數（from server）
+  const finalConcurrentRef = useRef(7);   // 最高同時蘋果數（from server）
+  const appleMsLoRef       = useRef(350); // 蘋果最短可見 ms（from server）
+  const appleMsHiRef       = useRef(700); // 蘋果最長可見 ms（from server）
+  // Ref-based hole state — authoritative for collision detection; avoids stale closures
+  const holeStateRef = useRef(
+    Array.from({ length: HOLE_COUNT }, () => ({ up: false, whacked: false }))
+  );
+
+  useEffect(() => { phaseRef.current = phase; }, [phase]);
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+  // Sync ref + React state atomically
+  const setHoleState = useCallback((updater) => {
+    holeStateRef.current = updater(holeStateRef.current);
+    setHoles([...holeStateRef.current]);
+  }, []);
+
+  const resetHoles = useCallback(() => {
+    holeStateRef.current = Array.from({ length: HOLE_COUNT }, () => ({ up: false, whacked: false }));
+    setHoles([...holeStateRef.current]);
+  }, []);
+
+  const clearHoleTimers = useCallback(() => {
+    holeTimers.current.forEach(clearTimeout);
+    holeTimers.current = [];
+  }, []);
+
+  // ─── 集中調度（控制同時出現上限） ────────────────────────────────────────
+  // 所有 deps 皆透過 ref 存取 → stable callback，safe for recursive call
+  const scheduleNextHole = useCallback((delay = rand(300, 700)) => {
+    if (phaseRef.current !== "playing") return;
+    if (upCountRef.current >= maxConcurrentRef.current) return;
+
+    const t = setTimeout(() => {
+      if (phaseRef.current !== "playing") return;
+      if (upCountRef.current >= maxConcurrentRef.current) return;
+
+      // 找出所有目前沒有彈出的洞，隨機選一個
+      const idleIndices = holeStateRef.current
+        .map((h, i) => i)
+        .filter(i => !holeStateRef.current[i].up);
+      if (idleIndices.length === 0) return;
+
+      const i = idleIndices[Math.floor(Math.random() * idleIndices.length)];
+      upCountRef.current++;
+
+      holeStateRef.current = holeStateRef.current.map((h, idx) =>
+        idx === i ? { up: true, whacked: false } : h
+      );
+      setHoles([...holeStateRef.current]);
+
+      // 停留一段時間後自動縮回（若未被打到）
+      const upDuration = rand(appleMsLoRef.current, appleMsHiRef.current);
+      const t2 = setTimeout(() => {
+        if (phaseRef.current !== "playing") return;
+        const h = holeStateRef.current[i];
+        if (h.up && !h.whacked) {
+          upCountRef.current = Math.max(0, upCountRef.current - 1);
+          holeStateRef.current = holeStateRef.current.map((hole, idx) =>
+            idx === i ? { up: false, whacked: false } : hole
+          );
+          setHoles([...holeStateRef.current]);
+          scheduleNextHole(rand(100, 350));
+        }
+      }, upDuration);
+
+      holeTimers.current.push(t2);
+    }, delay);
+
+    holeTimers.current.push(t);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const startHoles = useCallback(() => {
+    clearHoleTimers();
+    resetHoles();
+    upCountRef.current = 0;
+
+    const initN  = initConcurrentRef.current;
+    const finalN = finalConcurrentRef.current;
+    const midN   = Math.round((initN + finalN) / 2);
+    maxConcurrentRef.current = initN;
+
+    // 開始時錯開啟動
+    for (let k = 0; k < initN; k++) {
+      scheduleNextHole(rand(k * 120, k * 120 + 250));
+    }
+
+    // 10 秒後升至中間值
+    const ramp1 = setTimeout(() => {
+      if (phaseRef.current === "playing" && midN > initN) {
+        maxConcurrentRef.current = midN;
+        for (let k = 0; k < midN - initN; k++) scheduleNextHole(rand(50 + k * 100, 200 + k * 100));
+      }
+    }, 10000);
+
+    // 20 秒後升至最高值
+    const ramp2 = setTimeout(() => {
+      if (phaseRef.current === "playing" && finalN > midN) {
+        maxConcurrentRef.current = finalN;
+        for (let k = 0; k < finalN - midN; k++) scheduleNextHole(rand(50 + k * 80, 200 + k * 80));
+      }
+    }, 20000);
+
+    holeTimers.current.push(ramp1, ramp2);
+  }, [clearHoleTimers, resetHoles, scheduleNextHole]);
+
+  const stopHoles = useCallback(() => {
+    clearHoleTimers();
+    resetHoles();
+  }, [clearHoleTimers, resetHoles]);
+
+  // ─── Socket events ────────────────────────────────────────────────────────
+  useEffect(() => {
+    const onStart = ({ duration, reward: r, msLo, msHi, minApples, maxApples }) => {
+      setReward(r ?? 1);
+      setMyScore(0); myScoreRef.current = 0;
+      setCombo(0);   comboRef.current   = 0;
+      setResult(null);
+      setHitEffects([]);
+      if (msLo       !== undefined) appleMsLoRef.current       = msLo;
+      if (msHi       !== undefined) appleMsHiRef.current       = msHi;
+      if (minApples  !== undefined) initConcurrentRef.current  = minApples;
+      if (maxApples  !== undefined) finalConcurrentRef.current = maxApples;
+      phaseRef.current = "playing";
+      setPhase("playing");
+
+      clearInterval(timerRef.current);
+      let left = duration;
+      setTimeLeft(left);
+      timerRef.current = setInterval(() => {
+        left--;
+        setTimeLeft(left);
+        if (left <= 0) clearInterval(timerRef.current);
+      }, 1000);
+
+      startHoles();
+    };
+
+    const onEnd = ({ scores }) => {
+      clearInterval(timerRef.current);
+      stopHoles();
+      setResult(scores || {});
+      phaseRef.current = "result";
+      setPhase("result");
+      if (scores?.[name] && typeof setApples === "function") {
+        setApples(prev => prev + scores[name]);
+      }
+    };
+
+    socket.on("whackGameStart", onStart);
+    socket.on("whackGameEnd",   onEnd);
+    return () => {
+      socket.off("whackGameStart", onStart);
+      socket.off("whackGameEnd",   onEnd);
+    };
+  }, [socket, name, setApples, startHoles, stopHoles]);
+
+  // Cleanup on unmount
+  useEffect(() => () => {
+    clearInterval(timerRef.current);
+    clearHoleTimers();
+    clearTimeout(comboTimer.current);
+  }, [clearHoleTimers]);
+
+  // ─── Whack! ───────────────────────────────────────────────────────────────
+  const handleWhack = useCallback((i, e) => {
+    if (phaseRef.current !== "playing") return;
+    const h = holeStateRef.current[i];
+    if (!h.up || h.whacked) return;
+
+    // Immediately mark whacked (ref + state)
+    holeStateRef.current = holeStateRef.current.map((hole, idx) =>
+      idx === i ? { up: true, whacked: true } : hole
+    );
+    setHoles([...holeStateRef.current]);
+
+    // Score
+    myScoreRef.current++;
+    setMyScore(myScoreRef.current);
+
+    // Combo
+    comboRef.current++;
+    setCombo(comboRef.current);
+    clearTimeout(comboTimer.current);
+    comboTimer.current = setTimeout(() => {
+      comboRef.current = 0;
+      setCombo(0);
+    }, 1500);
+
+    // Floating hit effect
+    const rect = e.currentTarget.getBoundingClientRect();
+    const id   = ++hitIdRef.current;
+    setHitEffects(fx => [...fx, { id, x: rect.left + rect.width / 2, y: rect.top }]);
+    setTimeout(() => setHitEffects(fx => fx.filter(f => f.id !== id)), 700);
+
+    // Notify server
+    socket.emit("catchWhackApple", { token });
+
+    // Pop back down after whack animation, then reschedule
+    setTimeout(() => {
+      holeStateRef.current = holeStateRef.current.map((hole, idx) =>
+        idx === i ? { up: false, whacked: false } : hole
+      );
+      setHoles([...holeStateRef.current]);
+      upCountRef.current = Math.max(0, upCountRef.current - 1);
+      if (phaseRef.current === "playing") scheduleNextHole(rand(80, 250));
+    }, 380);
+  }, [socket, token, scheduleNextHole]);
+
+  const dismissResult = useCallback(() => {
+    setPhase("idle");
+    setResult(null);
+  }, []);
+
+  // ─── Render: idle ─────────────────────────────────────────────────────────
+  if (phase === "idle") return null;
+
+  // ─── Render: result ───────────────────────────────────────────────────────
+  if (phase === "result") {
+    const entries  = Object.entries(result || {}).sort((a, b) => b[1] - a[1]).slice(0, 50);
+    const myRank   = entries.findIndex(([n]) => n === name) + 1;
+    const myCount  = result?.[name] ?? 0;
+    return (
+      <div className="wag-overlay" onClick={dismissResult}>
+        <div className="wag-result" onClick={e => e.stopPropagation()}>
+          <h2>🍎 打金蘋果結束！</h2>
+          {entries.length > 0 ? (
+            <>
+              {myRank > 0 && (
+                <p className="wag-my-rank">
+                  你排第 <strong>{myRank}</strong> 名，打到{" "}
+                  <strong style={{ color: "gold" }}>{myCount}</strong> 顆🍎
+                  {myCount > 0 && <span style={{ color: "#7fff7f" }}> 已入帳！</span>}
+                </p>
+              )}
+              <ul>
+                {entries.map(([uname, count], idx) => (
+                  <li key={uname} className={uname === name ? "me" : ""}>
+                    {idx + 1}. {uname}：{count} 顆{uname === name ? " 🎉" : ""}
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p>本次沒有人打到金蘋果…</p>
+          )}
+          <p className="wag-dismiss-hint">點擊任意處關閉</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Render: playing ──────────────────────────────────────────────────────
+  const urgency = timeLeft <= 10 ? "urgent" : timeLeft <= 20 ? "warning" : "";
+
+  return (
+    <div className="wag-overlay">
+      {/* HUD */}
+      <div className="wag-hud">
+        <span className={`wag-timer ${urgency}`}>{timeLeft}</span>
+        <span className="wag-timer-unit">秒</span>
+        <span className="wag-score">🍎 ×{myScore}</span>
+        <span className="wag-hint">打金蘋果！每顆得 {reward} 個🍎</span>
+      </div>
+
+      {/* Combo counter */}
+      {combo >= 2 && (
+        <div key={combo} className={`wag-combo ${combo >= 5 ? "fire" : combo >= 3 ? "hot" : ""}`}>
+          {combo >= 7 ? "🔥🔥" : combo >= 5 ? "🔥" : "⚡"} COMBO ×{combo}!
+        </div>
+      )}
+
+      {/* Floating +1 effects */}
+      {hitEffects.map(fx => (
+        <div key={fx.id} className="wag-hit-effect" style={{ left: fx.x, top: fx.y }}>
+          +1 🍎
+        </div>
+      ))}
+
+      {/* Game field */}
+      <div className="wag-field">
+        {/* Stars in background */}
+        <div className="wag-stars-bg" aria-hidden="true" />
+
+        <div className="wag-holes-grid">
+          {holes.map((hole, i) => (
+            <div key={i} className="wag-hole-wrap">
+              {/* Clip area — apple slides up inside this */}
+              <div className="wag-mole-area">
+                <div
+                  className={`wag-apple-slot${hole.up ? " up" : ""}${hole.whacked ? " whacked" : ""}`}
+                  onPointerDown={hole.up && !hole.whacked ? (e) => handleWhack(i, e) : undefined}
+                >
+                  <img
+                    src="/gifts/gold_apple.gif"
+                    className="wag-apple-img"
+                    alt="金蘋果"
+                    draggable={false}
+                  />
+                  {hole.whacked && (
+                    <div className="wag-whack-fx" aria-hidden="true">
+                      {comboRef.current >= 5 ? "💥🌟" : "💥"}
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* Oval hole */}
+              <div className="wag-hole" />
+            </div>
+          ))}
+        </div>
+
+        {/* Ground strip */}
+        <div className="wag-ground" />
+      </div>
+    </div>
+  );
+}
