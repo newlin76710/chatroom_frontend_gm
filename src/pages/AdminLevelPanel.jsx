@@ -5,6 +5,7 @@ import "./AdminLevelPanel.css";
 const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
 const PAGE_SIZE = 20;
 const MAX_GOLD_APPLES = parseInt(import.meta.env.MAX_GOLD_APPLES || "999999999", 10);
+const NF = import.meta.env.VITE_NEW_FUNCTION === "true";
 
 export default function AdminLevelPanel({ token, myLevel, minLevel }) {
     const [open, setOpen] = useState(false);
@@ -175,7 +176,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
     return (
         <>
             <button className="admin-btn" onClick={() => { setOpen(true); loadUsers(1); }}>
-                🛡 管理使用者等級 & 金蘋果
+                🛡 管理使用者等級 {NF && "& 金蘋果"}
             </button>
 
             {open && (
@@ -203,7 +204,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                     <tr>
                                         <th>帳號</th>
                                         <th>等級</th>
-                                        <th>金蘋果</th>
+                                        {NF && <th>金蘋果</th>}
                                         <th>建立時間</th>
                                         <th>最近登入</th>
                                     </tr>
@@ -237,7 +238,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                                     修改
                                                 </button>
                                             </td>
-                                            <td>
+                                            {NF && (<td>
                                                 <input
                                                     type="number"
                                                     min="0"
@@ -260,13 +261,13 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                                 >
                                                     修改
                                                 </button>
-                                            </td>
+                                            </td>)}
                                             <td>{new Date(u.created_at).toLocaleString()}</td>
                                             <td>{u.last_login_at ? new Date(u.last_login_at).toLocaleString() : "-"}</td>
                                         </tr>
                                     )) : (
                                         <tr>
-                                            <td colSpan="6" style={{ textAlign: "center" }}>無資料</td>
+                                            <td colSpan={NF ? 5 : 4} style={{ textAlign: "center" }}>無資料</td>
                                         </tr>
                                     )}
                                 </tbody>
