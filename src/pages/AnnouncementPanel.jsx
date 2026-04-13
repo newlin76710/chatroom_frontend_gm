@@ -129,6 +129,9 @@ export default function AnnouncementPanel({ open, onClose, myLevel, token }) {
 
   /* ===== 拖動 ===== */
   const onMouseDown = e => {
+    // 點按鈕不觸發拖動（避免冒泡問題）
+    if (e.target.closest("button")) return;
+    e.preventDefault();
     pos.current.dragging = true;
     pos.current.offsetX = e.clientX - pos.current.x;
     pos.current.offsetY = e.clientY - pos.current.y;
@@ -137,6 +140,7 @@ export default function AnnouncementPanel({ open, onClose, myLevel, token }) {
   };
   const onMouseMove = e => {
     if (!pos.current.dragging) return;
+    e.preventDefault();
     pos.current.x = e.clientX - pos.current.offsetX;
     pos.current.y = e.clientY - pos.current.offsetY;
     if (panelRef.current) {
@@ -231,7 +235,7 @@ export default function AnnouncementPanel({ open, onClose, myLevel, token }) {
           </>
         ) : (
           <>
-            <strong style={{ color: currentAnnouncement?.color || "#ffffff" }}>{currentAnnouncement?.title}</strong>
+            <strong style={{ color: currentAnnouncement?.color || "#ffffff", userSelect: "text", cursor: "text" }}>{currentAnnouncement?.title}</strong>
             <pre style={{ whiteSpace: "pre-wrap", color: currentAnnouncement?.color || "#ffffff" }}>{currentAnnouncement?.content}</pre>
           </>
         )}

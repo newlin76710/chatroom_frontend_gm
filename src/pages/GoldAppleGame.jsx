@@ -66,6 +66,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
   const animRef = useRef(null);
   const timerRef = useRef(null);
   const phaseRef = useRef("idle");
+  const activePointerRef = useRef(null); // 多點觸控保護：同時只允許一個 pointer
   // 快取容器尺寸，避免每幀 layout thrashing
   const sizeRef = useRef({ W: window.innerWidth, H: window.innerHeight });
   useEffect(() => { phaseRef.current = phase; }, [phase]);
@@ -156,6 +157,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
 
       // 清除上場記錄
       localCaughtRef.current.clear();
+      activePointerRef.current = null;
 
       const W = window.innerWidth;
       const H = window.innerHeight;
@@ -269,6 +271,10 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
   const handleCatch1 = useCallback((id, e) => {
     e.stopPropagation();
 
+    // 多點觸控保護：已有其他手指佔用時忽略
+    if (activePointerRef.current !== null && activePointerRef.current !== e.pointerId) return;
+    activePointerRef.current = e.pointerId;
+
     // ① 防止同一顆蘋果在本地被重複點擊
     if (localCaughtRef.current.has(id)) return;
     localCaughtRef.current.add(id);
@@ -283,8 +289,17 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
 
   const handleCatch2 = useCallback((e) => {
     e.stopPropagation();
+    // 多點觸控保護
+    if (activePointerRef.current !== null && activePointerRef.current !== e.pointerId) return;
+    activePointerRef.current = e.pointerId;
     socket.emit("catchApple2", { token });
   }, [socket, token]);
+
+  const handlePointerRelease = useCallback((e) => {
+    if (activePointerRef.current === e.pointerId) {
+      activePointerRef.current = null;
+    }
+  }, []);
 
   // 點擊結果卡片可提前關閉
   const dismissResult = useCallback(() => {
@@ -354,7 +369,10 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
 
   // ─── 遊戲進行中畫面 ───────────────────────────────────────────────────────
   return (
-    <div className="gag-overlay" ref={containerRef}>
+    <div className="gag-overlay" ref={containerRef}
+      onPointerUp={handlePointerRelease}
+      onPointerCancel={handlePointerRelease}
+    >
 
       {/* HUD — 遊戲一顯示倒計時，遊戲二只顯示提示 */}
       <div className="gag-hud">

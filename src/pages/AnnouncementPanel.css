@@ -83,6 +83,8 @@
   box-sizing: border-box;
   font-family: inherit;
   font-size: 1rem;
+  user-select: text;
+  cursor: text;
 }
 
 /* ===== 儲存 / 新增 / 刪除 按鈕 ===== */
