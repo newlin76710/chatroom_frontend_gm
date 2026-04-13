@@ -17,6 +17,7 @@ export default function MessageList({
   messagesEndRef,
   onSelectTarget,
   userList = [],
+  scrollLocked = false,
 }) {
   const AML = import.meta.env.VITE_ADMIN_MAX_LEVEL || 99;
   const containerRef = useRef(null);
@@ -32,6 +33,14 @@ export default function MessageList({
     el.addEventListener("scroll", handleScroll, { passive: true });
     return () => el.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // scrollLocked 解除時立刻捲到底
+  useLayoutEffect(() => {
+    if (!scrollLocked) {
+      const el = containerRef.current;
+      if (el) el.scrollTop = el.scrollHeight;
+    }
+  }, [scrollLocked]);
 
   // 手機鍵盤彈出/收起時（visualViewport resize），若原本在底部就補捲
   useLayoutEffect(() => {
@@ -56,7 +65,7 @@ export default function MessageList({
 
   useLayoutEffect(() => {
     const el = containerRef.current;
-    if (!el || !messages.length) return;
+    if (!el || !messages.length || scrollLocked) return;
 
     const lastMsg = messages[messages.length - 1];
     const isSelf = lastMsg?.user?.name === name;
@@ -67,7 +76,7 @@ export default function MessageList({
         el.scrollTop = el.scrollHeight;
       }
     });
-  }, [messages, name]);
+  }, [messages, name, scrollLocked]);
 
   const handleSelectUser = (user) => {
     if (onSelectTarget && user && user !== name) onSelectTarget(user);

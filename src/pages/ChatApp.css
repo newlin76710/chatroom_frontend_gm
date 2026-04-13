@@ -201,6 +201,12 @@ body {
   color: #fff;
 }
 
+.scroll-lock-btn.active {
+  background-color: #5a2d00;
+  border-color: #c87941;
+  color: #ffb366;
+}
+
 /* ===== YouTube PLAYER ===== */
 .youtube-container {
   flex: 0 0 200px;

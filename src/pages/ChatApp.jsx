@@ -126,6 +126,7 @@ export default function ChatApp() {
   const [appleAmount, setAppleAmount]             = useState(1);
   const [sendingApple, setSendingApple]           = useState(false);
   const [showAppleSetting, setShowAppleSetting]   = useState(false);
+  const [scrollLocked, setScrollLocked]           = useState(false);
 
   const joinedRef     = useRef(false);
   const messagesEndRef = useRef(null);
@@ -545,10 +546,18 @@ export default function ChatApp() {
                   focusInput();
                 }}
                 userList={userList}
+                scrollLocked={scrollLocked}
               />
 
               <div className="chat-input">
                 <button className="clear-btn" onClick={clearMessages}>🧹清空畫面</button>
+                <button
+                  className={`clear-btn scroll-lock-btn${scrollLocked ? " active" : ""}`}
+                  onClick={() => setScrollLocked(v => !v)}
+                  title={scrollLocked ? "解除停止捲動" : "停止捲動"}
+                >
+                  {scrollLocked ? "🔒停止捲動" : "🔓自動捲動"}
+                </button>
 
                 {/* ✅ 管理工具包 AppErrorBoundary，防止管理面板錯誤炸掉整個聊天室 */}
                 <AppErrorBoundary label="管理工具">
