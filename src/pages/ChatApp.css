@@ -435,6 +435,8 @@ body {
   align-items: center;
   z-index: 9999;
   animation: fadeInOut 5s forwards;
+  -webkit-mask-image: linear-gradient(to bottom, black 65%, transparent 90%);
+  mask-image: linear-gradient(to bottom, black 65%, transparent 90%);
 }
 
 .firework-gif {
