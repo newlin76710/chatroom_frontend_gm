@@ -22,6 +22,8 @@ export default function MessageList({
   const AML = import.meta.env.VITE_ADMIN_MAX_LEVEL || 99;
   const containerRef = useRef(null);
   const isNearBottomRef = useRef(true);
+  const scrollLockedRef = useRef(scrollLocked);
+  scrollLockedRef.current = scrollLocked;
 
   // 追蹤使用者是否在底部附近
   useLayoutEffect(() => {
@@ -47,7 +49,7 @@ export default function MessageList({
     const el = containerRef.current;
     if (!el) return;
     const handleResize = () => {
-      if (isNearBottomRef.current) {
+      if (!scrollLockedRef.current && isNearBottomRef.current) {
         requestAnimationFrame(() => {
           el.scrollTop = el.scrollHeight;
         });
@@ -198,7 +200,7 @@ export default function MessageList({
                         className="gift-big-image"
                         onLoad={() => {
                           const el = containerRef.current;
-                          if (el) el.scrollTop = el.scrollHeight;
+                          if (el && !scrollLockedRef.current) el.scrollTop = el.scrollHeight;
                         }}
                       />
                     </div>}
