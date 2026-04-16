@@ -554,9 +554,9 @@ export default function ChatApp() {
                 <button
                   className={`clear-btn scroll-lock-btn${scrollLocked ? " active" : ""}`}
                   onClick={() => setScrollLocked(v => !v)}
-                  title={scrollLocked ? "解除停止捲動" : "停止捲動"}
+                  title={scrollLocked ? "自動捲動" : "停止捲動"}
                 >
-                  {scrollLocked ? "🔒停止捲動" : "🔓自動捲動"}
+                  {scrollLocked ? "🔓自動捲動" : "🔒停止捲動"}
                 </button>
 
                 {/* ✅ 管理工具包 AppErrorBoundary，防止管理面板錯誤炸掉整個聊天室 */}
