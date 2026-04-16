@@ -21,37 +21,28 @@ export default function MessageList({
 }) {
   const AML = import.meta.env.VITE_ADMIN_MAX_LEVEL || 99;
   const containerRef = useRef(null);
-  const isNearBottomRef = useRef(true);
   const scrollLockedRef = useRef(scrollLocked);
+  const prevScrollLockedRef = useRef(scrollLocked);
+  const prevMsgLenRef = useRef(0);
   scrollLockedRef.current = scrollLocked;
-
-  // 追蹤使用者是否在底部附近
-  useLayoutEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const handleScroll = () => {
-      isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
-    };
-    el.addEventListener("scroll", handleScroll, { passive: true });
-    return () => el.removeEventListener("scroll", handleScroll);
-  }, []);
 
   // scrollLocked 解除時立刻捲到底
   useLayoutEffect(() => {
-    if (!scrollLocked) {
+    if (prevScrollLockedRef.current && !scrollLocked) {
       const el = containerRef.current;
       if (el) el.scrollTop = el.scrollHeight;
     }
+    prevScrollLockedRef.current = scrollLocked;
   }, [scrollLocked]);
 
-  // 手機鍵盤彈出/收起時（visualViewport resize），若原本在底部就補捲
+  // 手機鍵盤彈出/收起時，若非停止捲動就補捲到底
   useLayoutEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const handleResize = () => {
-      if (!scrollLockedRef.current && isNearBottomRef.current) {
+      if (!scrollLockedRef.current) {
         requestAnimationFrame(() => {
-          el.scrollTop = el.scrollHeight;
+          if (!scrollLockedRef.current) el.scrollTop = el.scrollHeight;
         });
       }
     };
@@ -65,20 +56,18 @@ export default function MessageList({
     }
   }, []);
 
+  // 有新訊息時，依 scrollLocked 決定是否捲到底
   useLayoutEffect(() => {
     const el = containerRef.current;
-    if (!el || !messages.length || scrollLocked) return;
-
-    const lastMsg = messages[messages.length - 1];
-    const isSelf = lastMsg?.user?.name === name;
-
+    if (!el || !messages.length) return;
+    const currLen = messages.length;
+    const prevLen = prevMsgLenRef.current;
+    prevMsgLenRef.current = currLen;
+    if (currLen <= prevLen || scrollLockedRef.current) return;
     requestAnimationFrame(() => {
-      // 自己發的訊息一律捲到底；其他人的訊息只有在「已在底部」時才跟著捲
-      if (isSelf || isNearBottomRef.current) {
-        el.scrollTop = el.scrollHeight;
-      }
+      if (!scrollLockedRef.current) el.scrollTop = el.scrollHeight;
     });
-  }, [messages, name, scrollLocked]);
+  }, [messages]);
 
   const handleSelectUser = (user) => {
     if (onSelectTarget && user && user !== name) onSelectTarget(user);
