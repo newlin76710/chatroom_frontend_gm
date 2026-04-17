@@ -41,9 +41,7 @@ export default function MessageList({
     if (!el) return;
     const handleResize = () => {
       if (!scrollLockedRef.current) {
-        requestAnimationFrame(() => {
-          if (!scrollLockedRef.current) el.scrollTop = el.scrollHeight;
-        });
+        el.scrollTop = el.scrollHeight;
       }
     };
     const vv = window.visualViewport;
@@ -64,9 +62,7 @@ export default function MessageList({
     const prevLen = prevMsgLenRef.current;
     prevMsgLenRef.current = currLen;
     if (currLen <= prevLen || scrollLockedRef.current) return;
-    requestAnimationFrame(() => {
-      if (!scrollLockedRef.current) el.scrollTop = el.scrollHeight;
-    });
+    el.scrollTop = el.scrollHeight;
   }, [messages]);
 
   const handleSelectUser = (user) => {
