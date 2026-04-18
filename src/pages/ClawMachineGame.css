@@ -1,0 +1,569 @@
+/* ClawMachineGame.css — 夾蘋果機遊戲 */
+
+/* ─── 全螢幕覆蓋層 ──────────────────────────────────────────────────────────── */
+.clw-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9300;
+  background:
+    radial-gradient(ellipse at 30% 20%, #1a004d 0%, transparent 55%),
+    radial-gradient(ellipse at 70% 80%, #00004d 0%, transparent 55%),
+    linear-gradient(180deg, #06001a 0%, #0d0030 50%, #0a0020 100%);
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  overflow: hidden;
+}
+
+/* 星星背景 */
+.clw-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 8%  9%,  rgba(255,255,255,.9) 0%, transparent 100%),
+    radial-gradient(1px 1px at 22% 5%,  rgba(255,255,255,.7) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 38% 14%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 52% 7%,  rgba(255,255,255,.8) 0%, transparent 100%),
+    radial-gradient(1px 1px at 65% 18%, rgba(255,255,255,.6) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 79% 8%, rgba(255,255,255,.9) 0%, transparent 100%),
+    radial-gradient(1px 1px at 91% 22%, #fff 0%, transparent 100%),
+    radial-gradient(1px 1px at 14% 32%, rgba(255,255,255,.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 48% 28%, rgba(255,255,255,.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 73% 35%, rgba(255,255,255,.4) 0%, transparent 100%);
+}
+
+/* ─── HUD ───────────────────────────────────────────────────────────────────── */
+.clw-hud {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 10px 28px;
+  background: rgba(0, 0, 0, 0.75);
+  border-bottom: 2px solid #7700cc;
+  box-shadow: 0 2px 20px rgba(119, 0, 204, 0.5);
+  position: relative;
+  z-index: 10;
+}
+
+.clw-timer {
+  font-size: 2.6rem;
+  font-weight: 900;
+  color: gold;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.4s;
+}
+.clw-timer.warning { color: #ffb300; }
+.clw-timer.urgent  {
+  color: #ff3c00;
+  animation: clw-pulse 0.5s ease-in-out infinite alternate;
+}
+.clw-timer-unit { font-size: 0.9rem; color: #ccc; margin-left: -4px; }
+
+.clw-score {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #ffe600;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1.5px solid gold;
+  border-radius: 22px;
+  padding: 3px 14px;
+  min-width: 90px;
+}
+.clw-score-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.clw-hint {
+  font-size: 0.88rem;
+  color: #bb88ff;
+  white-space: nowrap;
+}
+
+/* ─── Field ─────────────────────────────────────────────────────────────────── */
+.clw-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 16px;
+}
+
+/* ─── Machine cabinet ───────────────────────────────────────────────────────── */
+.clw-machine {
+  width: min(420px, 90vw);
+  height: min(420px, 58vh);
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px 18px 10px 10px;
+  box-shadow:
+    0 0 0 4px #6600bb,
+    0 0 0 7px #330088,
+    0 0 50px rgba(119, 0, 204, 0.55),
+    0 20px 60px rgba(0, 0, 0, 0.7);
+}
+
+/* ─── Title bar ─────────────────────────────────────────────────────────────── */
+.clw-top-bar {
+  flex-shrink: 0;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #3300aa 0%, #220077 100%);
+  border-radius: 16px 16px 0 0;
+  border: 2px solid #8844dd;
+  border-bottom: none;
+}
+
+.clw-neon-text {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 3px;
+  text-shadow:
+    0 0 6px #ff88ff,
+    0 0 14px #cc44ff,
+    0 0 28px #8800ff;
+}
+
+/* ─── Glass window ──────────────────────────────────────────────────────────── */
+.clw-window {
+  flex: 1;
+  position: relative;
+  background: linear-gradient(180deg, rgba(10,0,32,0.93) 0%, rgba(18,5,52,0.9) 100%);
+  border-left:  3px solid #8844dd;
+  border-right: 3px solid #8844dd;
+  overflow: hidden;
+}
+
+/* 玻璃光澤 */
+.clw-window::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 55%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ─── Rail ──────────────────────────────────────────────────────────────────── */
+.clw-rail {
+  position: absolute;
+  top: 12px;
+  left: 4%;
+  right: 4%;
+  height: 10px;
+  background: linear-gradient(180deg, #ccaaff 0%, #8855cc 50%, #552299 100%);
+  border-radius: 5px;
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.9),
+    0 0 10px rgba(170,88,255,0.5);
+  z-index: 5;
+}
+
+/* ─── Claw system ───────────────────────────────────────────────────────────── */
+.clw-claw-system {
+  position: absolute;
+  top: 12px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 6;
+  pointer-events: none;
+}
+
+/* Rope */
+.clw-rope {
+  width: 5px;
+  min-height: 20px;
+  background: linear-gradient(180deg, #ddccff 0%, #9966cc 60%, #7744bb 100%);
+  border-radius: 2px;
+  box-shadow: 0 0 4px rgba(170,100,255,0.4);
+}
+
+/* Claw head */
+.clw-claw-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  position: relative;
+  gap: 2px;
+}
+
+/* 爪頭頂蓋 */
+.clw-claw-head::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 9px;
+  background: linear-gradient(180deg, #ccbbff 0%, #7755bb 100%);
+  border-radius: 4px 4px 0 0;
+  box-shadow: 0 0 6px rgba(170,100,255,0.5);
+}
+
+/* Prongs */
+.clw-prong {
+  width: 7px;
+  height: 32px;
+  background: linear-gradient(180deg, #ddccff 0%, #9966cc 55%, #6633aa 100%);
+  border-radius: 0 0 7px 7px;
+  box-shadow: 0 0 5px rgba(170,100,255,0.35);
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: top center;
+}
+
+/* 開爪 */
+.clw-prong-l { transform: rotate(24deg)  translateY(6px); }
+.clw-prong-c { transform: rotate(0deg)   translateY(0px); }
+.clw-prong-r { transform: rotate(-24deg) translateY(6px); }
+
+/* 夾合 */
+.clw-prong-l.closed { transform: rotate(4deg)  translateY(6px); }
+.clw-prong-c.closed { transform: rotate(0deg)  translateY(0px); }
+.clw-prong-r.closed { transform: rotate(-4deg) translateY(6px); }
+
+/* 爪子夾住的蘋果 */
+.clw-held-apple {
+  position: absolute;
+  bottom: -34px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: clw-apple-pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.clw-held-apple img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px gold) drop-shadow(0 0 4px #ff8800);
+}
+
+/* ─── Apple pile ────────────────────────────────────────────────────────────── */
+/* 外層：只負責定位；bottom transition 在此層，與 transform 動畫完全隔離 */
+.clw-pile-pos {
+  position: absolute;
+  z-index: 2;
+  cursor: default;
+  transition: bottom 0.35s ease; /* 補位滑落動畫 */
+}
+
+/* 內層：只負責滾動動畫；will-change 讓瀏覽器保持在合成層，不受 layout 影響 */
+.clw-pile-apple {
+  will-change: transform;
+  animation: clw-roll var(--dur, 2.5s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+.clw-pile-apple img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 3px 5px rgba(0,0,0,0.7));
+  transition: filter 0.1s;
+}
+
+/* 被夾走：停止滾動、播放消失動畫 */
+.clw-pile-apple.caught {
+  animation: clw-apple-caught 0.45s ease-out forwards !important;
+  pointer-events: none;
+}
+
+/* ─── Floating +N effect ────────────────────────────────────────────────────── */
+.clw-effect {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: gold;
+  text-shadow: 0 0 14px #ff8800, 0 2px 4px rgba(0,0,0,0.9);
+  pointer-events: none;
+  animation: clw-effect-float 1.4s ease-out forwards;
+  z-index: 20;
+  white-space: nowrap;
+}
+.clw-effect img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+/* ─── Exit slot ─────────────────────────────────────────────────────────────── */
+.clw-slot {
+  flex-shrink: 0;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #220066 0%, #120044 100%);
+  border: 3px solid #8844dd;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  box-shadow: inset 0 4px 12px rgba(0,0,0,0.5);
+}
+.clw-slot-label {
+  font-size: 0.82rem;
+  color: #bb88ff;
+  letter-spacing: 2px;
+}
+
+/* ─── Grab button ───────────────────────────────────────────────────────────── */
+.clw-grab-btn {
+  width: min(200px, 50vw);
+  height: 62px;
+  font-size: 2rem;
+  font-weight: 900;
+  color: #1a0800;
+  background: linear-gradient(180deg, #ffe000 0%, #ffaa00 55%, #ff8c00 100%);
+  border: none;
+  border-radius: 18px;
+  cursor: pointer;
+  letter-spacing: 3px;
+  box-shadow:
+    0 6px 0 #cc6600,
+    0 8px 24px rgba(255,160,0,0.55),
+    0 0 36px rgba(255,200,0,0.3);
+  transition: transform 0.1s, box-shadow 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.clw-grab-btn:hover:not(.disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 0 #cc6600, 0 12px 28px rgba(255,160,0,0.65);
+}
+.clw-grab-btn:active:not(.disabled) {
+  transform: translateY(5px);
+  box-shadow: 0 1px 0 #cc6600, 0 4px 10px rgba(255,160,0,0.4);
+}
+.clw-grab-btn.disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ─── 30 秒預告說明彈窗 ──────────────────────────────────────────────────────── */
+.clw-warn-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9300;
+  background: rgba(0, 0, 0, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.clw-warn-card {
+  background: linear-gradient(145deg, #1a0040 0%, #0d0030 100%);
+  border: 3px solid #aa44ff;
+  border-radius: 22px;
+  padding: 28px 36px 24px;
+  text-align: center;
+  color: #fff;
+  min-width: 280px;
+  max-width: 400px;
+  width: 90vw;
+  cursor: default;
+  box-shadow:
+    0 0 50px rgba(170, 68, 255, 0.45),
+    0 0 100px rgba(100, 0, 200, 0.2);
+  animation: clw-fadein 0.35s ease;
+}
+
+.clw-warn-countdown {
+  font-size: 4rem;
+  font-weight: 900;
+  color: gold;
+  line-height: 1;
+  text-shadow: 0 0 20px #ff8800, 0 0 40px #ff4400;
+  font-variant-numeric: tabular-nums;
+}
+
+.clw-warn-unit {
+  font-size: 1rem;
+  color: #cc99ff;
+  margin-bottom: 12px;
+}
+
+.clw-warn-title {
+  font-size: 1.6rem;
+  color: #fff;
+  margin: 0 0 16px;
+  text-shadow: 0 0 10px #cc44ff;
+  letter-spacing: 2px;
+}
+
+.clw-warn-rules {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.clw-warn-rules li {
+  font-size: 1rem;
+  color: #ddd;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 8px 14px;
+  border-left: 3px solid #8844cc;
+  line-height: 1.5;
+}
+
+.clw-warn-rules li strong { color: gold; }
+
+.clw-warn-close {
+  width: 100%;
+  padding: 12px 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a0800;
+  background: linear-gradient(180deg, #ffe000 0%, #ffaa00 100%);
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #cc6600, 0 6px 16px rgba(255,160,0,0.4);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.clw-warn-close:hover { transform: translateY(-1px); box-shadow: 0 5px 0 #cc6600; }
+.clw-warn-close:active { transform: translateY(3px); box-shadow: 0 1px 0 #cc6600; }
+
+/* ─── Closing：遊戲畫面淡出 ─────────────────────────────────────────────────── */
+.clw-overlay.closing .clw-hud,
+.clw-overlay.closing .clw-field {
+  animation: clw-fadeout 0.4s ease-out forwards;
+  pointer-events: none;
+}
+
+/* ─── Result screen：整個覆蓋層可點擊 ─────────────────────────────────────── */
+.clw-result-screen {
+  cursor: pointer;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ─── Result card ───────────────────────────────────────────────────────────── */
+.clw-result {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(145deg, #1a0a2e 0%, #0d0520 100%);
+  border: 3px solid gold;
+  border-radius: 20px;
+  padding: 30px 42px;
+  color: #fff;
+  text-align: center;
+  min-width: 280px;
+  max-width: 480px;
+  max-height: 80vh;
+  z-index: 30;
+  box-shadow:
+    0 0 50px rgba(255,215,0,0.4),
+    0 0 90px rgba(119,0,204,0.25);
+  animation: clw-fadein 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.clw-result h2   { font-size: 1.85rem; color: gold; margin: 0 0 14px; }
+.clw-my-rank     { font-size: 1.05rem; color: #cc99ff; margin-bottom: 10px; }
+.clw-my-rank strong { color: gold; font-size: 1.3em; }
+
+.clw-result ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+  text-align: left;
+  max-height: 280px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+.clw-result ul li { padding: 5px 0; border-bottom: 1px solid rgba(255,215,0,0.15); }
+.clw-result ul li.me { color: gold; font-weight: bold; }
+.clw-result ul::-webkit-scrollbar       { width: 6px; }
+.clw-result ul::-webkit-scrollbar-track { background: transparent; }
+.clw-result ul::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.45); border-radius: 4px; }
+
+.clw-dismiss-hint { margin-top: 16px; font-size: 0.84rem; color: #666; }
+
+/* ─── Animations ─────────────────────────────────────────────────────────────── */
+
+/* 爪子讀秒閃爍 */
+@keyframes clw-pulse {
+  from { opacity: 1; }
+  to   { opacity: 0.5; }
+}
+
+/* 蘋果自然滾動（每顆 --dur / --delay 不同，看起來各自獨立） */
+@keyframes clw-roll {
+  0%   { transform: translateX(0)    rotate(0deg);  }
+  18%  { transform: translateX(5px)  rotate(9deg);  }
+  36%  { transform: translateX(-3px) rotate(-6deg); }
+  55%  { transform: translateX(6px)  rotate(11deg); }
+  72%  { transform: translateX(-4px) rotate(-8deg); }
+  88%  { transform: translateX(3px)  rotate(5deg);  }
+  100% { transform: translateX(0)    rotate(0deg);  }
+}
+
+/* 被夾走：縮放放大再消失 */
+@keyframes clw-apple-caught {
+  0%   { opacity: 1; transform: scale(1)   translateY(0);    }
+  35%  { opacity: 1; transform: scale(1.4) translateY(-12px); }
+  100% { opacity: 0; transform: scale(0.3) translateY(-50px); }
+}
+
+/* 夾住蘋果出現在爪子上 */
+@keyframes clw-apple-pop {
+  0%   { transform: translateX(-50%) scale(0); opacity: 0; }
+  100% { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+
+/* 浮動 +N 效果 */
+@keyframes clw-effect-float {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0)     scale(1);    }
+  40%  { opacity: 1; transform: translateX(-50%) translateY(-50px)  scale(1.15); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-110px) scale(0.85); }
+}
+
+/* 遊戲畫面淡出（closing 相位） */
+@keyframes clw-fadeout {
+  from { opacity: 1; transform: scale(1);    }
+  to   { opacity: 0; transform: scale(0.95); }
+}
+
+/* 結果卡片淡入 */
+@keyframes clw-fadein {
+  from { opacity: 0; transform: translate(-50%, -46%) scale(0.96); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1);    }
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .clw-machine   { height: 48vh; }
+  .clw-grab-btn  { height: 54px; font-size: 1.6rem; }
+  .clw-hint      { display: none; }
+  .clw-timer     { font-size: 2rem; }
+  .clw-pile-pos .clw-pile-apple img { width: 30px; height: 30px; }
+  .clw-held-apple img { width: 28px; height: 28px; }
+}

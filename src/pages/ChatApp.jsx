@@ -23,6 +23,7 @@ import UserList from "./UserList";
 import AdminSettingsModal from "./AdminSettingsModal";
 import GoldAppleGame from "./GoldAppleGame";
 import WhackAppleGame from "./WhackAppleGame";
+import ClawMachineGame from "./ClawMachineGame";
 import SurpriseHistoryPanel from "./SurpriseHistoryPanel";
 import AdminToolPanel from "./AdminToolPanel";
 import QuickPhrasePanel from "./QuickPhrasePanel";
@@ -127,6 +128,7 @@ export default function ChatApp() {
   const [sendingApple, setSendingApple]           = useState(false);
   const [showAppleSetting, setShowAppleSetting]   = useState(false);
   const [scrollLocked, setScrollLocked]           = useState(false);
+  const scrollLockedRef = useRef(false); // 同步更新，避免 useLayoutEffect 讀到過期值
 
   const joinedRef     = useRef(false);
   const messagesEndRef = useRef(null);
@@ -547,13 +549,18 @@ export default function ChatApp() {
                 }}
                 userList={userList}
                 scrollLocked={scrollLocked}
+                scrollLockedRef={scrollLockedRef}
               />
 
               <div className="chat-input">
                 <button className="clear-btn" onClick={clearMessages}>🧹清空畫面</button>
                 <button
                   className={`clear-btn scroll-lock-btn${scrollLocked ? " active" : ""}`}
-                  onClick={() => setScrollLocked(v => !v)}
+                  onClick={() => {
+                    const next = !scrollLockedRef.current;
+                    scrollLockedRef.current = next;
+                    setScrollLocked(next);
+                  }}
                   title={scrollLocked ? "自動捲動" : "停止捲動"}
                 >
                   {scrollLocked ? "🔓自動捲動" : "🔒停止捲動"}
@@ -701,6 +708,16 @@ export default function ChatApp() {
       {/* 打金蘋果遊戲（打地鼠風格，有遊戲時才渲染） */}
       {NF && (
         <WhackAppleGame
+          socket={socket}
+          token={token}
+          name={name}
+          setApples={setApples}
+        />
+      )}
+
+      {/* 夾蘋果機遊戲（夾娃娃機風格，有遊戲時才渲染） */}
+      {NF && (
+        <ClawMachineGame
           socket={socket}
           token={token}
           name={name}

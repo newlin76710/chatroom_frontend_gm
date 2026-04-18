@@ -40,6 +40,10 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
   // ── 遊戲階段: idle | game1 | game2 | result1 | result2
   const [phase, setPhase] = useState("idle");
 
+  // ── 30 秒預告
+  const [warnType, setWarnType] = useState(null); // null | 'game1' | 'game2'
+  const [warnSeconds, setWarnSeconds] = useState(30);
+
   // ── 遊戲一
   const [g1AppleIds, setG1AppleIds] = useState([]); // React 控制 DOM 渲染
   const [g1Reward, setG1Reward] = useState(1);
@@ -65,6 +69,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
   const g2SpdRef = useRef({ lo: SPD2_LO, hi: SPD2_HI });
   const animRef = useRef(null);
   const timerRef = useRef(null);
+  const warnTimerRef = useRef(null); // 說明彈窗倒數計時器
   const phaseRef = useRef("idle");
   const activePointerRef = useRef(null); // 多點觸控保護：同時只允許一個 pointer
   // 快取容器尺寸，避免每幀 layout thrashing
@@ -148,8 +153,25 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
 
   // ─── Socket 事件 ──────────────────────────────────────────────────────────
   useEffect(() => {
+    // ── 30 秒預告 ──
+    const startWarnCountdown = (type, secondsLeft) => {
+      setWarnType(type);
+      setWarnSeconds(secondsLeft || 30);
+      clearInterval(warnTimerRef.current);
+      let s = secondsLeft || 30;
+      warnTimerRef.current = setInterval(() => {
+        s -= 1;
+        setWarnSeconds(s);
+        if (s <= 0) clearInterval(warnTimerRef.current);
+      }, 1000);
+    };
+    const onGame1Warn = ({ secondsLeft }) => startWarnCountdown('game1', secondsLeft);
+    const onGame2Warn = ({ secondsLeft }) => startWarnCountdown('game2', secondsLeft);
+
     // ── 遊戲一開始 ──
     const onG1Start = ({ duration, appleIds, reward, speedLo, speedHi }) => {
+      clearInterval(warnTimerRef.current);
+      setWarnType(null);
       setG1Reward(reward);
       setG1Result(null);
       setLateMsg("");
@@ -205,6 +227,8 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
 
     // ── 遊戲二開始（不限時，有人搶到才結束）──
     const onG2Start = ({ reward, speedLo, speedHi }) => {
+      clearInterval(warnTimerRef.current);
+      setWarnType(null);
       setG2Reward(reward);
       setG2Result(null);
       setLateMsg("");
@@ -240,6 +264,8 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
       setPhase("result2");
     };
 
+    socket.on("goldGame1Warn",   onGame1Warn);
+    socket.on("goldGame2Warn",   onGame2Warn);
     socket.on("goldGame1Start", onG1Start);
     socket.on("goldAppleCaught1", onCaught1);
     socket.on("goldGame1End", onG1End);
@@ -249,6 +275,8 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
     socket.on("goldGame2End", onG2End);
 
     return () => {
+      socket.off("goldGame1Warn",   onGame1Warn);
+      socket.off("goldGame2Warn",   onGame2Warn);
       socket.off("goldGame1Start", onG1Start);
       socket.off("goldAppleCaught1", onCaught1);
       socket.off("goldGame1End", onG1End);
@@ -264,6 +292,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
     return () => {
       stopAnim();
       clearInterval(timerRef.current);
+      clearInterval(warnTimerRef.current);
     };
   }, [stopAnim]);
 
@@ -308,6 +337,42 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
     setG2Result(null);
     setLateMsg("");
   }, []);
+
+  // ── 30 秒預告說明彈窗 ──────────────────────────────────────────────────────
+  if (phase === "idle" && warnType) {
+    const isGame1 = warnType === 'game1';
+    return (
+      <div className="gag-warn-overlay" onClick={() => { setWarnType(null); clearInterval(warnTimerRef.current); }}>
+        <div className="gag-warn-card" onClick={e => e.stopPropagation()}>
+          <div className="gag-warn-countdown">{warnSeconds}</div>
+          <div className="gag-warn-unit">秒後開始</div>
+          <h2 className="gag-warn-title">{isGame1 ? '🍎 撈金蘋果' : '🍎 搶大金蘋果'}</h2>
+          <ul className="gag-warn-rules">
+            {isGame1 ? (
+              <>
+                <li>🍎 多顆金蘋果在畫面中<strong>飛來飛去</strong></li>
+                <li>👆 <strong>點擊金蘋果</strong>即可撈起</li>
+                <li>⏱ 60 秒內<strong>撈越多越好</strong></li>
+                <li>🏆 每顆蘋果獲得固定金蘋果獎勵</li>
+              </>
+            ) : (
+              <>
+                <li>🍎 一顆<strong>大金蘋果</strong>在畫面中彈跳</li>
+                <li>👆 <strong>第一個點到</strong>的人獲得全部獎勵</li>
+                <li>⚡ 手速決定勝負，全力搶！</li>
+              </>
+            )}
+          </ul>
+          <button
+            className="gag-warn-close"
+            onClick={() => { setWarnType(null); clearInterval(warnTimerRef.current); }}
+          >
+            我知道了！
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // ─── 沒有遊戲時不渲染 ────────────────────────────────────────────────────
   if (phase === "idle") return null;

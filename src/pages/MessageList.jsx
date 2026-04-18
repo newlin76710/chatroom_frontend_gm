@@ -18,13 +18,16 @@ export default function MessageList({
   onSelectTarget,
   userList = [],
   scrollLocked = false,
+  scrollLockedRef,         // 從 ChatApp 傳入的 ref，點擊時同步更新
 }) {
   const AML = import.meta.env.VITE_ADMIN_MAX_LEVEL || 99;
   const containerRef = useRef(null);
-  const scrollLockedRef = useRef(scrollLocked);
+  const _localRef = useRef(scrollLocked);            // 沒傳 ref 時的後備
+  const activeScrollLockedRef = scrollLockedRef || _localRef;
   const prevScrollLockedRef = useRef(scrollLocked);
   const prevMsgLenRef = useRef(0);
-  scrollLockedRef.current = scrollLocked;
+  // 沒有外部 ref 時才從 prop 同步（有外部 ref 則由 ChatApp 自行維護）
+  if (!scrollLockedRef) _localRef.current = scrollLocked;
 
   // scrollLocked 解除時立刻捲到底
   useLayoutEffect(() => {
@@ -40,7 +43,7 @@ export default function MessageList({
     const el = containerRef.current;
     if (!el) return;
     const handleResize = () => {
-      if (!scrollLockedRef.current) {
+      if (!activeScrollLockedRef.current) {
         el.scrollTop = el.scrollHeight;
       }
     };
@@ -61,7 +64,7 @@ export default function MessageList({
     const currLen = messages.length;
     const prevLen = prevMsgLenRef.current;
     prevMsgLenRef.current = currLen;
-    if (currLen <= prevLen || scrollLockedRef.current) return;
+    if (currLen <= prevLen || activeScrollLockedRef.current) return;
     el.scrollTop = el.scrollHeight;
   }, [messages]);
 
@@ -185,7 +188,7 @@ export default function MessageList({
                         className="gift-big-image"
                         onLoad={() => {
                           const el = containerRef.current;
-                          if (el && !scrollLockedRef.current) el.scrollTop = el.scrollHeight;
+                          if (el && !activeScrollLockedRef.current) el.scrollTop = el.scrollHeight;
                         }}
                       />
                     </div>}

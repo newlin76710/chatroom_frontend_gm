@@ -29,6 +29,15 @@ const DEFAULT = {
   whack_ms_hi:          700,
   whack_min_apples:     4,
   whack_max_apples:     7,
+  claw_enabled:         true,
+  claw_hour:            21,
+  claw_minute:          30,
+  claw_duration:        50,
+  claw_reward:          2,
+  claw_difficulty:      75,
+  claw_speed:           100,
+  claw_drop_speed:      100,
+  claw_apple_count:     12,
 };
 
 export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
@@ -281,6 +290,70 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                     onChange={e => setInt("whack_max_apples", e.target.value)} />
                   <span className="field-note">顆（最高 9）</span>
                 </div>
+              </Row>
+            </section>
+
+            {/* ─── 遊戲四：夾蘋果機 ───────────────────────────────── */}
+            <section className="settings-section">
+              <h4>
+                🎰 遊戲四：夾蘋果機（夾娃娃機風格）
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.claw_enabled}
+                    onChange={e => setBool("claw_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+
+              <Row label="每日開始時間（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <input type="number" min={0} max={23} style={{ width: 64 }}
+                    value={settings.claw_hour}
+                    onChange={e => setInt("claw_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 64 }}
+                    value={settings.claw_minute}
+                    onChange={e => setInt("claw_minute", e.target.value)} />
+                  <span>分</span>
+                  <span style={{ color: "#aaa", fontSize: "0.85rem" }}>
+                    → {fmtTime(settings.claw_hour, settings.claw_minute)}
+                  </span>
+                </div>
+              </Row>
+              <Row label="遊戲時長">
+                <input type="number" min={10} max={120} style={{ width: 80 }}
+                  value={settings.claw_duration}
+                  onChange={e => setInt("claw_duration", e.target.value)} />
+                <span className="field-note">秒（最少 10 秒）</span>
+              </Row>
+              <Row label="每次夾到獎勵">
+                <input type="number" min={1} style={{ width: 80 }}
+                  value={settings.claw_reward}
+                  onChange={e => setInt("claw_reward", e.target.value)} />
+                <span className="field-note">個金蘋果</span>
+              </Row>
+              <Row label="夾取成功率">
+                <input type="number" min={0} max={100} style={{ width: 80 }}
+                  value={settings.claw_difficulty}
+                  onChange={e => setInt("claw_difficulty", e.target.value)} />
+                <span className="field-note">% （0=不可能，100=必中）</span>
+              </Row>
+              <Row label="爪子搖擺速度">
+                <input type="number" min={10} max={200} style={{ width: 80 }}
+                  value={settings.claw_speed}
+                  onChange={e => setInt("claw_speed", e.target.value)} />
+                <span className="field-note">10=很慢，100=預設，200=極快</span>
+              </Row>
+              <Row label="爪子下降速度">
+                <input type="number" min={50} max={300} style={{ width: 80 }}
+                  value={settings.claw_drop_speed}
+                  onChange={e => setInt("claw_drop_speed", e.target.value)} />
+                <span className="field-note">50=慢，100=預設，200=快，300=極快</span>
+              </Row>
+              <Row label="場內蘋果數量">
+                <input type="number" min={1} max={40} style={{ width: 80 }}
+                  value={settings.claw_apple_count}
+                  onChange={e => setInt("claw_apple_count", e.target.value)} />
+                <span className="field-note">顆（1–40，越多越滿）</span>
               </Row>
             </section>
 

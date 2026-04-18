@@ -13,6 +13,8 @@ function rand(min, max) { return min + Math.random() * (max - min); }
 // ─── 主元件 ──────────────────────────────────────────────────────────────────
 export default function WhackAppleGame({ socket, token, name, setApples }) {
   const [phase, setPhase]         = useState("idle"); // idle | playing | result
+  const [warnVisible, setWarnVisible] = useState(false); // 30秒預告
+  const [warnSeconds, setWarnSeconds] = useState(30);
   const [timeLeft, setTimeLeft]   = useState(0);
   const [reward, setReward]       = useState(1);
   const [holes, setHoles]         = useState(() =>
@@ -26,6 +28,7 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
   // ── refs ──────────────────────────────────────────────────────────────────
   const phaseRef    = useRef("idle");
   const timerRef    = useRef(null);
+  const warnTimerRef = useRef(null); // 說明彈窗倒數計時器
   const holeTimers  = useRef([]);
   const myScoreRef  = useRef(0);
   const comboRef    = useRef(0);
@@ -147,7 +150,21 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
 
   // ─── Socket events ────────────────────────────────────────────────────────
   useEffect(() => {
+    const onWarn = ({ secondsLeft }) => {
+      setWarnVisible(true);
+      setWarnSeconds(secondsLeft || 30);
+      clearInterval(warnTimerRef.current);
+      let s = secondsLeft || 30;
+      warnTimerRef.current = setInterval(() => {
+        s -= 1;
+        setWarnSeconds(s);
+        if (s <= 0) clearInterval(warnTimerRef.current);
+      }, 1000);
+    };
+
     const onStart = ({ duration, reward: r, msLo, msHi, minApples, maxApples }) => {
+      clearInterval(warnTimerRef.current);
+      setWarnVisible(false);
       setReward(r ?? 1);
       setMyScore(0); myScoreRef.current = 0;
       setCombo(0);   comboRef.current   = 0;
@@ -183,9 +200,11 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
       }
     };
 
+    socket.on("whackGameWarn",  onWarn);
     socket.on("whackGameStart", onStart);
     socket.on("whackGameEnd",   onEnd);
     return () => {
+      socket.off("whackGameWarn",  onWarn);
       socket.off("whackGameStart", onStart);
       socket.off("whackGameEnd",   onEnd);
     };
@@ -194,6 +213,7 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
   // Cleanup on unmount
   useEffect(() => () => {
     clearInterval(timerRef.current);
+    clearInterval(warnTimerRef.current);
     clearHoleTimers();
     clearTimeout(comboTimer.current);
   }, [clearHoleTimers]);
@@ -247,6 +267,31 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
     setPhase("idle");
     setResult(null);
   }, []);
+
+  // ── 30 秒預告說明彈窗 ──────────────────────────────────────────────────────
+  if (phase === "idle" && warnVisible) {
+    return (
+      <div className="wag-warn-overlay" onClick={() => { setWarnVisible(false); clearInterval(warnTimerRef.current); }}>
+        <div className="wag-warn-card" onClick={e => e.stopPropagation()}>
+          <div className="wag-warn-countdown">{warnSeconds}</div>
+          <div className="wag-warn-unit">秒後開始</div>
+          <h2 className="wag-warn-title">🔨 打金蘋果（打地鼠）</h2>
+          <ul className="wag-warn-rules">
+            <li>🍎 金蘋果會從 <strong>9 個洞</strong>隨機冒出</li>
+            <li>👆 快速<strong>點擊冒出的蘋果</strong>來得分</li>
+            <li>⚡ 連續打中有<strong>Combo</strong>加成！</li>
+            <li>⏱ 遊戲進行中蘋果<strong>越來越快</strong>，撐住！</li>
+          </ul>
+          <button
+            className="wag-warn-close"
+            onClick={() => { setWarnVisible(false); clearInterval(warnTimerRef.current); }}
+          >
+            我知道了！
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // ─── Render: idle ─────────────────────────────────────────────────────────
   if (phase === "idle") return null;
