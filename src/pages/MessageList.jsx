@@ -60,8 +60,9 @@ export default function MessageList({
   // 有新訊息時，依 scrollLocked 決定是否捲到底
   useLayoutEffect(() => {
     const el = containerRef.current;
-    if (!el || !messages.length) return;
+    if (!el) return;
     const currLen = messages.length;
+    if (currLen === 0) { prevMsgLenRef.current = 0; return; }
     const prevLen = prevMsgLenRef.current;
     prevMsgLenRef.current = currLen;
     if (currLen <= prevLen || activeScrollLockedRef.current) return;
