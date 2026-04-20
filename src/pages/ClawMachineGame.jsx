@@ -362,6 +362,8 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
   // 鍵盤
   useEffect(() => {
     const onKey = (e) => {
+      const tag = e.target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
       if (e.code === "Space" || e.code === "Enter") { e.preventDefault(); handleDrop(); }
     };
     window.addEventListener("keydown", onKey);
