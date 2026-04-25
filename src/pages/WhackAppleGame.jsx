@@ -25,6 +25,9 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
   const [hitEffects, setHitEffects] = useState([]); // [{ id, x, y }]
   const [result, setResult]       = useState(null);  // { [name]: count }
 
+  const [hammerPos, setHammerPos]           = useState({ x: -200, y: -200 });
+  const [hammerSwinging, setHammerSwinging] = useState(false);
+
   // ── refs ──────────────────────────────────────────────────────────────────
   const phaseRef    = useRef("idle");
   const timerRef    = useRef(null);
@@ -35,6 +38,9 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
   const comboTimer  = useRef(null);
   const hitIdRef           = useRef(0);
   const upCountRef         = useRef(0);   // 目前彈出中的蘋果數
+  const activePointerRef   = useRef(null); // 多點觸控保護：同時只允許一個 pointer
+  const lastWhackTimeRef   = useRef(0);   // 連點冷卻
+  const WHACK_COOLDOWN_MS  = 250;         // 打完後冷卻時間（ms）
   const maxConcurrentRef   = useRef(4);   // 目前上限（隨難度遞增）
   const initConcurrentRef  = useRef(4);   // 開場同時蘋果數（from server）
   const finalConcurrentRef = useRef(7);   // 最高同時蘋果數（from server）
@@ -44,6 +50,7 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
   const holeStateRef = useRef(
     Array.from({ length: HOLE_COUNT }, () => ({ up: false, whacked: false }))
   );
+  const holeRefs = useRef([]); // DOM refs for each wag-hole-wrap
 
   useEffect(() => { phaseRef.current = phase; }, [phase]);
 
@@ -170,6 +177,10 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
       setCombo(0);   comboRef.current   = 0;
       setResult(null);
       setHitEffects([]);
+      activePointerRef.current = null;
+      lastWhackTimeRef.current = 0;
+      setHammerPos({ x: -200, y: -200 });
+      setHammerSwinging(false);
       if (msLo       !== undefined) appleMsLoRef.current       = msLo;
       if (msHi       !== undefined) appleMsHiRef.current       = msHi;
       if (minApples  !== undefined) initConcurrentRef.current  = minApples;
@@ -219,22 +230,59 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
   }, [clearHoleTimers]);
 
   // ─── Whack! ───────────────────────────────────────────────────────────────
-  const handleWhack = useCallback((i, e) => {
-    if (phaseRef.current !== "playing") return;
-    const h = holeStateRef.current[i];
-    if (!h.up || h.whacked) return;
+  const handlePointerRelease = useCallback((e) => {
+    if (activePointerRef.current === e.pointerId) {
+      activePointerRef.current = null;
+    }
+  }, []);
 
-    // Immediately mark whacked (ref + state)
+  const handleHammerMove = useCallback((e) => {
+    if (phaseRef.current !== "playing") return;
+    setHammerPos({ x: e.clientX, y: e.clientY });
+  }, []);
+
+  const handleHammerStrike = useCallback((e) => {
+    if (phaseRef.current !== "playing") return;
+    if (activePointerRef.current !== null && activePointerRef.current !== e.pointerId) return;
+
+    const now = Date.now();
+    if (now - lastWhackTimeRef.current < WHACK_COOLDOWN_MS) return;
+
+    const STRIKE_RADIUS = 80;
+    let bestIdx = -1;
+    let bestDist = Infinity;
+
+    holeRefs.current.forEach((el, i) => {
+      if (!el) return;
+      const h = holeStateRef.current[i];
+      if (!h.up || h.whacked) return;
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+      if (dist <= STRIKE_RADIUS && dist < bestDist) {
+        bestDist = dist;
+        bestIdx = i;
+      }
+    });
+
+    // Always animate swing
+    setHammerSwinging(true);
+    setTimeout(() => setHammerSwinging(false), 280);
+
+    if (bestIdx < 0) return; // missed
+
+    activePointerRef.current = e.pointerId;
+    lastWhackTimeRef.current = now;
+
     holeStateRef.current = holeStateRef.current.map((hole, idx) =>
-      idx === i ? { up: true, whacked: true } : hole
+      idx === bestIdx ? { up: true, whacked: true } : hole
     );
     setHoles([...holeStateRef.current]);
 
-    // Score
     myScoreRef.current++;
     setMyScore(myScoreRef.current);
 
-    // Combo
     comboRef.current++;
     setCombo(comboRef.current);
     clearTimeout(comboTimer.current);
@@ -243,22 +291,22 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
       setCombo(0);
     }, 1500);
 
-    // Floating hit effect
-    const rect = e.currentTarget.getBoundingClientRect();
-    const id   = ++hitIdRef.current;
-    setHitEffects(fx => [...fx, { id, x: rect.left + rect.width / 2, y: rect.top }]);
+    const rect2 = holeRefs.current[bestIdx]?.getBoundingClientRect();
+    const fx_x = rect2 ? rect2.left + rect2.width / 2 : e.clientX;
+    const fx_y = rect2 ? rect2.top : e.clientY;
+    const id = ++hitIdRef.current;
+    setHitEffects(fx => [...fx, { id, x: fx_x, y: fx_y }]);
     setTimeout(() => setHitEffects(fx => fx.filter(f => f.id !== id)), 700);
 
-    // Notify server
     socket.emit("catchWhackApple", { token });
 
-    // Pop back down after whack animation, then reschedule
     setTimeout(() => {
       holeStateRef.current = holeStateRef.current.map((hole, idx) =>
-        idx === i ? { up: false, whacked: false } : hole
+        idx === bestIdx ? { up: false, whacked: false } : hole
       );
       setHoles([...holeStateRef.current]);
       upCountRef.current = Math.max(0, upCountRef.current - 1);
+      if (activePointerRef.current !== null) activePointerRef.current = null;
       if (phaseRef.current === "playing") scheduleNextHole(rand(80, 250));
     }, 380);
   }, [socket, token, scheduleNextHole]);
@@ -278,7 +326,7 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
           <h2 className="wag-warn-title">🔨 打金蘋果（打地鼠）</h2>
           <ul className="wag-warn-rules">
             <li>🍎 金蘋果會從 <strong>9 個洞</strong>隨機冒出</li>
-            <li>👆 快速<strong>點擊冒出的蘋果</strong>來得分</li>
+            <li>🔨 移動<strong>槌子</strong>到金蘋果上方，按下打擊！</li>
             <li>⚡ 連續打中有<strong>Combo</strong>加成！</li>
             <li>⏱ 遊戲進行中蘋果<strong>越來越快</strong>，撐住！</li>
           </ul>
@@ -335,13 +383,27 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
   const urgency = timeLeft <= 10 ? "urgent" : timeLeft <= 20 ? "warning" : "";
 
   return (
-    <div className="wag-overlay">
+    <div className="wag-overlay"
+      onPointerMove={handleHammerMove}
+      onPointerDown={handleHammerStrike}
+      onPointerUp={handlePointerRelease}
+      onPointerCancel={handlePointerRelease}
+      style={{ cursor: "none" }}
+    >
+      {/* 槌子游標 */}
+      <div
+        className={`wag-hammer${hammerSwinging ? " swinging" : ""}`}
+        style={{ left: hammerPos.x, top: hammerPos.y }}
+      >
+        🔨
+      </div>
+
       {/* HUD */}
       <div className="wag-hud">
         <span className={`wag-timer ${urgency}`}>{timeLeft}</span>
         <span className="wag-timer-unit">秒</span>
         <span className="wag-score">🍎 ×{myScore}</span>
-        <span className="wag-hint">打金蘋果！每顆得 {reward} 個🍎</span>
+        <span className="wag-hint">移動槌子打金蘋果！每顆得 {reward} 個🍎</span>
       </div>
 
       {/* Combo counter */}
@@ -365,12 +427,11 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
 
         <div className="wag-holes-grid">
           {holes.map((hole, i) => (
-            <div key={i} className="wag-hole-wrap">
+            <div key={i} className="wag-hole-wrap" ref={el => holeRefs.current[i] = el}>
               {/* Clip area — apple slides up inside this */}
               <div className="wag-mole-area">
                 <div
                   className={`wag-apple-slot${hole.up ? " up" : ""}${hole.whacked ? " whacked" : ""}`}
-                  onPointerDown={hole.up && !hole.whacked ? (e) => handleWhack(i, e) : undefined}
                 >
                   <img
                     src="/gifts/gold_apple.gif"

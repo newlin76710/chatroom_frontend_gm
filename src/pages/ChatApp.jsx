@@ -41,13 +41,13 @@ import { HEARTBEAT_INTERVAL, COOLDOWN_MS, GENDER_COLORS } from "./constants";
 import * as OpenCC from "opencc-js";
 
 // ─── 環境設定 ────────────────────────────────────────────────────────────────
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
-const RN      = import.meta.env.VITE_ROOM_NAME || "windsong";
-const CN      = import.meta.env.VITE_CHATROOM_NAME || "聽風的歌";
-const AML     = Number(import.meta.env.VITE_ADMIN_MAX_LEVEL) || 99;
-const ANL     = Number(import.meta.env.VITE_ADMIN_MIN_LEVEL) || 91;
-const OPENAI  = import.meta.env.VITE_OPENAI === "true";
-const NF      = import.meta.env.VITE_NEW_FUNCTION === "true";
+const BACKEND          = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
+const RN               = import.meta.env.VITE_ROOM_NAME || "windsong";
+const CN               = import.meta.env.VITE_CHATROOM_NAME || "聽風的歌";
+const AML              = Number(import.meta.env.VITE_ADMIN_MAX_LEVEL) || 99;
+const ANL              = Number(import.meta.env.VITE_ADMIN_MIN_LEVEL) || 91;
+const OPENAI           = import.meta.env.VITE_OPENAI === "true";
+const NF               = import.meta.env.VITE_NEW_FUNCTION === "true";
 
 // ─── 純函式工具 ──────────────────────────────────────────────────────────────
 const safeText = (v) => {
@@ -127,6 +127,7 @@ export default function ChatApp() {
   const [appleAmount, setAppleAmount]             = useState(1);
   const [sendingApple, setSendingApple]           = useState(false);
   const [showAppleSetting, setShowAppleSetting]   = useState(false);
+  const [perTransferLimit, setPerTransferLimit]   = useState(0); // 0 = 不限制
   const [scrollLocked, setScrollLocked]           = useState(false);
   const scrollLockedRef = useRef(false); // 同步更新，避免 useLayoutEffect 讀到過期值
 
@@ -424,9 +425,23 @@ export default function ChatApp() {
     setVideoUrl("");
   }, [socket, room, videoUrl, name]);
 
+  // ─── 讀取轉帳上限設定 ────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!token) return;
+    fetch(`${BACKEND}/api/transfer-limits`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.per_transfer_limit > 0) setPerTransferLimit(d.per_transfer_limit); })
+      .catch(() => {});
+  }, [token]);
+
   // ─── 送金蘋果 ─────────────────────────────────────────────────────────────
   const transferApple = useCallback(async () => {
     if (!target) { alert("請選擇對象"); return; }
+    const maxAllowed = perTransferLimit > 0 ? Math.min(apples, perTransferLimit) : apples;
+    const safeAmount = Math.max(1, Math.min(Math.floor(appleAmount), maxAllowed));
+    if (safeAmount > apples) { alert("金蘋果不足"); return; }
     setSendingApple(true);
     try {
       const res = await fetch(`${BACKEND}/api/transfer-gold`, {
@@ -435,7 +450,7 @@ export default function ChatApp() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ targetUsername: target, amount: appleAmount }),
+        body: JSON.stringify({ targetUsername: target, amount: safeAmount }),
       });
       const data = await res.json();
       if (!res.ok || data.success === false) {
@@ -447,7 +462,7 @@ export default function ChatApp() {
     } finally {
       setSendingApple(false);
     }
-  }, [target, appleAmount, token]);
+  }, [target, appleAmount, token, apples, perTransferLimit]);
 
   const focusInput = useCallback(() => {
     requestAnimationFrame(() => inputRef.current?.focus());
@@ -637,8 +652,12 @@ export default function ChatApp() {
                   <input
                     type="number"
                     min={1}
+                    max={perTransferLimit > 0 ? Math.min(apples, perTransferLimit) : apples}
                     value={appleAmount}
-                    onChange={(e) => setAppleAmount(Math.max(1, Number(e.target.value)))}
+                    onChange={(e) => {
+                      const maxVal = perTransferLimit > 0 ? Math.min(apples, perTransferLimit) : apples;
+                      setAppleAmount(Math.max(1, Math.min(maxVal, Math.floor(Number(e.target.value)))));
+                    }}
                     className="apple-amount-input"
                   />
 

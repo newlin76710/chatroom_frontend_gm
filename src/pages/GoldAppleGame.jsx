@@ -72,8 +72,12 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
   const warnTimerRef = useRef(null); // 說明彈窗倒數計時器
   const phaseRef = useRef("idle");
   const activePointerRef = useRef(null); // 多點觸控保護：同時只允許一個 pointer
+  const lastCatchTimeRef = useRef(0);   // 連點冷卻：避免快速連續點擊搶多顆
+  const CATCH_COOLDOWN_MS = 400;        // 每次撈蘋果後冷卻時間（ms）
   // 快取容器尺寸，避免每幀 layout thrashing
   const sizeRef = useRef({ W: window.innerWidth, H: window.innerHeight });
+  const [netPos, setNetPos]           = useState({ x: -300, y: -300 });
+  const [netScooping, setNetScooping] = useState(false);
   useEffect(() => { phaseRef.current = phase; }, [phase]);
 
   // 容器尺寸只在 resize 時更新
@@ -180,6 +184,9 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
       // 清除上場記錄
       localCaughtRef.current.clear();
       activePointerRef.current = null;
+      lastCatchTimeRef.current = 0;
+      setNetPos({ x: -300, y: -300 });
+      setNetScooping(false);
 
       const W = window.innerWidth;
       const H = window.innerHeight;
@@ -297,24 +304,46 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
   }, [stopAnim]);
 
   // ─── 撈蘋果動作 ───────────────────────────────────────────────────────────
-  const handleCatch1 = useCallback((id, e) => {
-    e.stopPropagation();
-
-    // 多點觸控保護：已有其他手指佔用時忽略
+  const handleNetCast = useCallback((e) => {
+    if (phaseRef.current !== "game1") return;
     if (activePointerRef.current !== null && activePointerRef.current !== e.pointerId) return;
+    const now = Date.now();
+    if (now - lastCatchTimeRef.current < CATCH_COOLDOWN_MS) return;
+
     activePointerRef.current = e.pointerId;
+    setNetPos({ x: e.clientX, y: e.clientY });
 
-    // ① 防止同一顆蘋果在本地被重複點擊
-    if (localCaughtRef.current.has(id)) return;
-    localCaughtRef.current.add(id);
+    const NET_RADIUS = 55; // px — matches the net SVG visual size
+    let bestId = null;
+    let bestDist = Infinity;
 
-    // ② 立即從畫面移除（樂觀更新，不等 server 回應）
-    delete physicsRef.current[id];
-    setG1AppleIds(prev => prev.filter(aid => aid !== id));
+    for (const p of Object.values(physicsRef.current)) {
+      if (localCaughtRef.current.has(p.id)) continue;
+      const cx = p.x + SIZE1 / 2;
+      const cy = p.y + SIZE1 / 2;
+      const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+      if (dist <= NET_RADIUS && dist < bestDist) {
+        bestDist = dist;
+        bestId = p.id;
+      }
+    }
 
-    // ③ 通知 server（server 仍有 caught flag + 節流 作為最終防線）
-    socket.emit("catchApple1", { token, appleId: id });
+    setNetScooping(true);
+    setTimeout(() => setNetScooping(false), 420);
+
+    if (!bestId) return;
+
+    lastCatchTimeRef.current = now;
+    localCaughtRef.current.add(bestId);
+    delete physicsRef.current[bestId];
+    setG1AppleIds(prev => prev.filter(id => id !== bestId));
+    socket.emit("catchApple1", { token, appleId: bestId });
   }, [socket, token]);
+
+  const handlePointerMove = useCallback((e) => {
+    if (phaseRef.current !== "game1") return;
+    setNetPos({ x: e.clientX, y: e.clientY });
+  }, []);
 
   const handleCatch2 = useCallback((e) => {
     e.stopPropagation();
@@ -351,7 +380,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
             {isGame1 ? (
               <>
                 <li>🍎 多顆金蘋果在畫面中<strong>飛來飛去</strong></li>
-                <li>👆 <strong>點擊金蘋果</strong>即可撈起</li>
+                <li>🕸 將網子<strong>移到金蘋果上方</strong>按下撈起</li>
                 <li>⏱ 60 秒內<strong>撈越多越好</strong></li>
                 <li>🏆 每顆蘋果獲得固定金蘋果獎勵</li>
               </>
@@ -435,8 +464,11 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
   // ─── 遊戲進行中畫面 ───────────────────────────────────────────────────────
   return (
     <div className="gag-overlay" ref={containerRef}
+      onPointerMove={handlePointerMove}
+      onPointerDown={phase === "game1" ? handleNetCast : undefined}
       onPointerUp={handlePointerRelease}
       onPointerCancel={handlePointerRelease}
+      style={phase === "game1" ? { cursor: "none" } : undefined}
     >
 
       {/* HUD — 遊戲一顯示倒計時，遊戲二只顯示提示 */}
@@ -445,7 +477,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
           <>
             <span className="gag-timer">{timeLeft}</span>
             <span className="gag-timer-unit">秒</span>
-            <span className="gag-hint">點擊金蘋果來撈！每顆 {g1Reward} 個🍎</span>
+            <span className="gag-hint">移動網子靠近金蘋果來撈！每顆 {g1Reward} 個🍎</span>
           </>
         )}
         {phase === "game2" && (
@@ -472,7 +504,6 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
               delete domRefs.current[id];
             }
           }}
-          onPointerDown={e => handleCatch1(id, e)}
         >
           <img
             src="/gifts/gold_apple.gif"
@@ -482,6 +513,37 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
           />
         </div>
       ))}
+
+      {/* 遊戲一：撈網游標 */}
+      {phase === "game1" && (
+        <div
+          className={`gag-net${netScooping ? " scooping" : ""}`}
+          style={{ left: netPos.x, top: netPos.y }}
+        >
+          <svg width="100" height="120" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+            <line x1="50" y1="86" x2="62" y2="118" stroke="#6B3A1F" strokeWidth="6" strokeLinecap="round"/>
+            <circle cx="50" cy="46" r="42" fill="none" stroke="#8B5E3C" strokeWidth="3"/>
+            <clipPath id="gag-nc">
+              <circle cx="50" cy="46" r="41"/>
+            </clipPath>
+            <g clipPath="url(#gag-nc)" stroke="#8B5E3C" strokeWidth="1.2" opacity="0.75">
+              <line x1="8" y1="26" x2="92" y2="26"/>
+              <line x1="8" y1="36" x2="92" y2="36"/>
+              <line x1="8" y1="46" x2="92" y2="46"/>
+              <line x1="8" y1="56" x2="92" y2="56"/>
+              <line x1="8" y1="66" x2="92" y2="66"/>
+              <line x1="8" y1="76" x2="92" y2="76"/>
+              <line x1="26" y1="5" x2="26" y2="87"/>
+              <line x1="36" y1="5" x2="36" y2="87"/>
+              <line x1="46" y1="5" x2="46" y2="87"/>
+              <line x1="56" y1="5" x2="56" y2="87"/>
+              <line x1="66" y1="5" x2="66" y2="87"/>
+              <line x1="76" y1="5" x2="76" y2="87"/>
+            </g>
+            <circle cx="50" cy="46" r="41" fill="rgba(200,160,80,0.12)"/>
+          </svg>
+        </div>
+      )}
 
       {/* 遊戲二：一顆大蘋果 */}
       {phase === "game2" && (() => {

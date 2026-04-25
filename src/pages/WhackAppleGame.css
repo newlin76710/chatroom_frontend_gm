@@ -183,7 +183,7 @@
 /* 彈出狀態 */
 .wag-apple-slot.up {
   transform: translateX(-50%) translateY(0);
-  cursor: pointer;
+  cursor: default;
 }
 
 /* 被打到：往下壓扁 */
@@ -499,3 +499,27 @@
 }
 .wag-warn-close:hover  { transform: translateY(-1px); box-shadow: 0 5px 0 #cc6600; }
 .wag-warn-close:active { transform: translateY(3px);  box-shadow: 0 1px 0 #cc6600; }
+
+/* ─── 槌子游標 ──────────────────────────────────────────────────────────────── */
+.wag-hammer {
+  position: fixed;
+  pointer-events: none;
+  z-index: 60;
+  font-size: 52px;
+  line-height: 1;
+  transform: translate(-50%, -80%) rotate(-35deg);
+  filter: drop-shadow(2px 4px 8px rgba(0,0,0,0.8));
+  user-select: none;
+  will-change: transform;
+}
+
+.wag-hammer.swinging {
+  animation: wag-hammer-swing 0.28s ease-in-out;
+}
+
+@keyframes wag-hammer-swing {
+  0%   { transform: translate(-50%, -80%) rotate(-35deg); }
+  35%  { transform: translate(-50%, -80%) rotate(45deg) scale(1.15); }
+  70%  { transform: translate(-50%, -80%) rotate(-10deg); }
+  100% { transform: translate(-50%, -80%) rotate(-35deg); }
+}

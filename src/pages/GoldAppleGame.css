@@ -61,7 +61,7 @@
   top: 0;
   left: 0;
   will-change: transform;
-  cursor: pointer;
+  cursor: none;
   pointer-events: all;
 }
 
@@ -306,4 +306,26 @@
 @keyframes gag-fadein {
   from { opacity: 0; transform: translate(-50%, -46%); }
   to   { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+/* ─── 撈網游標 ──────────────────────────────────────────────────────────────── */
+.gag-net {
+  position: fixed;
+  pointer-events: none;
+  z-index: 60;
+  width: 100px;
+  height: 120px;
+  transform: translate(-50px, -46px);
+  will-change: transform;
+}
+
+.gag-net.scooping {
+  animation: gag-net-scoop 0.42s ease-out;
+}
+
+@keyframes gag-net-scoop {
+  0%   { transform: translate(-50px, -46px) rotate(0deg)   scale(1);    }
+  30%  { transform: translate(-50px, -46px) rotate(28deg)  scale(1.18); }
+  65%  { transform: translate(-50px, -46px) rotate(-8deg)  scale(0.92); }
+  100% { transform: translate(-50px, -46px) rotate(0deg)   scale(1);    }
 }
