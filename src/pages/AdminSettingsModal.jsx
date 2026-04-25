@@ -38,6 +38,15 @@ const DEFAULT = {
   claw_speed:           100,
   claw_drop_speed:      100,
   claw_apple_count:     12,
+  roulette_enabled:          true,
+  roulette_open_hour:        13,
+  roulette_open_minute:      0,
+  roulette_close_hour:       24,
+  roulette_close_minute:     0,
+  roulette_num_multiplier:   36,
+  roulette_bh_multiplier:    2,
+  roulette_combo_multiplier: 4,
+  roulette_max_bet:          50,
 };
 
 export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
@@ -354,6 +363,64 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   value={settings.claw_apple_count}
                   onChange={e => setInt("claw_apple_count", e.target.value)} />
                 <span className="field-note">顆（1–40，越多越滿）</span>
+              </Row>
+            </section>
+
+            {/* ─── 賭城：金蘋果輪盤 ──────────────────────────── */}
+            <section className="settings-section">
+              <h4>
+                🎰 賭城：金蘋果輪盤
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.roulette_enabled}
+                    onChange={e => setBool("roulette_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+
+              <Row label="開放時間（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                  <input type="number" min={0} max={23} style={{ width: 56 }}
+                    value={settings.roulette_open_hour}
+                    onChange={e => setInt("roulette_open_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.roulette_open_minute}
+                    onChange={e => setInt("roulette_open_minute", e.target.value)} />
+                  <span>分 ～</span>
+                  <input type="number" min={0} max={24} style={{ width: 56 }}
+                    value={settings.roulette_close_hour}
+                    onChange={e => setInt("roulette_close_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.roulette_close_minute}
+                    onChange={e => setInt("roulette_close_minute", e.target.value)} />
+                  <span>分</span>
+                  <span style={{ color: "#aaa", fontSize: "0.8rem" }}>（24時 = 午夜）</span>
+                </div>
+              </Row>
+              <Row label="數字賠率（×N）">
+                <input type="number" min={1} max={200} style={{ width: 80 }}
+                  value={settings.roulette_num_multiplier}
+                  onChange={e => setInt("roulette_num_multiplier", e.target.value)} />
+                <span className="field-note">倍（猜中指定數字 0–36）</span>
+              </Row>
+              <Row label="大/小/紅/黑賠率（×N）">
+                <input type="number" min={1} max={20} style={{ width: 80 }}
+                  value={settings.roulette_bh_multiplier}
+                  onChange={e => setInt("roulette_bh_multiplier", e.target.value)} />
+                <span className="field-note">倍（大 / 小 / 紅 / 黑）</span>
+              </Row>
+              <Row label="組合賠率（×N）">
+                <input type="number" min={1} max={100} style={{ width: 80 }}
+                  value={settings.roulette_combo_multiplier}
+                  onChange={e => setInt("roulette_combo_multiplier", e.target.value)} />
+                <span className="field-note">倍（紅大 / 紅小 / 黑大 / 黑小）</span>
+              </Row>
+              <Row label="單次最高下注">
+                <input type="number" min={1} max={1000} style={{ width: 80 }}
+                  value={settings.roulette_max_bet}
+                  onChange={e => setInt("roulette_max_bet", e.target.value)} />
+                <span className="field-note">個金蘋果（最多可下注）</span>
               </Row>
             </section>
 

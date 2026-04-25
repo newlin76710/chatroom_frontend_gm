@@ -29,6 +29,7 @@ import AdminToolPanel from "./AdminToolPanel";
 import QuickPhrasePanel from "./QuickPhrasePanel";
 import AnnouncementPanel from "./AnnouncementPanel";
 import ShopPanel from "./ShopPanel";
+import CasinoPanel from "./CasinoPanel";
 import MessageBoard from "./MessageBoard";
 import MyMessageLogPanel from "./MyMessageLogPanel";
 import Leaderboard from "./Leaderboard";
@@ -121,6 +122,7 @@ export default function ChatApp() {
   const [showAnnouncement, setShowAnnouncement]   = useState(false);
   const [showMessageBoard, setShowMessageBoard]   = useState(false);
   const [showShop, setShowShop]                   = useState(false);
+  const [showCasino, setShowCasino]               = useState(false);
   const [filteredUsers, setFilteredUsers]         = useState([]);
   const [currentSinger, setCurrentSinger]         = useState(null);
   const [convertTC, setConvertTC]                 = useState(true);
@@ -490,6 +492,12 @@ export default function ChatApp() {
                   <img src="/gifts/gold_apple.gif" alt="金蘋果" style={{ width: 20, height: 20, marginTop: -5 }} /> 商城
                 </button>
               )}
+              {NF && isMember && (
+                <button className="announce-btn" title="賭城" onClick={() => setShowCasino(true)}
+                  style={{ background: "linear-gradient(135deg,#2a1500,#4a2800)", border: "1px solid #d4af37", color: "#ffd700" }}>
+                  🎰 賭城
+                </button>
+              )}
               {offline && <div className="offline-banner">⚠️ 網路不穩，重新連線中...</div>}
             </div>
           </div>
@@ -497,6 +505,7 @@ export default function ChatApp() {
           <AnnouncementPanel open={showAnnouncement} onClose={() => setShowAnnouncement(false)} myLevel={level} token={token} />
           <MessageBoard token={token} myName={name} myLevel={level} open={showMessageBoard} onClose={() => setShowMessageBoard(false)} />
           <ShopPanel token={token} myName={name} myLevel={level} targetName={target} open={showShop} onClose={() => setShowShop(false)} />
+          {NF && <CasinoPanel token={token} apples={apples} onApplesChange={setApples} open={showCasino} onClose={() => setShowCasino(false)} />}
 
           {name && (
             <>
