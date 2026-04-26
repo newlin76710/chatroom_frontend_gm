@@ -94,6 +94,7 @@ export default function SongRoom({ room, name, socket, currentSinger, myLevel })
       socket.off("forceStopSing");
       socket.off("yourTurn");
       socket.off("micStateUpdate");
+      socket.off("livekit-token");
     };
   }, [socket, name]);
 

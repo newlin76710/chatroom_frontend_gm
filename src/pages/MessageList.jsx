@@ -1,13 +1,7 @@
 import { useLayoutEffect, useRef } from "react";
 import { aiAvatars } from "./aiConfig";
 import "./MessageList.css";
-
-const safeText = (v) => {
-  if (v === null || v === undefined) return "";
-  if (typeof v === "string" || typeof v === "number") return String(v);
-  if (typeof v === "object") return v.text || v.message || v.name || JSON.stringify(v);
-  return String(v);
-};
+import { safeText } from "./utils";
 
 export default function MessageList({
   messages = [],

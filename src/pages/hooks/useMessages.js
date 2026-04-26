@@ -4,19 +4,7 @@
 //   - pendingLeaves 緩衝，讓快速重連不顯示「離開聊天室」訊息
 import { useState, useRef, useCallback } from "react";
 import { MAX_MESSAGES, PENDING_LEAVE_DELAY, SYSTEM_AVATAR } from "../constants";
-
-const safeText = (v) => {
-  if (v === null || v === undefined) return "";
-  if (typeof v === "string") return v;
-  if (typeof v === "number") return String(v);
-  if (typeof v === "object") {
-    if (v.name) return String(v.name);
-    if (v.user) return String(v.user);
-    if (v.message) return String(v.message);
-    return JSON.stringify(v);
-  }
-  return String(v);
-};
+import { safeText } from "../utils";
 
 // 底層 append，超過 MAX_MESSAGES 就截斷最舊的
 function appendMsg(prev, msg) {

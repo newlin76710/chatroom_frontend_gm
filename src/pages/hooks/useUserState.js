@@ -10,17 +10,7 @@ import { EXP_TIP_DURATION, LEVEL_UP_TIP_DURATION } from "../constants";
 const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
 const ANL = Number(import.meta.env.VITE_ADMIN_MIN_LEVEL) || 91;
 
-const safeText = (v) => {
-  if (v === null || v === undefined) return "";
-  if (typeof v === "string") return v;
-  if (typeof v === "number") return String(v);
-  if (typeof v === "object") {
-    if (v.name) return String(v.name);
-    if (v.user) return String(v.user);
-    return JSON.stringify(v);
-  }
-  return String(v);
-};
+import { safeText } from "../utils";
 
 export function useUserState(socket) {
   const [name, setName] = useState("");

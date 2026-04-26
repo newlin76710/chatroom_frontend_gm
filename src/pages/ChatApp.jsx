@@ -35,7 +35,7 @@ import MyMessageLogPanel from "./MyMessageLogPanel";
 import Leaderboard from "./Leaderboard";
 import AppErrorBoundary from "./AppErrorBoundary";
 import { aiAvatars } from "./aiConfig";
-import { expForNextLevel } from "./utils";
+import { expForNextLevel, safeText } from "./utils";
 import { useMessages } from "./hooks/useMessages";
 import { useUserState } from "./hooks/useUserState";
 import { HEARTBEAT_INTERVAL, COOLDOWN_MS, GENDER_COLORS } from "./constants";
@@ -49,20 +49,6 @@ const AML              = Number(import.meta.env.VITE_ADMIN_MAX_LEVEL) || 99;
 const ANL              = Number(import.meta.env.VITE_ADMIN_MIN_LEVEL) || 91;
 const OPENAI           = import.meta.env.VITE_OPENAI === "true";
 const NF               = import.meta.env.VITE_NEW_FUNCTION === "true";
-
-// ─── 純函式工具 ──────────────────────────────────────────────────────────────
-const safeText = (v) => {
-  if (v === null || v === undefined) return "";
-  if (typeof v === "string") return v;
-  if (typeof v === "number") return String(v);
-  if (typeof v === "object") {
-    if (v.name) return String(v.name);
-    if (v.user) return String(v.user);
-    if (v.message) return String(v.message);
-    return JSON.stringify(v);
-  }
-  return String(v);
-};
 
 // ✅ 模組層級建立（原本在 render 內建立，每次 render 都重新 new）
 const converter = OpenCC.Converter({ from: "cn", to: "tw" });
