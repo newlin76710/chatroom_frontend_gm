@@ -398,24 +398,6 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   <span style={{ color: "#aaa", fontSize: "0.8rem" }}>（24時 = 午夜）</span>
                 </div>
               </Row>
-              <Row label="數字賠率（×N）">
-                <input type="number" min={1} max={200} style={{ width: 80 }}
-                  value={settings.roulette_num_multiplier}
-                  onChange={e => setInt("roulette_num_multiplier", e.target.value)} />
-                <span className="field-note">倍（猜中指定數字 0–36）</span>
-              </Row>
-              <Row label="大/小/紅/黑賠率（×N）">
-                <input type="number" min={1} max={20} style={{ width: 80 }}
-                  value={settings.roulette_bh_multiplier}
-                  onChange={e => setInt("roulette_bh_multiplier", e.target.value)} />
-                <span className="field-note">倍（大 / 小 / 紅 / 黑）</span>
-              </Row>
-              <Row label="組合賠率（×N）">
-                <input type="number" min={1} max={100} style={{ width: 80 }}
-                  value={settings.roulette_combo_multiplier}
-                  onChange={e => setInt("roulette_combo_multiplier", e.target.value)} />
-                <span className="field-note">倍（紅大 / 紅小 / 黑大 / 黑小）</span>
-              </Row>
               <Row label="單次最高下注">
                 <input type="number" min={1} max={1000} style={{ width: 80 }}
                   value={settings.roulette_max_bet}
