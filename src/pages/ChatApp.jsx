@@ -493,9 +493,9 @@ export default function ChatApp() {
                 </button>
               )}
               {NF && isMember && (
-                <button className="announce-btn" title="賭城" onClick={() => setShowCasino(true)}
+                <button className="announce-btn" title="娛樂城" onClick={() => setShowCasino(true)}
                   style={{ background: "linear-gradient(135deg,#2a1500,#4a2800)", border: "1px solid #d4af37", color: "#ffd700" }}>
-                  🎰 賭城
+                  🎰 娛樂城
                 </button>
               )}
               {offline && <div className="offline-banner">⚠️ 網路不穩，重新連線中...</div>}

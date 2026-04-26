@@ -39,16 +39,16 @@ export default function CasinoPanel({ token, apples, onApplesChange, open, onClo
 
         {/* ── Header ── */}
         <div className="casino-header">
-          <span className="casino-title">🎰 賭城</span>
+          <span className="casino-title">🎰 娛樂城</span>
           <div className="casino-header-right">
             {/* Rules button */}
             <div className="casino-rules-wrap">
-              <button
+              {/* <button
                 className="casino-rules-btn"
                 onMouseEnter={() => setShowRules(true)}
                 onMouseLeave={() => setShowRules(false)}
                 onClick={() => setShowRules(v => !v)}
-              >？</button>
+              >？</button> */}
               {showRules && (
                 <div className="casino-rules-tooltip">
                   <pre>{RULES}</pre>

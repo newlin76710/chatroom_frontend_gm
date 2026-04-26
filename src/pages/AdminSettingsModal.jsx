@@ -366,10 +366,10 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
               </Row>
             </section>
 
-            {/* ─── 賭城：金蘋果輪盤 ──────────────────────────── */}
+            {/* ─── 娛樂城：金蘋果輪盤 ──────────────────────────── */}
             <section className="settings-section">
               <h4>
-                🎰 賭城：金蘋果輪盤
+                🎰 娛樂城：金蘋果輪盤
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={!!settings.roulette_enabled}
                     onChange={e => setBool("roulette_enabled", e.target.checked)} />
