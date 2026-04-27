@@ -9,7 +9,7 @@ const SYMBOLS = [
   "🌙", "🗻", "⛩️", "🎎", "🐱"
 ];
 
-// sprite sheet: /game/15.gif  5col × 3row  (1536×1024 PNG)
+// sprite sheet 定位（不變）
 const SYMBOL_POS = {
   "☀️": [0,0], "⚔️": [1,0], "🐍": [2,0], "🦊": [3,0], "🐢": [4,0],
   "👺": [0,1], "⚡": [1,1], "🌀": [2,1], "🌸": [3,1], "🪖": [4,1],
@@ -34,23 +34,24 @@ function spriteStyle(sym, cellW) {
   };
 }
 
-// 賠率表（5連 / 4連 / 3連）
+// ── 賠率表（RTP ≈ 55%｜四捨五入取整）────────────────────
+// 計算方式：原 90% RTP 賠率 × (55/90) ≈ 原值 × 0.611111，再四捨五入
 const PAYOUTS = {
-  "☀️": [1800, 720, 180],
-  "⚔️": [1080, 360, 108],
-  "🐍": [ 720, 288,  72],
-  "🦊": [ 540, 216,  72],
-  "🐢": [ 540, 216,  72],
-  "👺": [ 360, 144,  36],
-  "⚡": [ 360, 144,  36],
-  "🌀": [ 360, 144,  36],
-  "🌸": [ 288, 108,  36],
-  "🪖": [ 288, 108,  36],
-  "🌙": [ 288, 108,  36],
-  "🗻": [ 216,  72,  36],
-  "⛩️": [ 216,  72,  36],
-  "🎎": [ 216,  72,  36],
-  "🐱": [ 216,  72,  36],
+  "☀️": [1100, 440, 110],   // 原 1800,720,180
+  "⚔️": [660,  220, 66],    // 原 1080,360,108
+  "🐍": [440,  176, 44],    // 原 720,288,72
+  "🦊": [330,  132, 44],    // 原 540,216,72
+  "🐢": [330,  132, 44],
+  "👺": [220,  88,  22],    // 原 360,144,36
+  "⚡": [220,  88,  22],
+  "🌀": [220,  88,  22],
+  "🌸": [176,  66,  22],    // 原 288,108,36
+  "🪖": [176,  66,  22],
+  "🌙": [176,  66,  22],
+  "🗻": [132,  44,  22],    // 原 216,72,36
+  "⛩️": [132,  44,  22],
+  "🎎": [132,  44,  22],
+  "🐱": [132,  44,  22],
 };
 
 const pad2 = n => String(n).padStart(2, "0");
@@ -71,7 +72,7 @@ function randomReels() {
   );
 }
 
-// ── 說明面板（更新規則）──────────────────────────────
+// 說明面板（顯示更新後的賠率）
 function HelpPanel({ onClose }) {
   return (
     <div className="slot-help-popover">
@@ -114,13 +115,13 @@ function HelpPanel({ onClose }) {
   );
 }
 
-// ── 主元件 ──────────────────────────────────────────
+// 主元件
 export default function SlotMachine({ token, apples, onApplesChange }) {
   const [settings, setSettings] = useState(null);
   const [bet, setBet]           = useState(1);
   const [spinning, setSpinning] = useState(false);
   const [reels, setReels]       = useState(randomReels());
-  const [winningCells, setWinningCells] = useState(new Set()); // 儲存 "col,row" 字串
+  const [winningCells, setWinningCells] = useState(new Set());
   const [lastWin, setLastWin]   = useState(0);
   const [showWinPopup, setShowWinPopup] = useState(false);
   const [error, setError]       = useState("");
@@ -165,7 +166,6 @@ export default function SlotMachine({ token, apples, onApplesChange }) {
       }
 
       setReels(data.reels);
-      // 收集所有中獎格子
       const cellsSet = new Set();
       if (data.lines) {
         data.lines.forEach(line => {

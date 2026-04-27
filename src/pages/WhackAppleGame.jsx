@@ -32,6 +32,7 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
   const phaseRef    = useRef("idle");
   const timerRef    = useRef(null);
   const warnTimerRef = useRef(null); // 說明彈窗倒數計時器
+  const inputLockedRef = useRef(true);
   const holeTimers  = useRef([]);
   const myScoreRef  = useRef(0);
   const comboRef    = useRef(0);
@@ -170,6 +171,7 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
     };
 
     const onStart = ({ duration, reward: r, msLo, msHi, minApples, maxApples }) => {
+      inputLockedRef.current = false;
       clearInterval(warnTimerRef.current);
       setWarnVisible(false);
       setReward(r ?? 1);
@@ -201,8 +203,11 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
     };
 
     const onEnd = ({ scores }) => {
+      inputLockedRef.current = true;
       clearInterval(timerRef.current);
       stopHoles();
+      activePointerRef.current = null;
+      setHammerSwinging(false);
       setResult(scores || {});
       phaseRef.current = "result";
       setPhase("result");
@@ -237,11 +242,13 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
   }, []);
 
   const handleHammerMove = useCallback((e) => {
+    if (inputLockedRef.current) return;
     if (phaseRef.current !== "playing") return;
     setHammerPos({ x: e.clientX, y: e.clientY });
   }, []);
 
   const handleHammerStrike = useCallback((e) => {
+    if (inputLockedRef.current) return;
     if (phaseRef.current !== "playing") return;
     if (activePointerRef.current !== null && activePointerRef.current !== e.pointerId) return;
 
@@ -312,6 +319,7 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
   }, [socket, token, scheduleNextHole]);
 
   const dismissResult = useCallback(() => {
+    inputLockedRef.current = true;
     setPhase("idle");
     setResult(null);
   }, []);

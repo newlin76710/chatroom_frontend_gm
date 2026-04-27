@@ -71,6 +71,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
   const timerRef = useRef(null);
   const warnTimerRef = useRef(null); // 說明彈窗倒數計時器
   const phaseRef = useRef("idle");
+  const inputLockedRef = useRef(true);
   const activePointerRef = useRef(null); // 多點觸控保護：同時只允許一個 pointer
   const lastCatchTimeRef = useRef(0);   // 連點冷卻：避免快速連續點擊搶多顆
   const CATCH_COOLDOWN_MS = 400;        // 每次撈蘋果後冷卻時間（ms）
@@ -174,6 +175,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
 
     // ── 遊戲一開始 ──
     const onG1Start = ({ duration, appleIds, reward, speedLo, speedHi }) => {
+      inputLockedRef.current = false;
       clearInterval(warnTimerRef.current);
       setWarnType(null);
       setG1Reward(reward);
@@ -223,8 +225,11 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
 
     // ── 遊戲一結束 ──
     const onG1End = ({ catches }) => {
+      inputLockedRef.current = true;
       stopAnim();
       clearInterval(timerRef.current);
+      activePointerRef.current = null;
+      setNetScooping(false);
       setG1Result(catches || {});
       setG1AppleIds([]);
       physicsRef.current = {};
@@ -234,6 +239,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
 
     // ── 遊戲二開始（不限時，有人搶到才結束）──
     const onG2Start = ({ reward, speedLo, speedHi }) => {
+      inputLockedRef.current = false;
       clearInterval(warnTimerRef.current);
       setWarnType(null);
       setG2Reward(reward);
@@ -253,6 +259,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
 
     // ── 遊戲二有人贏 ──
     const onG2Won = ({ winner, reward }) => {
+      inputLockedRef.current = true;
       setG2Result({ winner, reward });
       if (winner === name && typeof setApples === "function") {
         setApples(prev => prev + reward);
@@ -267,7 +274,9 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
 
     // ── 遊戲二結束 ──
     const onG2End = () => {
+      inputLockedRef.current = true;
       stopAnim();
+      activePointerRef.current = null;
       setPhase("result2");
     };
 
@@ -305,6 +314,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
 
   // ─── 撈蘋果動作 ───────────────────────────────────────────────────────────
   const handleNetCast = useCallback((e) => {
+    if (inputLockedRef.current) return;
     if (phaseRef.current !== "game1") return;
     if (activePointerRef.current !== null && activePointerRef.current !== e.pointerId) return;
     const now = Date.now();
@@ -341,11 +351,13 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
   }, [socket, token]);
 
   const handlePointerMove = useCallback((e) => {
+    if (inputLockedRef.current) return;
     if (phaseRef.current !== "game1") return;
     setNetPos({ x: e.clientX, y: e.clientY });
   }, []);
 
   const handleCatch2 = useCallback((e) => {
+    if (inputLockedRef.current) return;
     e.stopPropagation();
     // 多點觸控保護
     if (activePointerRef.current !== null && activePointerRef.current !== e.pointerId) return;
@@ -361,6 +373,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
 
   // 點擊結果卡片可提前關閉
   const dismissResult = useCallback(() => {
+    inputLockedRef.current = true;
     setPhase("idle");
     setG1Result(null);
     setG2Result(null);

@@ -96,6 +96,7 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
   const timerRef        = useRef(null);
   const closeTimerRef   = useRef(null);  // closing → result 延遲計時器
   const warnTimerRef    = useRef(null);  // 說明彈窗倒數計時器
+  const inputLockedRef  = useRef(true);
   const slideTimerRef   = useRef(null);  // 補位動畫延遲計時器
   const appleListRef    = useRef([]);    // appleList 的 ref 鏡像（給 RAF 讀）
   const oscAnimRef      = useRef(null);
@@ -253,6 +254,7 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
     };
 
     const onStart = ({ duration, reward: r, speed, dropSpeed, appleCount }) => {
+      inputLockedRef.current = false;
       // 遊戲開始，關閉說明彈窗
       clearInterval(warnTimerRef.current);
       setWarnVisible(false);
@@ -303,10 +305,12 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
     };
 
     const onDropResult = ({ success, caught }) => {
+      if (inputLockedRef.current) return;
       catchResultRef.current = { success, earned: caught ?? rewardRef.current };
     };
 
     const onEnd = ({ scores }) => {
+      inputLockedRef.current = true;
       clearInterval(timerRef.current);
       stopOscillation();
       if (dropAnimRef.current) cancelAnimationFrame(dropAnimRef.current);
@@ -350,6 +354,7 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
 
   // ── 玩家按下落爪 ──────────────────────────────────────────────────────────────
   const handleDrop = useCallback(() => {
+    if (inputLockedRef.current) return;
     if (phaseRef.current !== "playing" || droppingRef.current) return;
     droppingRef.current    = true;
     catchResultRef.current = null;
@@ -406,7 +411,7 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
     return (
       <div
         className="clw-overlay clw-result-screen"
-        onClick={() => { setPhase("idle"); phaseRef.current = "idle"; }}
+        onClick={() => { inputLockedRef.current = true; setPhase("idle"); phaseRef.current = "idle"; }}
       >
         <div className="clw-result">
           <h2>🎉 遊戲結束</h2>
