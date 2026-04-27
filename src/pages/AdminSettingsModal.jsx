@@ -47,6 +47,12 @@ const DEFAULT = {
   roulette_bh_multiplier:    2,
   roulette_combo_multiplier: 4,
   roulette_max_bet:          50,
+  blackjack_enabled:         true,
+  blackjack_open_hour:       0,
+  blackjack_open_minute:     0,
+  blackjack_close_hour:      24,
+  blackjack_close_minute:    0,
+  blackjack_max_bet:         200,
 };
 
 export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
@@ -403,6 +409,46 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   value={settings.roulette_max_bet}
                   onChange={e => setInt("roulette_max_bet", e.target.value)} />
                 <span className="field-note">個金蘋果（最多可下注）</span>
+              </Row>
+            </section>
+
+            {/* ─── 娛樂城：21點 ────────────────────────────────── */}
+            <section className="settings-section">
+              <h4>
+                🃏 娛樂城：21點
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.blackjack_enabled}
+                    onChange={e => setBool("blackjack_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+
+              <Row label="開放時間（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                  <input type="number" min={0} max={23} style={{ width: 56 }}
+                    value={settings.blackjack_open_hour}
+                    onChange={e => setInt("blackjack_open_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.blackjack_open_minute}
+                    onChange={e => setInt("blackjack_open_minute", e.target.value)} />
+                  <span>分 ～</span>
+                  <input type="number" min={0} max={24} style={{ width: 56 }}
+                    value={settings.blackjack_close_hour}
+                    onChange={e => setInt("blackjack_close_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.blackjack_close_minute}
+                    onChange={e => setInt("blackjack_close_minute", e.target.value)} />
+                  <span>分</span>
+                  <span style={{ color: "#aaa", fontSize: "0.8rem" }}>（24時 = 午夜）</span>
+                </div>
+              </Row>
+              <Row label="下注上限">
+                <input type="number" min={200} max={9999} style={{ width: 80 }}
+                  value={settings.blackjack_max_bet}
+                  onChange={e => setInt("blackjack_max_bet", e.target.value)} />
+                <span className="field-note">個金蘋果（最少 200）</span>
               </Row>
             </section>
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import RouletteGame from "./RouletteGame";
+import BlackjackGame from "./BlackjackGame";
 import "./CasinoPanel.css";
 
 const RULES = `🎰 金蘋果輪盤 遊戲規則
@@ -21,7 +22,7 @@ const RULES = `🎰 金蘋果輪盤 遊戲規則
 4. 中獎自動入帳`;
 
 export default function CasinoPanel({ token, apples, onApplesChange, open, onClose }) {
-  const [tab, setTab] = useState("roulette");
+  const [tab, setTab] = useState("blackjack");
   const [showRules, setShowRules] = useState(false);
 
   if (!open) return null;
@@ -68,14 +69,24 @@ export default function CasinoPanel({ token, apples, onApplesChange, open, onClo
         {/* ── Tabs ── */}
         <div className="casino-tabs">
           <button
+            className={`casino-tab ${tab === "blackjack" ? "active" : ""}`}
+            onClick={() => setTab("blackjack")}
+          >🃏 21點</button>
+          <button
             className={`casino-tab ${tab === "roulette" ? "active" : ""}`}
             onClick={() => setTab("roulette")}
           >🎡 輪盤</button>
-          {/* Future games go here */}
         </div>
 
         {/* ── Game area ── */}
         <div className="casino-body">
+          {tab === "blackjack" && (
+            <BlackjackGame
+              token={token}
+              apples={apples}
+              onApplesChange={onApplesChange}
+            />
+          )}
           {tab === "roulette" && (
             <RouletteGame
               token={token}
