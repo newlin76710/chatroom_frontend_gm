@@ -126,6 +126,14 @@ export function useUserState(socket) {
         sessionStorage.setItem("level", 1);
         sessionStorage.setItem("exp", 0);
       }
+      if (me.gold_apples !== applesRef.current) {
+        setApples(me.gold_apples || 0);
+        sessionStorage.setItem("apples", me.gold_apples || 0);
+      }
+      if (me.gender && me.gender !== genderRef.current) {
+        setGender(me.gender);
+        sessionStorage.setItem("gender", me.gender);
+      }
       return;
     }
 

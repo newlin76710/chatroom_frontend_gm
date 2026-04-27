@@ -276,7 +276,8 @@ export default function ChatApp() {
   }, [socket, addSurpriseMessage]);
 
   useEffect(() => {
-    const handleGoldAwarded = ({ credited, balance } = {}) => {
+    const handleGoldAwarded = ({ username, credited, balance } = {}) => {
+      if (username !== nameRef.current) return;
       if (typeof balance === "number") {
         setApples(balance);
         sessionStorage.setItem("apples", balance);

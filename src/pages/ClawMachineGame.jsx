@@ -7,6 +7,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./ClawMachineGame.css";
 
+const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
+
 // 基準下爪速度（dropSpeed=100 時的值，已比原版快 1.5 倍）
 const BASE_DROP_MS = 600;
 const BASE_HOLD_MS = 500;
@@ -107,6 +109,21 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
 
   useEffect(() => { phaseRef.current  = phase;  }, [phase]);
   useEffect(() => { rewardRef.current = reward; }, [reward]);
+
+  const refreshMyApples = useCallback(async () => {
+    if (!token || typeof setApples !== "function") return;
+    try {
+      const res = await fetch(`${BACKEND}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (typeof data.gold_apples === "number") {
+        setApples(data.gold_apples);
+        sessionStorage.setItem("apples", data.gold_apples);
+      }
+    } catch {}
+  }, [token, setApples]);
 
   // ── 重置蘋果堆 ────────────────────────────────────────────────────────────────
   const resetApples = useCallback(() => {
@@ -326,6 +343,9 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
       setProngsOpen(true);
       setHasCatch(false);
       setResult(scores);
+      if ((scores?.[name] || 0) > 0) {
+        setTimeout(() => { refreshMyApples(); }, 300);
+      }
 
       closeTimerRef.current = setTimeout(() => {
         setPhase("result");
@@ -350,7 +370,7 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
       stopOscillation();
       if (dropAnimRef.current) cancelAnimationFrame(dropAnimRef.current);
     };
-  }, [socket, startOscillation, stopOscillation, resetApples]);
+  }, [socket, startOscillation, stopOscillation, resetApples, name, refreshMyApples]);
 
   // ── 玩家按下落爪 ──────────────────────────────────────────────────────────────
   const handleDrop = useCallback(() => {

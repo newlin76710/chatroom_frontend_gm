@@ -6,6 +6,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./WhackAppleGame.css";
 
+const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
+
 const HOLE_COUNT = 9; // 3×3 grid
 
 function rand(min, max) { return min + Math.random() * (max - min); }
@@ -54,6 +56,21 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
   const holeRefs = useRef([]); // DOM refs for each wag-hole-wrap
 
   useEffect(() => { phaseRef.current = phase; }, [phase]);
+
+  const refreshMyApples = useCallback(async () => {
+    if (!token || typeof setApples !== "function") return;
+    try {
+      const res = await fetch(`${BACKEND}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (typeof data.gold_apples === "number") {
+        setApples(data.gold_apples);
+        sessionStorage.setItem("apples", data.gold_apples);
+      }
+    } catch {}
+  }, [token, setApples]);
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
   // Sync ref + React state atomically
@@ -213,6 +230,7 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
       setPhase("result");
       if (scores?.[name] && typeof setApples === "function") {
         setApples(prev => prev + scores[name]);
+        setTimeout(() => { refreshMyApples(); }, 300);
       }
     };
 
@@ -224,7 +242,7 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
       socket.off("whackGameStart", onStart);
       socket.off("whackGameEnd",   onEnd);
     };
-  }, [socket, name, setApples, startHoles, stopHoles]);
+  }, [socket, name, setApples, startHoles, stopHoles, refreshMyApples]);
 
   // Cleanup on unmount
   useEffect(() => () => {

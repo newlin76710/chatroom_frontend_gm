@@ -4,6 +4,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./GoldAppleGame.css";
 
+const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
+
 // ─── 常數 ─────────────────────────────────────────────────────────────────────
 const SIZE1 = 56;   // px — 遊戲一蘋果尺寸（平板放大後以最大值計算邊界）
 const SIZE2 = 100;  // px — 遊戲二蘋果尺寸（放大後視覺更清楚）
@@ -80,6 +82,21 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
   const [netPos, setNetPos]           = useState({ x: -300, y: -300 });
   const [netScooping, setNetScooping] = useState(false);
   useEffect(() => { phaseRef.current = phase; }, [phase]);
+
+  const refreshMyApples = useCallback(async () => {
+    if (!token || typeof setApples !== "function") return;
+    try {
+      const res = await fetch(`${BACKEND}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (typeof data.gold_apples === "number") {
+        setApples(data.gold_apples);
+        sessionStorage.setItem("apples", data.gold_apples);
+      }
+    } catch {}
+  }, [token, setApples]);
 
   // 容器尺寸只在 resize 時更新
   useEffect(() => {
@@ -231,6 +248,9 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
       activePointerRef.current = null;
       setNetScooping(false);
       setG1Result(catches || {});
+      if ((catches?.[name] || 0) > 0) {
+        setTimeout(() => { refreshMyApples(); }, 300);
+      }
       setG1AppleIds([]);
       physicsRef.current = {};
       domRefs.current = {};
@@ -263,6 +283,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
       setG2Result({ winner, reward });
       if (winner === name && typeof setApples === "function") {
         setApples(prev => prev + reward);
+        setTimeout(() => { refreshMyApples(); }, 300);
       }
     };
 
@@ -301,7 +322,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
       socket.off("goldGame2Late", onG2Late);
       socket.off("goldGame2End", onG2End);
     };
-  }, [socket, name, setApples, startAnim, stopAnim, startTimer]);
+  }, [socket, name, setApples, startAnim, stopAnim, startTimer, refreshMyApples]);
 
   // ─── 離開時清理 ───────────────────────────────────────────────────────────
   useEffect(() => {
