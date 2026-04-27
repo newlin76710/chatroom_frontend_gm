@@ -275,6 +275,21 @@ export default function ChatApp() {
     return () => socket.off("goldenAppleSurprise", handleSurprise);
   }, [socket, addSurpriseMessage]);
 
+  useEffect(() => {
+    const handleGoldAwarded = ({ credited, balance } = {}) => {
+      if (typeof balance === "number") {
+        setApples(balance);
+        sessionStorage.setItem("apples", balance);
+      }
+      if ((credited || 0) > 0) {
+        addSystemMessage(`🍎 已入帳 ${credited} 顆金蘋果，目前餘額 ${balance ?? "?"} 顆`);
+      }
+    };
+
+    socket.on("goldAwarded", handleGoldAwarded);
+    return () => socket.off("goldAwarded", handleGoldAwarded);
+  }, [socket, addSystemMessage, setApples]);
+
   // ─── joinFailed / firework ────────────────────────────────────────────────
   useEffect(() => {
     const handleJoinFail = ({ reason }) => {
