@@ -53,6 +53,18 @@ const DEFAULT = {
   blackjack_close_hour:      24,
   blackjack_close_minute:    0,
   blackjack_max_bet:         200,
+  sicbo_enabled:             true,
+  sicbo_open_hour:           0,
+  sicbo_open_minute:         0,
+  sicbo_close_hour:          24,
+  sicbo_close_minute:        0,
+  sicbo_max_bet:             200,
+  slot_enabled:              true,
+  slot_open_hour:            0,
+  slot_open_minute:          0,
+  slot_close_hour:           24,
+  slot_close_minute:         0,
+  slot_max_bet:              200,
 };
 
 export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
@@ -449,6 +461,86 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   value={settings.blackjack_max_bet}
                   onChange={e => setInt("blackjack_max_bet", e.target.value)} />
                 <span className="field-note">個金蘋果（最少 200）</span>
+              </Row>
+            </section>
+
+            {/* ─── 娛樂城：骰寶 ────────────────────────────────── */}
+            <section className="settings-section">
+              <h4>
+                🎲 娛樂城：骰寶
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.sicbo_enabled}
+                    onChange={e => setBool("sicbo_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+
+              <Row label="開放時間（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                  <input type="number" min={0} max={23} style={{ width: 56 }}
+                    value={settings.sicbo_open_hour}
+                    onChange={e => setInt("sicbo_open_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.sicbo_open_minute}
+                    onChange={e => setInt("sicbo_open_minute", e.target.value)} />
+                  <span>分 ～</span>
+                  <input type="number" min={0} max={24} style={{ width: 56 }}
+                    value={settings.sicbo_close_hour}
+                    onChange={e => setInt("sicbo_close_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.sicbo_close_minute}
+                    onChange={e => setInt("sicbo_close_minute", e.target.value)} />
+                  <span>分</span>
+                  <span style={{ color: "#aaa", fontSize: "0.8rem" }}>（24時 = 午夜）</span>
+                </div>
+              </Row>
+              <Row label="單注上限">
+                <input type="number" min={1} max={9999} style={{ width: 80 }}
+                  value={settings.sicbo_max_bet}
+                  onChange={e => setInt("sicbo_max_bet", e.target.value)} />
+                <span className="field-note">個金蘋果（每種投注類型最多可下注）</span>
+              </Row>
+            </section>
+
+            {/* ─── 娛樂城：老虎機 ──────────────────────────────── */}
+            <section className="settings-section">
+              <h4>
+                🎰 娛樂城：老虎機
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.slot_enabled}
+                    onChange={e => setBool("slot_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+
+              <Row label="開放時間（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                  <input type="number" min={0} max={23} style={{ width: 56 }}
+                    value={settings.slot_open_hour}
+                    onChange={e => setInt("slot_open_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.slot_open_minute}
+                    onChange={e => setInt("slot_open_minute", e.target.value)} />
+                  <span>分 ～</span>
+                  <input type="number" min={0} max={24} style={{ width: 56 }}
+                    value={settings.slot_close_hour}
+                    onChange={e => setInt("slot_close_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.slot_close_minute}
+                    onChange={e => setInt("slot_close_minute", e.target.value)} />
+                  <span>分</span>
+                  <span style={{ color: "#aaa", fontSize: "0.8rem" }}>（24時 = 午夜）</span>
+                </div>
+              </Row>
+              <Row label="單注上限">
+                <input type="number" min={1} max={9999} style={{ width: 80 }}
+                  value={settings.slot_max_bet}
+                  onChange={e => setInt("slot_max_bet", e.target.value)} />
+                <span className="field-note">個金蘋果</span>
               </Row>
             </section>
 

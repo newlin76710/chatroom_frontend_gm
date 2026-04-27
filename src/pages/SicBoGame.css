@@ -1,0 +1,468 @@
+/* ── 全域 ─────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap');
+
+.sic-root {
+  background: linear-gradient(135deg, #2c0a0a 0%, #5c1a1a 30%, #8b0000 100%);
+  border: 3px solid #d4af37;
+  border-radius: 16px;
+  padding: 14px;
+  max-width: 600px;
+  margin: 0 auto;
+  color: #f0e0a0;
+  font-family: 'Ma Shan Zheng', 'KaiTi', 'SimSun', serif;
+  box-shadow: 0 0 30px rgba(0,0,0,0.7), inset 0 0 20px rgba(212,175,55,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.sic-root::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(212,175,55,0.2);
+  border-radius: 8px;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(212,175,55,0.03) 8px, rgba(212,175,55,0.03) 10px);
+}
+
+/* ── 頂部：骰子 + 籌碼 ──────────────────────────────────── */
+.sic-top-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+  align-items: flex-start;
+}
+
+.sic-dice-block {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.sic-chips-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  justify-content: center;
+  min-width: 0;
+}
+
+/* ── 骰子顯示 ─────────────────────────────────────────────── */
+.sic-dice-row {
+  display: flex;
+  gap: 8px;
+}
+
+.sic-dice-sum {
+  font-size: 1rem;
+  color: #ffd700;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* ── 單個骰子 ─────────────────────────────────────────────── */
+.sic-die {
+  width: 56px;
+  height: 56px;
+  background: #e63946;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.2);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s;
+}
+.sic-die.rolling { animation: sic-shake 0.15s infinite; }
+@keyframes sic-shake {
+  0%   { transform: rotate(0deg); }
+  25%  { transform: rotate(10deg); }
+  50%  { transform: rotate(-10deg); }
+  75%  { transform: rotate(5deg); }
+  100% { transform: rotate(0deg); }
+}
+.sic-die-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+.sic-dot-row {
+  display: flex;
+  justify-content: space-around;
+  height: 14px;
+}
+.sic-die-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+.sic-die-dot.filled {
+  background: #fff;
+  box-shadow: 0 0 2px rgba(0,0,0,0.5);
+}
+
+/* ── 籌碼選擇 ─────────────────────────────────────────────── */
+.sic-chip-selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.sic-chip-label {
+  font-size: 0.85rem;
+  color: #d4af37;
+  font-weight: bold;
+  white-space: nowrap;
+}
+.sic-chips-row {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.sic-chip {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid #d4af37;
+  background: radial-gradient(circle at 30% 30%, #fff6d5, #b8860b);
+  color: #4a2500;
+  font-weight: bold;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.sic-chip::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  border: 1px dashed rgba(255,255,255,0.4);
+}
+.sic-chip.active {
+  border-color: #ffd700;
+  box-shadow: 0 0 10px #ffd700;
+  transform: scale(1.1);
+}
+.sic-chip:disabled { opacity: 0.4; cursor: default; }
+
+/* ── 餘額 / 下注狀態列 ─────────────────────────────────── */
+.sic-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+.sic-bal {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: #ffd700;
+}
+.sic-bal img { width: 16px; height: 16px; }
+.sic-bet-label { color: #f0e0a0; }
+.sic-clear-btn {
+  background: none;
+  border: 1px solid #c0392b;
+  color: #e74c3c;
+  border-radius: 6px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  margin-left: auto;
+}
+.sic-clear-btn:disabled { opacity: 0.5; }
+
+/* ── 大小/單雙/組合 行 ──────────────────────────────────── */
+.sic-section-row {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 5px;
+}
+.sic-section-row .sic-bet-btn { flex: 1; }
+
+.sic-large-row .sic-bet-btn  { height: 56px; }
+.sic-large-row .sic-bet-name { font-size: 1.4rem; }
+.sic-large-row .sic-bet-odds { font-size: 0.85rem; }
+
+.sic-medium-row .sic-bet-btn  { height: 48px; }
+.sic-medium-row .sic-bet-name { font-size: 1.15rem; }
+.sic-medium-row .sic-bet-odds { font-size: 0.8rem; }
+
+/* ── 標籤行 (豹子 / 對子 / 總和) ────────────────────────── */
+.sic-labeled-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 5px;
+}
+.sic-row-label {
+  flex: 0 0 auto;
+  font-size: 0.85rem;
+  color: #d4af37;
+  font-weight: bold;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  line-height: 1;
+  text-align: center;
+}
+
+/* ── 緊湊行 (豹子 / 對子) ────────────────────────────────── */
+.sic-compact-row {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.sic-compact-row .sic-bet-btn  { flex: 1; height: 52px; min-width: 0; }
+.sic-compact-row .sic-bet-name { font-size: 1.1rem; }
+.sic-compact-row .sic-bet-odds { font-size: 0.72rem; }
+
+/* ── 總和格線 (7 × 2) ────────────────────────────────────── */
+.sic-total-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.sic-total-grid .sic-bet-btn  { height: 44px; min-width: 0; padding: 2px; }
+.sic-total-grid .sic-bet-name { font-size: 0.95rem; }
+.sic-total-grid .sic-bet-odds { font-size: 0.68rem; }
+
+/* ── 共用下注按鈕 ─────────────────────────────────────────── */
+.sic-bet-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(212,175,55,0.3);
+  border-radius: 6px;
+  padding: 3px 4px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  color: #f0e0a0;
+  font-family: inherit;
+  gap: 1px;
+}
+.sic-bet-btn:hover:not(:disabled) {
+  background: rgba(212,175,55,0.2);
+  border-color: #ffd700;
+}
+.sic-bet-btn:disabled { opacity: 0.5; cursor: default; }
+.sic-bet-name {
+  font-weight: bold;
+  line-height: 1.1;
+}
+.sic-bet-odds {
+  color: #7fffa0;
+  line-height: 1.1;
+}
+.sic-bet-amount {
+  font-size: 0.72rem;
+  background: rgba(212,175,55,0.25);
+  padding: 0 3px;
+  border-radius: 8px;
+  line-height: 1.3;
+}
+
+/* ── 擲骰子按鈕 ────────────────────────────────────────────── */
+.sic-roll-btn {
+  display: block;
+  width: 100%;
+  padding: 11px;
+  margin-top: 8px;
+  background: linear-gradient(135deg, #ffd700, #b8860b);
+  border: none;
+  border-radius: 8px;
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #4a2500;
+  letter-spacing: 4px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(212,175,55,0.5);
+  transition: filter 0.2s, transform 0.1s;
+  font-family: inherit;
+}
+.sic-roll-btn:disabled { opacity: 0.4; cursor: default; }
+.sic-roll-btn.active:not(:disabled):hover {
+  filter: brightness(1.15);
+  transform: translateY(-2px);
+}
+
+/* ── 結果彈窗 ──────────────────────────────────────────────── */
+.sic-result-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(4px);
+}
+.sic-result-card {
+  background: linear-gradient(135deg, #3e1a1a, #2c0a0a);
+  border: 2px solid #d4af37;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  max-width: 280px;
+  box-shadow: 0 0 40px rgba(0,0,0,0.8);
+  color: #f0e0a0;
+}
+.sic-result-icon   { font-size: 3rem; margin-bottom: 8px; }
+.sic-result-title  { font-size: 1.4rem; margin-bottom: 8px; }
+.sic-result-amount {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #ffd700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.sic-result-apple  { width: 28px; height: 28px; }
+.sic-result-detail { font-size: 0.9rem; margin-bottom: 16px; color: #aaa; }
+.sic-result-btn {
+  background: #d4af37;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 24px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #2c0a0a;
+  font-size: 1rem;
+}
+
+/* ── 關閉狀態 ──────────────────────────────────────────────── */
+.sic-closed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: #d4af37;
+}
+.sic-closed-icon { font-size: 3rem; }
+.sic-closed-text { font-size: 1.1rem; }
+
+/* ── 錯誤訊息 ──────────────────────────────────────────────── */
+.sic-error {
+  color: #ff6b6b;
+  font-size: 0.82rem;
+  text-align: center;
+  margin: 0;
+}
+
+/* ── 開放時間 badge ──────────────────────────────────────── */
+.sic-hours-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+.sic-hours-badge.open   { background: rgba(30,120,40,0.5);  border: 1px solid #4caf50; color: #a0ffa0; }
+.sic-hours-badge.closed { background: rgba(120,30,30,0.5);  border: 1px solid #f55;    color: #ffaaaa; }
+.sic-hours-text { font-weight: normal; opacity: 0.9; }
+
+/* ── 說明按鈕 ──────────────────────────────────────────────── */
+.sic-help-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(212,175,55,0.15);
+  border: 1.5px solid rgba(212,175,55,0.5);
+  color: #d4af37;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+  z-index: 20;
+}
+.sic-help-btn:hover,
+.sic-help-btn.active {
+  background: rgba(212,175,55,0.35);
+  border-color: #ffd700;
+  color: #ffd700;
+}
+
+/* ── 說明面板 ──────────────────────────────────────────────── */
+.sic-help-popover {
+  position: absolute;
+  top: 38px;
+  right: 6px;
+  width: min(360px, calc(100% - 12px));
+  background: #1a0800;
+  border: 1.5px solid rgba(212,175,55,0.4);
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.8);
+  z-index: 50;
+  overflow: hidden;
+  font-family: sans-serif;
+}
+.sic-help-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 12px;
+  background: rgba(212,175,55,0.12);
+  border-bottom: 1px solid rgba(212,175,55,0.25);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #d4af37;
+}
+.sic-help-close {
+  background: none; border: none; color: #d4af37;
+  font-size: 0.85rem; cursor: pointer; opacity: 0.7; padding: 0;
+}
+.sic-help-close:hover { opacity: 1; }
+.sic-help-body {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 60vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #d4af37 #1a0800;
+}
+.sic-help-intro { font-size: 0.8rem; color: #ddd; margin: 0; }
+.sic-help-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.74rem;
+}
+.sic-help-table th {
+  color: #d4af37;
+  font-weight: 700;
+  text-align: left;
+  padding: 3px 6px;
+  border-bottom: 1px solid rgba(212,175,55,0.3);
+}
+.sic-help-table td {
+  padding: 4px 6px;
+  color: #ddd;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.sic-help-table tr:last-child td { border-bottom: none; }
+.sic-help-table td:first-child { color: #f0d080; font-weight: 700; white-space: nowrap; }
+.sic-help-table .sic-help-pay { color: #7fffa0; font-weight: 700; }
+.sic-help-note { font-size: 0.71rem; color: #f88; margin: 0; line-height: 1.5; }

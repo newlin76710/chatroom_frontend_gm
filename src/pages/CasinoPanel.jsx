@@ -1,6 +1,8 @@
 import { useState } from "react";
 import RouletteGame from "./RouletteGame";
 import BlackjackGame from "./BlackjackGame";
+import SicBoGame from "./SicBoGame";
+import SlotMachine from "./SlotMachine";
 import "./CasinoPanel.css";
 
 const RULES = `🎰 金蘋果輪盤 遊戲規則
@@ -76,6 +78,14 @@ export default function CasinoPanel({ token, apples, onApplesChange, open, onClo
             className={`casino-tab ${tab === "roulette" ? "active" : ""}`}
             onClick={() => setTab("roulette")}
           >🎡 輪盤</button>
+          <button
+            className={`casino-tab ${tab === "sicbo" ? "active" : ""}`}
+            onClick={() => setTab("sicbo")}
+          >🎲 骰寶</button>
+          <button
+            className={`casino-tab ${tab === "slot" ? "active" : ""}`}
+            onClick={() => setTab("slot")}
+          >🎰 老虎機</button>
         </div>
 
         {/* ── Game area ── */}
@@ -89,6 +99,20 @@ export default function CasinoPanel({ token, apples, onApplesChange, open, onClo
           )}
           {tab === "roulette" && (
             <RouletteGame
+              token={token}
+              apples={apples}
+              onApplesChange={onApplesChange}
+            />
+          )}
+          {tab === "sicbo" && (
+            <SicBoGame
+              token={token}
+              apples={apples}
+              onApplesChange={onApplesChange}
+            />
+          )}
+          {tab === "slot" && (
+            <SlotMachine
               token={token}
               apples={apples}
               onApplesChange={onApplesChange}

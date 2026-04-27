@@ -1,5 +1,7 @@
+// BlackjackGame.jsx
 import { useState, useEffect, useCallback, useRef } from "react";
 import "./BlackjackGame.css";
+import { getFaceCardComponent } from "./CardFaces";
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
 
@@ -36,6 +38,8 @@ function handLabel(total, hand) {
 // ── Single Card component ────────────────────────────────────────
 function Card({ card, small, highlight, dealIdx = 0 }) {
   if (!card) return null;
+  
+  // 牌背
   if (card.hidden) {
     return (
       <div
@@ -46,14 +50,69 @@ function Card({ card, small, highlight, dealIdx = 0 }) {
       </div>
     );
   }
+
   const red = RED_SUITS.has(card.s);
+  const isFace = ["J", "Q", "K"].includes(card.v);
+  const isAce = card.v === "A";
+  const numValue = isFace ? 0 : parseInt(card.v) || 1;
+
+  // 牌面中央內容
+  const renderPips = () => {
+    // 人頭牌 J/Q/K
+    if (isFace) {
+      const FaceComponent = getFaceCardComponent(card.s, card.v);
+      const svgSize = small ? 40 : 58;
+      return (
+        <div className="bj-card-center-face">
+          {FaceComponent ? (
+            <FaceComponent size={svgSize} />
+          ) : (
+            <span className="bj-card-center-letter">{card.v}</span>
+          )}
+        </div>
+      );
+    }
+
+    // Ace
+    if (isAce) {
+      return (
+        <div className="bj-card-center-ace">
+          <span className="bj-ace-big">{card.s}</span>
+        </div>
+      );
+    }
+
+    // 數字牌 2-10
+    const pipPositions = {
+      2: ["top", "bottom"],
+      3: ["top", "center", "bottom"],
+      4: ["top-left", "top-right", "bottom-left", "bottom-right"],
+      5: ["top-left", "top-right", "center", "bottom-left", "bottom-right"],
+      6: ["top-left", "top-right", "center-left", "center-right", "bottom-left", "bottom-right"],
+      7: ["top-left", "top-right", "center-top", "center", "center-bottom", "bottom-left", "bottom-right"],
+      8: ["top-left", "top-right", "center-top-left", "center-top-right", "center-bottom-left", "center-bottom-right", "bottom-left", "bottom-right"],
+      9: ["top-left", "top-right", "center", "top-center", "center-left", "center-right", "bottom-left", "bottom-right", "bottom-center"],
+      10: ["top-left", "top-right", "center", "top-center", "center-top-left", "center-top-right", "center-bottom-left", "center-bottom-right", "bottom-left", "bottom-right", "bottom-center"]
+    };
+
+    const positions = pipPositions[numValue] || [];
+
+    return (
+      <div className={`bj-card-center-pips bj-pips-${numValue}`}>
+        {positions.map((pos, i) => (
+          <span key={i} className={`bj-pip bj-pip-${pos}`}>{card.s}</span>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div
       className={`bj-card${red ? " red" : ""}${small ? " small" : ""}${highlight ? " bj-card-hl" : ""}`}
       style={{ animationDelay: `${dealIdx * 0.12}s` }}
     >
       <span className="bj-card-tl">{card.v}<br />{card.s}</span>
-      <span className="bj-card-center">{card.s}</span>
+      {renderPips()}
       <span className="bj-card-br">{card.v}<br />{card.s}</span>
     </div>
   );
@@ -313,12 +372,12 @@ function HelpPanel({ onClose }) {
 export default function BlackjackGame({ token, apples, onApplesChange }) {
   const [settings, setSettings]   = useState(null);
   const [loadErr, setLoadErr]     = useState("");
-  const [game, setGame]           = useState(null);     // active game from backend
+  const [game, setGame]           = useState(null);
   const [bet, setBet]             = useState(0);
   const [loading, setLoading]     = useState(false);
   const [errMsg, setErrMsg]       = useState("");
   const [showHelp, setShowHelp]   = useState(false);
-  const [animKey, setAnimKey]     = useState(0);        // forces card re-animation
+  const [animKey, setAnimKey]     = useState(0);
   const tableRef = useRef(null);
 
   // Keyboard shortcuts during player_turn
@@ -399,16 +458,13 @@ export default function BlackjackGame({ token, apples, onApplesChange }) {
   }
 
   function fmtHour(h, m) {
-    // 特例：24:00 保持原樣
     if (h === 24 && m === 0) {
       return "24:00";
     }
-    // 只要 >= 24（但排除 24:00）→ 次日
     if (h >= 24) {
       const hh = h % 24;
       return `${String(hh).padStart(2, "0")}:${String(m).padStart(2, "0")}（次日）`;
     }
-    // 正常時間
     return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
   }
 
