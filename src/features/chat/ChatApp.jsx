@@ -10,7 +10,7 @@
 //  5. [AppErrorBoundary] 管理面板 / UserList 包上錯誤邊界，局部錯誤不炸全頁
 //  6. [常數集中]     所有魔術數字從 constants.js 引入
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { lazy, Suspense, useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import socketInstance from "../../shared/socket";
 import "./ChatApp.css";
@@ -20,19 +20,10 @@ import VideoSafeBoundary from "./VideoSafeBoundary";
 import SongRoom from "./SongRoom";
 import Listener from "./Listener";
 import UserList from "./UserList";
-import AdminSettingsModal from "../admin/AdminSettingsModal";
-import GoldAppleGame from "../games/GoldAppleGame";
-import WhackAppleGame from "../games/WhackAppleGame";
-import ClawMachineGame from "../games/ClawMachineGame";
 import SurpriseHistoryPanel from "./SurpriseHistoryPanel";
-import AdminToolPanel from "../admin/AdminToolPanel";
 import QuickPhrasePanel from "./QuickPhrasePanel";
 import AnnouncementPanel from "./AnnouncementPanel";
-import ShopPanel from "./ShopPanel";
-import CasinoPanel from "../casino/CasinoPanel";
-import MessageBoard from "./MessageBoard";
 import MyMessageLogPanel from "./MyMessageLogPanel";
-import Leaderboard from "./Leaderboard";
 import AppErrorBoundary from "../../shared/AppErrorBoundary";
 import { aiAvatars } from "../../shared/aiConfig";
 import { expForNextLevel, safeText } from "../../shared/utils";
@@ -42,13 +33,14 @@ import { HEARTBEAT_INTERVAL, COOLDOWN_MS, GENDER_COLORS } from "../../shared/con
 import { Converter } from "opencc-js";
 
 // ─── 環境設定 ────────────────────────────────────────────────────────────────
-const BACKEND          = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
-const RN               = import.meta.env.VITE_ROOM_NAME || "windsong";
-const CN               = import.meta.env.VITE_CHATROOM_NAME || "聽風的歌";
-const AML              = Number(import.meta.env.VITE_ADMIN_MAX_LEVEL) || 99;
-const ANL              = Number(import.meta.env.VITE_ADMIN_MIN_LEVEL) || 91;
-const OPENAI           = import.meta.env.VITE_OPENAI === "true";
-const NF               = import.meta.env.VITE_NEW_FUNCTION === "true";
+const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
+const RN = import.meta.env.VITE_ROOM_NAME || "windsong";
+const CN = import.meta.env.VITE_CHATROOM_NAME || "聽風的歌";
+const AML = Number(import.meta.env.VITE_ADMIN_MAX_LEVEL) || 99;
+const ANL = Number(import.meta.env.VITE_ADMIN_MIN_LEVEL) || 91;
+const OPENAI = import.meta.env.VITE_OPENAI === "true";
+const NF = import.meta.env.VITE_NEW_FUNCTION === "true";
+const FRONTEND_VERSION = import.meta.env.VITE_APP_VERSION || "dev";
 
 // ✅ 模組層級建立（原本在 render 內建立，每次 render 都重新 new）
 const converter = Converter({ from: "cn", to: "tw" });
@@ -67,6 +59,33 @@ const extractVideoID = (url) => {
 };
 
 const getUserColorByGender = (g) => GENDER_COLORS[g] ?? GENDER_COLORS.default;
+
+function compareVersions(a = "", b = "") {
+  const pa = String(a).match(/\d+/g)?.map((n) => Number.parseInt(n, 10) || 0) || [0];
+  const pb = String(b).match(/\d+/g)?.map((n) => Number.parseInt(n, 10) || 0) || [0];
+  const len = Math.max(pa.length, pb.length);
+  for (let i = 0; i < len; i++) {
+    const av = pa[i] || 0;
+    const bv = pb[i] || 0;
+    if (av > bv) return 1;
+    if (av < bv) return -1;
+  }
+  return 0;
+}
+
+const AdminSettingsModal = lazy(() => import("../admin/AdminSettingsModal"));
+const GoldAppleGame = lazy(() => import("../games/GoldAppleGame"));
+const WhackAppleGame = lazy(() => import("../games/WhackAppleGame"));
+const ClawMachineGame = lazy(() => import("../games/ClawMachineGame"));
+const AdminToolPanel = lazy(() => import("../admin/AdminToolPanel"));
+const ShopPanel = lazy(() => import("./ShopPanel"));
+const CasinoPanel = lazy(() => import("../casino/CasinoPanel"));
+const MessageBoard = lazy(() => import("./MessageBoard"));
+const Leaderboard = lazy(() => import("./Leaderboard"));
+
+function DeferredPanel({ children, fallback = null }) {
+  return <Suspense fallback={fallback}>{children}</Suspense>;
+}
 
 // ─── 主元件 ──────────────────────────────────────────────────────────────────
 export default function ChatApp() {
@@ -90,51 +109,55 @@ export default function ChatApp() {
   } = useMessages();
 
   // ── UI state ──
-  const [offline, setOffline]               = useState(false);
-  const [target, setTarget]                 = useState("");
-  const [typing]                            = useState("");
-  const [userList, setUserList]             = useState([]);
-  const [currentVideo, setCurrentVideo]     = useState(null);
-  const [videoUrl, setVideoUrl]             = useState("");
-  const [closedVideoId, setClosedVideoId]   = useState(null);
-  const [chatMode, setChatMode]             = useState("public");
+  const [offline, setOffline] = useState(false);
+  const [showReloadNotice, setShowReloadNotice] = useState(false);
+  const [target, setTarget] = useState("");
+  const [typing] = useState("");
+  const [userList, setUserList] = useState([]);
+  const [currentVideo, setCurrentVideo] = useState(null);
+  const [videoUrl, setVideoUrl] = useState("");
+  const [closedVideoId, setClosedVideoId] = useState(null);
+  const [chatMode, setChatMode] = useState("public");
   const [userListCollapsed, setUserListCollapsed] = useState(false);
-  const [text, setText]                     = useState("");
-  const [cooldown, setCooldown]             = useState(false);
-  const [placeholder, setPlaceholder]       = useState("輸入訊息...");
-  const [chatColor, setChatColor]           = useState(
+  const [text, setText] = useState("");
+  const [cooldown, setCooldown] = useState(false);
+  const [placeholder, setPlaceholder] = useState("輸入訊息...");
+  const [chatColor, setChatColor] = useState(
     () => sessionStorage.getItem("chatColor") || "#ffffff"
   );
-  const [showAnnouncement, setShowAnnouncement]   = useState(false);
-  const [showMessageBoard, setShowMessageBoard]   = useState(false);
-  const [showShop, setShowShop]                   = useState(false);
-  const [showCasino, setShowCasino]               = useState(false);
-  const [filteredUsers, setFilteredUsers]         = useState([]);
-  const [currentSinger, setCurrentSinger]         = useState(null);
-  const [convertTC, setConvertTC]                 = useState(true);
-  const [appleAmount, setAppleAmount]             = useState(1);
-  const [sendingApple, setSendingApple]           = useState(false);
-  const [showAppleSetting, setShowAppleSetting]   = useState(false);
-  const [perTransferLimit, setPerTransferLimit]   = useState(0); // 0 = 不限制
-  const [scrollLocked, setScrollLocked]           = useState(false);
+  const [showAnnouncement, setShowAnnouncement] = useState(false);
+  const [showMessageBoard, setShowMessageBoard] = useState(false);
+  const [showShop, setShowShop] = useState(false);
+  const [showCasino, setShowCasino] = useState(false);
+  const [showAdminTools, setShowAdminTools] = useState(false);
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [currentSinger, setCurrentSinger] = useState(null);
+  const [convertTC, setConvertTC] = useState(true);
+  const [appleAmount, setAppleAmount] = useState(1);
+  const [sendingApple, setSendingApple] = useState(false);
+  const [showAppleSetting, setShowAppleSetting] = useState(false);
+  const [perTransferLimit, setPerTransferLimit] = useState(0); // 0 = 不限制
+  const [scrollLocked, setScrollLocked] = useState(false);
   const scrollLockedRef = useRef(false); // 同步更新，避免 useLayoutEffect 讀到過期值
 
-  const joinedRef     = useRef(false);
+  const joinedRef = useRef(false);
   const messagesEndRef = useRef(null);
-  const inputRef      = useRef(null);
+  const inputRef = useRef(null);
+  const versionReportInFlightRef = useRef(false);
+  const versionReloadingRef = useRef(false);
 
   const userType = sessionStorage.getItem("type") || "guest";
   const isMember = userType === "account";
 
   // ─── 「最新值」refs（給 socket handlers 讀取，避免 stale closure 同時不重新綁定）
-  const userListRef      = useRef(userList);
+  const userListRef = useRef(userList);
   const closedVideoIdRef = useRef(closedVideoId);
-  const roomRef          = useRef(room);
-  const nameRef          = useRef(name);
-  useEffect(() => { userListRef.current = userList; },      [userList]);
+  const roomRef = useRef(room);
+  const nameRef = useRef(name);
+  useEffect(() => { userListRef.current = userList; }, [userList]);
   useEffect(() => { closedVideoIdRef.current = closedVideoId; }, [closedVideoId]);
-  useEffect(() => { roomRef.current = room; },              [room]);
-  useEffect(() => { nameRef.current = name; },              [name]);
+  useEffect(() => { roomRef.current = room; }, [room]);
+  useEffect(() => { nameRef.current = name; }, [name]);
 
   // ✅ 過濾訊息用 useMemo，只在 messages / filteredUsers 改變時重算
   const visibleMessages = useMemo(
@@ -148,11 +171,57 @@ export default function ChatApp() {
     if (t) fetchUserData(t);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ─── 心跳 ────────────────────────────────────────────────────────────────
+  const triggerVersionRefresh = useCallback(() => {
+    if (versionReloadingRef.current) return;
+    versionReloadingRef.current = true;
+    // 用 state 控制 UI（不要用 alert）
+    setShowReloadNotice(true);
+    setTimeout(() => {
+      window.location.reload();
+    }, 5000);
+  }, []);
+
+  // ─── 心跳 + 版本檢查（整合版） ─────────────────────────────────────────────
   useEffect(() => {
-    const id = setInterval(() => socket.emit("heartbeat"), HEARTBEAT_INTERVAL);
+    let lastCheckTime = 0;
+    const CHECK_INTERVAL = 30000; // 最少30秒檢查一次版本
+    const tick = async () => {
+      // 1️⃣ heartbeat（原本功能）
+      socket.emit("heartbeat");
+
+      // 2️⃣ 節流版本檢查（避免每次 heartbeat 都打 API）
+      const now = Date.now();
+      if (now - lastCheckTime < CHECK_INTERVAL) return;
+      lastCheckTime = now;
+
+      // 3️⃣ 防止重複請求（你原本的保護機制保留）
+      if (versionReportInFlightRef.current) return;
+      versionReportInFlightRef.current = true;
+      try {
+        const res = await fetch(`${BACKEND}/frontend-version-report`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ version: FRONTEND_VERSION, room }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (
+          data?.shouldRefresh &&
+          compareVersions(data.latestVersion, FRONTEND_VERSION) > 0
+        ) {
+          triggerVersionRefresh();
+        }
+      } catch (_) {
+        // ignore
+      } finally {
+        versionReportInFlightRef.current = false;
+      }
+    };
+
+    tick(); // 進來先跑一次
+    const id = setInterval(tick, HEARTBEAT_INTERVAL);
     return () => clearInterval(id);
-  }, [socket]);
+  }, [socket, room, triggerVersionRefresh]);
 
   // ─── updateUsers ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -235,29 +304,29 @@ export default function ChatApp() {
   useEffect(() => {
     // ✅ 關鍵：handler 本身在 closure 裡讀的是 ref，不是 state，
     //    所以整個 effect 只在 socket 改變時重新執行（綁定一次）
-    const handleMessage       = (m)   => addMessage(m, userListRef.current);
-    const handleSystemMessage = (m)   => addSystemMessage(m);
-    const handleVideoUpdate   = (v)   => {
+    const handleMessage = (m) => addMessage(m, userListRef.current);
+    const handleSystemMessage = (m) => addSystemMessage(m);
+    const handleVideoUpdate = (v) => {
       if (!v) { setCurrentVideo(null); return; }
       const id = extractVideoID(v.url);
       if (closedVideoIdRef.current === id) return;
       setCurrentVideo(v);
     };
-    const handleTransfer      = (msg) => addTransactionMessage(msg, userListRef.current);
-    const handleGift          = (msg) => addGiftMessage(msg);
+    const handleTransfer = (msg) => addTransactionMessage(msg, userListRef.current);
+    const handleGift = (msg) => addGiftMessage(msg);
 
-    socket.on("message",         handleMessage);
-    socket.on("systemMessage",   handleSystemMessage);
-    socket.on("videoUpdate",     handleVideoUpdate);
+    socket.on("message", handleMessage);
+    socket.on("systemMessage", handleSystemMessage);
+    socket.on("videoUpdate", handleVideoUpdate);
     socket.on("transferMessage", handleTransfer);
-    socket.on("giftMessage",     handleGift);
+    socket.on("giftMessage", handleGift);
 
     return () => {
-      socket.off("message",         handleMessage);
-      socket.off("systemMessage",   handleSystemMessage);
-      socket.off("videoUpdate",     handleVideoUpdate);
+      socket.off("message", handleMessage);
+      socket.off("systemMessage", handleSystemMessage);
+      socket.off("videoUpdate", handleVideoUpdate);
       socket.off("transferMessage", handleTransfer);
-      socket.off("giftMessage",     handleGift);
+      socket.off("giftMessage", handleGift);
     };
   }, [socket, addMessage, addSystemMessage, addTransactionMessage, addGiftMessage]);
   // addMessage 等函式全部是穩定的（useCallback deps=[]），所以等同只依賴 socket
@@ -274,6 +343,18 @@ export default function ChatApp() {
     socket.on("goldenAppleSurprise", handleSurprise);
     return () => socket.off("goldenAppleSurprise", handleSurprise);
   }, [socket, addSurpriseMessage]);
+
+  useEffect(() => {
+    const handleFrontendVersionUpdated = ({ version } = {}) => {
+      if (!version) return;
+      if (compareVersions(version, FRONTEND_VERSION) > 0) {
+        triggerVersionRefresh();
+      }
+    };
+
+    socket.on("frontendVersionUpdated", handleFrontendVersionUpdated);
+    return () => socket.off("frontendVersionUpdated", handleFrontendVersionUpdated);
+  }, [socket, triggerVersionRefresh]);
 
   useEffect(() => {
     const sourceLabel = (source) => {
@@ -327,10 +408,10 @@ export default function ChatApp() {
       setTimeout(() => container.remove(), 5000);
     };
 
-    socket.on("joinFailed",   handleJoinFail);
+    socket.on("joinFailed", handleJoinFail);
     socket.on("fireworkShow", handleFirework);
     return () => {
-      socket.off("joinFailed",   handleJoinFail);
+      socket.off("joinFailed", handleJoinFail);
       socket.off("fireworkShow", handleFirework);
     };
   }, [socket]);
@@ -345,10 +426,10 @@ export default function ChatApp() {
     const handleKickFailed = ({ reason }) => window.alert(reason);
 
     socket.on("forceLogout", handleForceLogout);
-    socket.on("kickFailed",  handleKickFailed);
+    socket.on("kickFailed", handleKickFailed);
     return () => {
       socket.off("forceLogout", handleForceLogout);
-      socket.off("kickFailed",  handleKickFailed);
+      socket.off("kickFailed", handleKickFailed);
     };
   }, [socket]);
 
@@ -375,7 +456,7 @@ export default function ChatApp() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: nameRef.current }),
         keepalive: true, // ✅ keepalive 確保瀏覽器關閉時請求還能送出
-      }).catch(() => {});
+      }).catch(() => { });
       socket.disconnect();
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -453,7 +534,7 @@ export default function ChatApp() {
     })
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.per_transfer_limit > 0) setPerTransferLimit(d.per_transfer_limit); })
-      .catch(() => {});
+      .catch(() => { });
   }, [token]);
 
   // ─── 送金蘋果 ─────────────────────────────────────────────────────────────
@@ -496,7 +577,10 @@ export default function ChatApp() {
         <div className="chat-left">
           <div className="chat-title-bar">
             <div className="chat-title">
-              <a href="https://www.ek21.com" target="_blank" rel="noopener noreferrer"><img src="/logo/logo_ek21.gif" alt="尋夢園" style={{height:'3em', verticalAlign:'bottom', marginBottom:'-0.5em'}} /></a>{CN}聊天室
+              <a href="https://www.ek21.com" target="_blank" rel="noopener noreferrer"><img src="/logo/logo_ek21.gif" alt="尋夢園" style={{ height: '3em', verticalAlign: 'bottom', marginBottom: '-0.5em' }} /></a>{CN}聊天室
+              <span className="app-version-badge" title="目前聊天室版本">
+                v{FRONTEND_VERSION}
+              </span>
               <button className="announce-btn" title="聊天室公告" onClick={() => setShowAnnouncement(true)}>
                 📢公告
               </button>
@@ -504,7 +588,9 @@ export default function ChatApp() {
                 💬 留言板
               </button>
               {isMember && <MyMessageLogPanel token={token} />}
-              {NF && <Leaderboard room={room} token={token} />}
+              <DeferredPanel>
+                {NF && <Leaderboard room={room} token={token} />}
+              </DeferredPanel>
               {NF && isMember && (
                 <button className="announce-btn" title="商城" onClick={() => setShowShop(true)}>
                   <img src="/gifts/gold_apple.gif" alt="金蘋果" style={{ width: 20, height: 20, marginTop: -5 }} /> 商城
@@ -517,13 +603,30 @@ export default function ChatApp() {
                 </button>
               )}
               {offline && <div className="offline-banner">⚠️ 網路不穩，重新連線中...</div>}
+              {showReloadNotice && (
+                <div className="reload-banner">
+                  🔄 聊天室版本已更新，5 秒後系統自動重新整理...
+                </div>
+              )}
             </div>
           </div>
 
           <AnnouncementPanel open={showAnnouncement} onClose={() => setShowAnnouncement(false)} myLevel={level} token={token} />
-          <MessageBoard token={token} myName={name} myLevel={level} open={showMessageBoard} onClose={() => setShowMessageBoard(false)} />
-          <ShopPanel token={token} myName={name} myLevel={level} targetName={target} open={showShop} onClose={() => setShowShop(false)} />
-          {NF && <CasinoPanel token={token} apples={apples} onApplesChange={setApples} open={showCasino} onClose={() => setShowCasino(false)} />}
+          {showMessageBoard && (
+            <DeferredPanel>
+              <MessageBoard token={token} myName={name} myLevel={level} open={showMessageBoard} onClose={() => setShowMessageBoard(false)} />
+            </DeferredPanel>
+          )}
+          {showShop && (
+            <DeferredPanel>
+              <ShopPanel token={token} myName={name} myLevel={level} targetName={target} open={showShop} onClose={() => setShowShop(false)} />
+            </DeferredPanel>
+          )}
+          {NF && showCasino && (
+            <DeferredPanel>
+              <CasinoPanel token={token} apples={apples} onApplesChange={setApples} open={showCasino} onClose={() => setShowCasino(false)} />
+            </DeferredPanel>
+          )}
 
           {name && (
             <>
@@ -609,13 +712,29 @@ export default function ChatApp() {
                 </button>
 
                 {/* ✅ 管理工具包 AppErrorBoundary，防止管理面板錯誤炸掉整個聊天室 */}
-                <AppErrorBoundary label="管理工具">
-                  <AdminToolPanel myName={name} myLevel={level} token={token} userList={userList} />
-                </AppErrorBoundary>
+                {level >= ANL && (
+                  <AppErrorBoundary label="管理工具">
+                    {showAdminTools ? (
+                      <DeferredPanel>
+                        <AdminToolPanel
+                          myName={name}
+                          myLevel={level}
+                          token={token}
+                          userList={userList}
+                          initialOpen
+                        />
+                      </DeferredPanel>
+                    ) : (
+                      <button className="admin-btn" onClick={() => setShowAdminTools(true)}>
+                        🛡 管理
+                      </button>
+                    )}
+                  </AppErrorBoundary>
+                )}
 
-                <label><input type="radio" checked={chatMode === "public"}       onChange={() => { setChatMode("public"); setTarget(""); }} /> 公開</label>
+                <label><input type="radio" checked={chatMode === "public"} onChange={() => { setChatMode("public"); setTarget(""); }} /> 公開</label>
                 <label><input type="radio" checked={chatMode === "publicTarget"} onChange={() => setChatMode("publicTarget")} /> 公開對象</label>
-                <label><input type="radio" checked={chatMode === "private"}      onChange={() => setChatMode("private")} /> 私聊</label>
+                <label><input type="radio" checked={chatMode === "private"} onChange={() => setChatMode("private")} /> 私聊</label>
 
                 {chatMode !== "public" && (
                   <select value={target} onChange={(e) => { setTarget(e.target.value); focusInput(); }}>
@@ -735,42 +854,52 @@ export default function ChatApp() {
         </div>
       </div>
 
-      <AdminSettingsModal
-        open={showAppleSetting}
-        onClose={() => setShowAppleSetting(false)}
-        token={token}
-        BACKEND={BACKEND}
-      />
+      {showAppleSetting && (
+        <DeferredPanel>
+          <AdminSettingsModal
+            open={showAppleSetting}
+            onClose={() => setShowAppleSetting(false)}
+            token={token}
+            BACKEND={BACKEND}
+          />
+        </DeferredPanel>
+      )}
 
       {/* 撈金蘋果遊戲覆蓋層（全螢幕，有遊戲時才渲染） */}
-      {NF && (
-        <GoldAppleGame
-          socket={socket}
-          token={token}
-          name={name}
-          setApples={setApples}
-        />
-      )}
+      <DeferredPanel>
+        {NF && (
+          <GoldAppleGame
+            socket={socket}
+            token={token}
+            name={name}
+            setApples={setApples}
+          />
+        )}
+      </DeferredPanel>
 
       {/* 打金蘋果遊戲（打地鼠風格，有遊戲時才渲染） */}
-      {NF && (
-        <WhackAppleGame
-          socket={socket}
-          token={token}
-          name={name}
-          setApples={setApples}
-        />
-      )}
+      <DeferredPanel>
+        {NF && (
+          <WhackAppleGame
+            socket={socket}
+            token={token}
+            name={name}
+            setApples={setApples}
+          />
+        )}
+      </DeferredPanel>
 
       {/* 夾蘋果機遊戲（夾娃娃機風格，有遊戲時才渲染） */}
-      {NF && (
-        <ClawMachineGame
-          socket={socket}
-          token={token}
-          name={name}
-          setApples={setApples}
-        />
-      )}
+      <DeferredPanel>
+        {NF && (
+          <ClawMachineGame
+            socket={socket}
+            token={token}
+            name={name}
+            setApples={setApples}
+          />
+        )}
+      </DeferredPanel>
     </>
   );
 }

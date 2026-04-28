@@ -1,0 +1,54 @@
+.surprise-history-btn,
+.surprise-history-close-btn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  background: #1976d2;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.surprise-history-btn:hover,
+.surprise-history-close-btn:hover {
+  background: #1565c0;
+}
+
+.surprise-history-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.surprise-history-content {
+  width: min(500px, 100%);
+  max-height: 80vh;
+  overflow-y: auto;
+  background: #1b1b1b;
+  border: 1px solid #3c3c3c;
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.surprise-history-reward {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.surprise-history-apple {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}

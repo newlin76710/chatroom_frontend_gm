@@ -54,6 +54,20 @@ body {
   font-weight: bold;
 }
 
+.app-version-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #252525;
+  border: 1px solid #4a4a4a;
+  color: #bdbdbd;
+  font-size: 0.7rem;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
 .announce-btn {
   background: transparent;
   border: none;

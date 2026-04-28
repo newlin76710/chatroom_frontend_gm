@@ -1,10 +1,11 @@
-import { useState } from "react";
-import RouletteGame from "./RouletteGame";
-import BlackjackGame from "./BlackjackGame";
-import SicBoGame from "./SicBoGame";
-import SlotMachine from "./SlotMachine";
-import BaccaratGame from "./BaccaratGame";
+import { lazy, Suspense, useState } from "react";
 import "./CasinoPanel.css";
+
+const RouletteGame = lazy(() => import("./RouletteGame"));
+const BlackjackGame = lazy(() => import("./BlackjackGame"));
+const SicBoGame = lazy(() => import("./SicBoGame"));
+const SlotMachine = lazy(() => import("./SlotMachine"));
+const BaccaratGame = lazy(() => import("./BaccaratGame"));
 
 const RULES = `🎰 金蘋果輪盤 遊戲規則
 
@@ -95,41 +96,43 @@ export default function CasinoPanel({ token, apples, onApplesChange, open, onClo
 
         {/* ── Game area ── */}
         <div className="casino-body">
-          {tab === "blackjack" && (
-            <BlackjackGame
-              token={token}
-              apples={apples}
-              onApplesChange={onApplesChange}
-            />
-          )}
-          {tab === "roulette" && (
-            <RouletteGame
-              token={token}
-              apples={apples}
-              onApplesChange={onApplesChange}
-            />
-          )}
-          {tab === "sicbo" && (
-            <SicBoGame
-              token={token}
-              apples={apples}
-              onApplesChange={onApplesChange}
-            />
-          )}
-          {tab === "slot" && (
-            <SlotMachine
-              token={token}
-              apples={apples}
-              onApplesChange={onApplesChange}
-            />
-          )}
-          {tab === "baccarat" && (
-            <BaccaratGame
-              token={token}
-              apples={apples}
-              onApplesChange={onApplesChange}
-            />
-          )}
+          <Suspense fallback={null}>
+            {tab === "blackjack" && (
+              <BlackjackGame
+                token={token}
+                apples={apples}
+                onApplesChange={onApplesChange}
+              />
+            )}
+            {tab === "roulette" && (
+              <RouletteGame
+                token={token}
+                apples={apples}
+                onApplesChange={onApplesChange}
+              />
+            )}
+            {tab === "sicbo" && (
+              <SicBoGame
+                token={token}
+                apples={apples}
+                onApplesChange={onApplesChange}
+              />
+            )}
+            {tab === "slot" && (
+              <SlotMachine
+                token={token}
+                apples={apples}
+                onApplesChange={onApplesChange}
+              />
+            )}
+            {tab === "baccarat" && (
+              <BaccaratGame
+                token={token}
+                apples={apples}
+                onApplesChange={onApplesChange}
+              />
+            )}
+          </Suspense>
         </div>
 
         {/* ── Light bulbs bottom ── */}

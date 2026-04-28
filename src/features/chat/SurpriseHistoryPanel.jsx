@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import "./SurpriseHistoryPanel.css";
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
 
@@ -33,20 +34,24 @@ export default function SurpriseHistoryPanel({ token }) {
 
   const handleOpen = () => {
     setOpen(true);
-    fetchLogs();
   };
+
+  useEffect(() => {
+    if (!open || !token) return;
+    fetchLogs();
+  }, [open, token]);
 
   if (!open) {
     return (
-      <button className="admin-btn" onClick={handleOpen} title="金蘋果樂透紀錄">
+      <button className="surprise-history-btn" onClick={handleOpen} title="金蘋果樂透紀錄">
         🎊 樂透紀錄
       </button>
     );
   }
 
   return (
-    <div className="apple-modal">
-      <div className="apple-modal-content" style={{ width: 500, maxHeight: "80vh", overflowY: "auto" }}>
+    <div className="surprise-history-modal">
+      <div className="surprise-history-content">
         <h3 style={{ color: "#FFD700", marginBottom: 12 }}>🎊 金蘋果樂透紀錄（10日內）</h3>
 
         {loading ? (
@@ -57,8 +62,8 @@ export default function SurpriseHistoryPanel({ token }) {
               <tr style={{ borderBottom: "1px solid #444", color: "#FFD700" }}>
                 <th style={{ textAlign: "left", padding: "4px 8px" }}>排程時間</th>
                 <th style={{ textAlign: "left", padding: "4px 8px" }}>觸發時間</th>
-                <th style={{ textAlign: "left", padding: "4px 8px" }}>得獎者</th>
-                <th style={{ textAlign: "right", padding: "4px 8px" }}>金蘋果</th>
+                <th style={{ textAlign: "left", padding: "4px 8px", width: 132, whiteSpace: "nowrap" }}>得獎者</th>
+                <th style={{ textAlign: "right", padding: "4px 8px", width: 108, whiteSpace: "nowrap" }}>金蘋果</th>
               </tr>
             </thead>
             <tbody>
@@ -68,11 +73,16 @@ export default function SurpriseHistoryPanel({ token }) {
                   <td style={{ padding: "4px 8px", color: "#ccc" }}>
                     {r.triggered_at ? fmt(r.triggered_at) : <span style={{ color: "#888" }}>待觸發</span>}
                   </td>
-                  <td style={{ padding: "4px 8px", color: r.winner ? "#FFD700" : "#888", fontWeight: r.winner ? "bold" : "normal" }}>
+                  <td style={{ padding: "4px 8px", color: r.winner ? "#FFD700" : "#888", fontWeight: r.winner ? "bold" : "normal", whiteSpace: "nowrap" }}>
                     {r.winner || "（無人上麥）"}
                   </td>
-                  <td style={{ padding: "4px 8px", textAlign: "right", color: r.winner ? "#FFD700" : "#888" }}>
-                    {r.winner ? `+${r.amount} 🍎` : "—"}
+                  <td style={{ padding: "4px 8px", textAlign: "right", color: r.winner ? "#FFD700" : "#888", whiteSpace: "nowrap" }}>
+                    {r.winner ? (
+                      <span className="surprise-history-reward">
+                        +{r.amount}
+                        <img src="/gifts/gold_apple.gif" alt="金蘋果" className="surprise-history-apple" />
+                      </span>
+                    ) : "—"}
                   </td>
                 </tr>
               ))}
@@ -86,7 +96,7 @@ export default function SurpriseHistoryPanel({ token }) {
         )}
 
         <div style={{ marginTop: 14, textAlign: "right" }}>
-          <button onClick={() => setOpen(false)}>關閉</button>
+          <button className="surprise-history-close-btn" onClick={() => setOpen(false)}>關閉</button>
         </div>
       </div>
     </div>

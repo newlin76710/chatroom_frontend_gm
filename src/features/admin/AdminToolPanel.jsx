@@ -10,8 +10,8 @@ import "./AdminToolPanel.css";
 const AML = import.meta.env.VITE_ADMIN_MAX_LEVEL || 99;
 const ANL = import.meta.env.VITE_ADMIN_MIN_LEVEL || 91;
 
-export default function AdminToolPanel({ myName, myLevel, token, userList }) {
-  const [open, setOpen] = useState(false);
+export default function AdminToolPanel({ myName, myLevel, token, userList, initialOpen = false }) {
+  const [open, setOpen] = useState(initialOpen);
   const [tab, setTab] = useState("login"); // default
 
   // ⭐ 用 useEffect 在 mount 或 myLevel 改變時設定初始 tab
