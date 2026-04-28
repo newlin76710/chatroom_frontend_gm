@@ -426,11 +426,11 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   onChange={e => setInt("roulette_max_bet", e.target.value)} />
                 <span className="field-note">個金蘋果（最多可下注）</span>
               </Row>
-              <Row label="莊家優勢設定">
+              <Row label="勝率偏向設定">
                 <input type="number" min={1} max={200} style={{ width: 80 }}
                   value={settings.roulette_house_edge}
                   onChange={e => setInt("roulette_house_edge", e.target.value)} />
-                <span className="field-note">1-200，100=原始賠率，越大玩家回收越少</span>
+                <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
               </Row>
             </section>
 
@@ -472,11 +472,11 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   onChange={e => setInt("blackjack_max_bet", e.target.value)} />
                 <span className="field-note">個金蘋果（最少 200）</span>
               </Row>
-              <Row label="莊家優勢設定">
+              <Row label="勝率偏向設定">
                 <input type="number" min={1} max={200} style={{ width: 80 }}
                   value={settings.blackjack_house_edge}
                   onChange={e => setInt("blackjack_house_edge", e.target.value)} />
-                <span className="field-note">1-200，100=原始賠率，越大玩家回收越少</span>
+                <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
               </Row>
             </section>
 
@@ -518,11 +518,11 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   onChange={e => setInt("sicbo_max_bet", e.target.value)} />
                 <span className="field-note">個金蘋果（每種投注類型最多可下注）</span>
               </Row>
-              <Row label="莊家優勢設定">
+              <Row label="勝率偏向設定">
                 <input type="number" min={1} max={200} style={{ width: 80 }}
                   value={settings.sicbo_house_edge}
                   onChange={e => setInt("sicbo_house_edge", e.target.value)} />
-                <span className="field-note">1-200，100=原始賠率，越大玩家回收越少</span>
+                <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
               </Row>
             </section>
 
@@ -564,11 +564,11 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   onChange={e => setInt("slot_max_bet", e.target.value)} />
                 <span className="field-note">個金蘋果</span>
               </Row>
-              <Row label="莊家優勢設定">
+              <Row label="勝率偏向設定">
                 <input type="number" min={1} max={200} style={{ width: 80 }}
                   value={settings.slot_house_edge}
                   onChange={e => setInt("slot_house_edge", e.target.value)} />
-                <span className="field-note">1-200，100=原始賠率，越大玩家回收越少</span>
+                <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
               </Row>
             </section>
 
