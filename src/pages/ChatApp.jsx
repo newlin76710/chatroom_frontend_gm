@@ -276,14 +276,30 @@ export default function ChatApp() {
   }, [socket, addSurpriseMessage]);
 
   useEffect(() => {
-    const handleGoldAwarded = ({ username, credited, balance } = {}) => {
+    const sourceLabel = (source) => {
+      switch (source) {
+        case "system_game1": return "撈金蘋果";
+        case "system_game2": return "大金蘋果";
+        case "system_whack": return "打金蘋果";
+        case "system_claw": return "夾蘋果機";
+        case "system_surprise": return "每日樂透";
+        default: return "金蘋果";
+      }
+    };
+
+    const handleGoldAwarded = ({ username, source, credited, previousBalance, balance } = {}) => {
       if (username !== nameRef.current) return;
       if (typeof balance === "number") {
         setApples(balance);
         sessionStorage.setItem("apples", balance);
       }
       if ((credited || 0) > 0) {
-        addSystemMessage(`🍎 已入帳 ${credited} 顆金蘋果，目前餘額 ${balance ?? "?"} 顆`);
+        const before = typeof previousBalance === "number"
+          ? previousBalance
+          : typeof balance === "number"
+            ? balance - credited
+            : "?";
+        addSystemMessage(`🍎 ${sourceLabel(source)} 獲得 ${credited} 顆，原本 ${before} 顆，入帳後 ${balance ?? "?"} 顆`);
       }
     };
 
