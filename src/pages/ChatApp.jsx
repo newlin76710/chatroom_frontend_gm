@@ -39,7 +39,7 @@ import { expForNextLevel, safeText } from "./utils";
 import { useMessages } from "./hooks/useMessages";
 import { useUserState } from "./hooks/useUserState";
 import { HEARTBEAT_INTERVAL, COOLDOWN_MS, GENDER_COLORS } from "./constants";
-import * as OpenCC from "opencc-js";
+import { Converter } from "opencc-js";
 
 // ─── 環境設定 ────────────────────────────────────────────────────────────────
 const BACKEND          = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
@@ -51,7 +51,7 @@ const OPENAI           = import.meta.env.VITE_OPENAI === "true";
 const NF               = import.meta.env.VITE_NEW_FUNCTION === "true";
 
 // ✅ 模組層級建立（原本在 render 內建立，每次 render 都重新 new）
-const converter = OpenCC.Converter({ from: "cn", to: "tw" });
+const converter = Converter({ from: "cn", to: "tw" });
 const toTraditional = (text) => (text ? converter(text) : "");
 
 const formatLv = (lv) => String(lv).padStart(2, "0");

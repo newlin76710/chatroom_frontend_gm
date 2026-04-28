@@ -14,6 +14,7 @@ export default function SongRoom({ room, name, socket, currentSinger, myLevel })
   const [isProcessing, setIsProcessing] = useState(false);
   const inQueue = queue.includes(name);
   const roomRef = useRef(null);
+  const livekitTokenHandlerRef = useRef(null);
   const audioCtxRef = useRef(null);
   const destRef = useRef(null);
   const micTrackRef = useRef(null);
@@ -86,15 +87,25 @@ export default function SongRoom({ room, name, socket, currentSinger, myLevel })
   useEffect(() => {
     if (!socket) return;
 
-    socket.on("forceStopSing", () => stopSing());
-    socket.on("yourTurn", () => { setWaiting(false); grabMic(); });
-    socket.on("micStateUpdate", data => { setQueue(data.queue); setMyPosition(data.queue.indexOf(name) + 1); });
+    const handleForceStopSing = () => stopSing();
+    const handleYourTurn = () => { setWaiting(false); grabMic(); };
+    const handleMicStateUpdate = (data) => {
+      setQueue(data.queue);
+      setMyPosition(data.queue.indexOf(name) + 1);
+    };
+
+    socket.on("forceStopSing", handleForceStopSing);
+    socket.on("yourTurn", handleYourTurn);
+    socket.on("micStateUpdate", handleMicStateUpdate);
 
     return () => {
-      socket.off("forceStopSing");
-      socket.off("yourTurn");
-      socket.off("micStateUpdate");
-      socket.off("livekit-token");
+      socket.off("forceStopSing", handleForceStopSing);
+      socket.off("yourTurn", handleYourTurn);
+      socket.off("micStateUpdate", handleMicStateUpdate);
+      if (livekitTokenHandlerRef.current) {
+        socket.off("livekit-token", livekitTokenHandlerRef.current);
+        livekitTokenHandlerRef.current = null;
+      }
     };
   }, [socket, name]);
 
@@ -137,26 +148,31 @@ export default function SongRoom({ room, name, socket, currentSinger, myLevel })
   const stopSing = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
-    const lk = roomRef.current;
-    await lk?.localParticipant.setMicrophoneEnabled(false);
-    if (micTrackRef.current) await lk?.localParticipant.unpublishTrack(micTrackRef.current);
-    micSourceRef.current?.disconnect();
-    micSourceRef.current = null;
-    micStreamRef.current?.getTracks().forEach(t => t.stop());
-    micStreamRef.current = null;
-    micTrackRef.current?.mediaStreamTrack?.stop();
-    micTrackRef.current?.stop();
-    micTrackRef.current = null;
-    await lk?.disconnect();
-    roomRef.current = null;
-    setLkRoom(null);
-    await audioCtxRef.current?.suspend();
-    await audioCtxRef.current?.close();
-    audioCtxRef.current = null;
-    destRef.current = null;
-    setSinging(false);
-    socket.emit("stopSing", { room, singer: name });
-    setIsProcessing(false);
+    try {
+      const lk = roomRef.current;
+      await lk?.localParticipant.setMicrophoneEnabled(false);
+      if (micTrackRef.current) await lk?.localParticipant.unpublishTrack(micTrackRef.current);
+      micSourceRef.current?.disconnect();
+      micSourceRef.current = null;
+      micStreamRef.current?.getTracks().forEach(t => t.stop());
+      micStreamRef.current = null;
+      micTrackRef.current?.mediaStreamTrack?.stop();
+      micTrackRef.current?.stop();
+      micTrackRef.current = null;
+      await lk?.disconnect();
+      roomRef.current = null;
+      setLkRoom(null);
+      await audioCtxRef.current?.suspend();
+      await audioCtxRef.current?.close();
+      audioCtxRef.current = null;
+      destRef.current = null;
+      setSinging(false);
+      socket.emit("stopSing", { room, singer: name });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const grabMic = () => {
@@ -165,11 +181,15 @@ export default function SongRoom({ room, name, socket, currentSinger, myLevel })
     setIsProcessing(true);
 
     socket.emit("grabMic", { room, singer: name });
-    socket.off("livekit-token");
-    socket.once("livekit-token", async ({ token }) => {
+    if (livekitTokenHandlerRef.current) {
+      socket.off("livekit-token", livekitTokenHandlerRef.current);
+    }
+    livekitTokenHandlerRef.current = async ({ token }) => {
       await startSing(token);
       setIsProcessing(false);
-    });
+      livekitTokenHandlerRef.current = null;
+    };
+    socket.once("livekit-token", livekitTokenHandlerRef.current);
   };
   const joinQueue = () => { socket.emit("joinQueue", { room, name }); setWaiting(true); };
   const leaveQueue = () => { socket.emit("leaveQueue", { room, name }); setWaiting(false); };
