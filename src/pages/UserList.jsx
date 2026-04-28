@@ -11,6 +11,7 @@ export default function UserList({
   userListCollapsed,
   setUserListCollapsed,
   kickUser,
+  kickAndBlockUser,
   muteUser,
   myLevel,
   myName,
@@ -20,6 +21,7 @@ export default function UserList({
 }) {
   const formatLv = (lv) => String(lv).padStart(2, "0");
   const ANL = import.meta.env.VITE_ADMIN_MIN_LEVEL || 91;
+  const AML = import.meta.env.VITE_ADMIN_MAX_LEVEL || 99;
   const OPENAI = import.meta.env.VITE_OPENAI === "true";
   const [openMenu, setOpenMenu] = React.useState(null);
 
@@ -63,6 +65,12 @@ export default function UserList({
             u.level < myLevel &&
             u.name !== myName &&
             kickUser;
+
+          const canKickAndBlock =
+            myLevel >= AML &&
+            u.level < myLevel &&
+            u.name !== myName &&
+            kickAndBlockUser;
 
           const isFiltered = filteredUsers.includes(u.name);
 
@@ -126,6 +134,26 @@ export default function UserList({
                       >
                         🔇 禁言30秒
                       </button>
+
+                      {canKickAndBlock && (
+                        <button
+                          className="ul-admin-ban"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const reason = window.prompt(`請輸入徹底封鎖 ${u.name} 的原因（必填）`, "");
+                            if (!reason || !reason.trim()) {
+                              window.alert("封鎖原因必填，操作已取消");
+                              return;
+                            }
+                            if (window.confirm(`確定徹底封鎖 ${u.name}？這會踢出並封鎖 IP 與暱稱。`)) {
+                              kickAndBlockUser?.(u.name, reason.trim());
+                              setOpenMenu(null);
+                            }
+                          }}
+                        >
+                          ⛔ 徹底封鎖
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>

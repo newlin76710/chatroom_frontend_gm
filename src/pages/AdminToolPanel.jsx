@@ -56,12 +56,6 @@ export default function AdminToolPanel({ myName, myLevel, token, userList }) {
                   等級管理
                 </button>
                 <button
-                  className={tab === "ip" ? "active" : ""}
-                  onClick={() => setTab("ip")}
-                >
-                  IP 管制
-                </button>
-                <button
                   className={tab === "adjustment" ? "active" : ""}
                   onClick={() => setTab("adjustment")}
                 >
@@ -78,6 +72,15 @@ export default function AdminToolPanel({ myName, myLevel, token, userList }) {
                 暱稱管理
               </button>
             )}
+
+            {myLevel >= AML && (
+              <button
+                className={tab === "ip" ? "active" : ""}
+                onClick={() => setTab("ip")}
+              >
+                IP 管制
+              </button>
+            )}
           </div>
 
           {/* Content */}
@@ -85,7 +88,7 @@ export default function AdminToolPanel({ myName, myLevel, token, userList }) {
             {tab === "login" && <AdminLoginLogPanel token={token} />}
             {tab === "message" && <MessageLogPanel myName={myName} myLevel={myLevel} token={token} userList={userList}/>}
             {tab === "level" && <AdminLevelPanel token={token} myLevel={myLevel} />}
-            {tab === "ip" && <AdminIPPanel token={token} />}
+            {tab === "ip" && <AdminIPPanel token={token} myLevel={myLevel} />}
             {tab === "adjustment" && <AdminAdjustmentLogPanel token={token} />}
             {tab === "nickname" && <AdminNicknamePanel myLevel={myLevel} token={token} myName={myName} />}
           </div>

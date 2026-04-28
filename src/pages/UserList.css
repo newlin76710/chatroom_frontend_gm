@@ -66,3 +66,12 @@
 .ul-admin-mute:hover {
   background: #efdbff;
 }
+
+.ul-admin-ban {
+  background: #fff1f0;
+  color: #cf1322;
+}
+
+.ul-admin-ban:hover {
+  background: #ffccc7;
+}
