@@ -12,7 +12,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import socketInstance from "./socket";
+import socketInstance from "../../shared/socket";
 import "./ChatApp.css";
 import MessageList from "./MessageList";
 import VideoPlayer from "./VideoPlayer";
@@ -20,25 +20,25 @@ import VideoSafeBoundary from "./VideoSafeBoundary";
 import SongRoom from "./SongRoom";
 import Listener from "./Listener";
 import UserList from "./UserList";
-import AdminSettingsModal from "./AdminSettingsModal";
-import GoldAppleGame from "./GoldAppleGame";
-import WhackAppleGame from "./WhackAppleGame";
-import ClawMachineGame from "./ClawMachineGame";
+import AdminSettingsModal from "../admin/AdminSettingsModal";
+import GoldAppleGame from "../games/GoldAppleGame";
+import WhackAppleGame from "../games/WhackAppleGame";
+import ClawMachineGame from "../games/ClawMachineGame";
 import SurpriseHistoryPanel from "./SurpriseHistoryPanel";
-import AdminToolPanel from "./AdminToolPanel";
+import AdminToolPanel from "../admin/AdminToolPanel";
 import QuickPhrasePanel from "./QuickPhrasePanel";
 import AnnouncementPanel from "./AnnouncementPanel";
 import ShopPanel from "./ShopPanel";
-import CasinoPanel from "./CasinoPanel";
+import CasinoPanel from "../casino/CasinoPanel";
 import MessageBoard from "./MessageBoard";
 import MyMessageLogPanel from "./MyMessageLogPanel";
 import Leaderboard from "./Leaderboard";
-import AppErrorBoundary from "./AppErrorBoundary";
-import { aiAvatars } from "./aiConfig";
-import { expForNextLevel, safeText } from "./utils";
-import { useMessages } from "./hooks/useMessages";
-import { useUserState } from "./hooks/useUserState";
-import { HEARTBEAT_INTERVAL, COOLDOWN_MS, GENDER_COLORS } from "./constants";
+import AppErrorBoundary from "../../shared/AppErrorBoundary";
+import { aiAvatars } from "../../shared/aiConfig";
+import { expForNextLevel, safeText } from "../../shared/utils";
+import { useMessages } from "../../shared/hooks/useMessages";
+import { useUserState } from "../../shared/hooks/useUserState";
+import { HEARTBEAT_INTERVAL, COOLDOWN_MS, GENDER_COLORS } from "../../shared/constants";
 import { Converter } from "opencc-js";
 
 // ─── 環境設定 ────────────────────────────────────────────────────────────────

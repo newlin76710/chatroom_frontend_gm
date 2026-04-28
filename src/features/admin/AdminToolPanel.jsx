@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import AdminLoginLogPanel from "./AdminLoginLogPanel";
-import MessageLogPanel from "./MessageLogPanel";
+import MessageLogPanel from "../chat/MessageLogPanel";
 import AdminLevelPanel from "./AdminLevelPanel";
 import AdminIPPanel from "./AdminIPPanel";
 import AdminNicknamePanel from "./AdminNicknamePanel";

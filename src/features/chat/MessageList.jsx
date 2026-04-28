@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from "react";
-import { aiAvatars } from "./aiConfig";
+import { aiAvatars } from "../../shared/aiConfig";
 import "./MessageList.css";
-import { safeText } from "./utils";
+import { safeText } from "../../shared/utils";
 
 export default function MessageList({
   messages = [],

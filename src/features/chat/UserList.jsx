@@ -1,6 +1,6 @@
 // UserList.jsx
 import React from "react";
-import { aiAvatars } from "./aiConfig";
+import { aiAvatars } from "../../shared/aiConfig";
 import "./UserList.css";
 
 export default function UserList({

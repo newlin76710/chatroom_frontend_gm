@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { aiAvatars } from "./aiConfig";
-import socket from "./socket";
+import { aiAvatars } from "../../shared/aiConfig";
+import socket from "../../shared/socket";
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
 const RN = import.meta.env.VITE_ROOM_NAME || "windsong";
