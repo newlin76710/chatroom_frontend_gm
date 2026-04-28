@@ -204,15 +204,16 @@ function ChipSelector({ bet, setBet, min, max, disabled, apples }) {
 function ActionButtons({ game, onAction, loading }) {
   if (!game || game.state === "finished") return null;
   const { canHit, canStand, canDouble, canSplit, canSurrender, canInsurance } = game;
+  const insuranceCost = Math.floor((game.betAmounts?.[0] || 0) / 2);
 
   if (game.state === "insurance_offered") {
     return (
       <div className="bj-actions">
         <div className="bj-insurance-prompt">
-          莊家亮出 A，是否投保？（花費 {Math.floor((game.betAmounts?.[0] || 0) / 2)} 顆）
+          莊家亮出 A，是否投保？（花費 {insuranceCost} 顆）
         </div>
         <div className="bj-actions-row">
-          <button className="bj-btn bj-btn-insurance" onClick={() => onAction("insurance")} disabled={loading}>
+          <button className="bj-btn bj-btn-insurance" onClick={() => onAction("insurance")} disabled={loading || !canInsurance}>
             投保 (2:1)
           </button>
           <button className="bj-btn bj-btn-no-insurance" onClick={() => onAction("no_insurance")} disabled={loading}>
