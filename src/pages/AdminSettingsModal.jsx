@@ -47,24 +47,28 @@ const DEFAULT = {
   roulette_bh_multiplier:    2,
   roulette_combo_multiplier: 4,
   roulette_max_bet:          50,
+  roulette_house_edge:       100,
   blackjack_enabled:         true,
   blackjack_open_hour:       0,
   blackjack_open_minute:     0,
   blackjack_close_hour:      24,
   blackjack_close_minute:    0,
   blackjack_max_bet:         200,
+  blackjack_house_edge:      100,
   sicbo_enabled:             true,
   sicbo_open_hour:           0,
   sicbo_open_minute:         0,
   sicbo_close_hour:          24,
   sicbo_close_minute:        0,
   sicbo_max_bet:             200,
+  sicbo_house_edge:          100,
   slot_enabled:              true,
   slot_open_hour:            0,
   slot_open_minute:          0,
   slot_close_hour:           24,
   slot_close_minute:         0,
   slot_max_bet:              200,
+  slot_house_edge:           100,
 };
 
 export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
@@ -422,6 +426,12 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   onChange={e => setInt("roulette_max_bet", e.target.value)} />
                 <span className="field-note">個金蘋果（最多可下注）</span>
               </Row>
+              <Row label="莊家優勢設定">
+                <input type="number" min={1} max={200} style={{ width: 80 }}
+                  value={settings.roulette_house_edge}
+                  onChange={e => setInt("roulette_house_edge", e.target.value)} />
+                <span className="field-note">1-200，100=原始賠率，越大玩家回收越少</span>
+              </Row>
             </section>
 
             {/* ─── 娛樂城：21點 ────────────────────────────────── */}
@@ -461,6 +471,12 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   value={settings.blackjack_max_bet}
                   onChange={e => setInt("blackjack_max_bet", e.target.value)} />
                 <span className="field-note">個金蘋果（最少 200）</span>
+              </Row>
+              <Row label="莊家優勢設定">
+                <input type="number" min={1} max={200} style={{ width: 80 }}
+                  value={settings.blackjack_house_edge}
+                  onChange={e => setInt("blackjack_house_edge", e.target.value)} />
+                <span className="field-note">1-200，100=原始賠率，越大玩家回收越少</span>
               </Row>
             </section>
 
@@ -502,6 +518,12 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   onChange={e => setInt("sicbo_max_bet", e.target.value)} />
                 <span className="field-note">個金蘋果（每種投注類型最多可下注）</span>
               </Row>
+              <Row label="莊家優勢設定">
+                <input type="number" min={1} max={200} style={{ width: 80 }}
+                  value={settings.sicbo_house_edge}
+                  onChange={e => setInt("sicbo_house_edge", e.target.value)} />
+                <span className="field-note">1-200，100=原始賠率，越大玩家回收越少</span>
+              </Row>
             </section>
 
             {/* ─── 娛樂城：老虎機 ──────────────────────────────── */}
@@ -541,6 +563,12 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   value={settings.slot_max_bet}
                   onChange={e => setInt("slot_max_bet", e.target.value)} />
                 <span className="field-note">個金蘋果</span>
+              </Row>
+              <Row label="莊家優勢設定">
+                <input type="number" min={1} max={200} style={{ width: 80 }}
+                  value={settings.slot_house_edge}
+                  onChange={e => setInt("slot_house_edge", e.target.value)} />
+                <span className="field-note">1-200，100=原始賠率，越大玩家回收越少</span>
               </Row>
             </section>
 
