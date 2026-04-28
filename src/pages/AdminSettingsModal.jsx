@@ -69,6 +69,13 @@ const DEFAULT = {
   slot_close_minute:         0,
   slot_max_bet:              200,
   slot_house_edge:           100,
+  baccarat_enabled:          true,
+  baccarat_open_hour:        0,
+  baccarat_open_minute:      0,
+  baccarat_close_hour:       24,
+  baccarat_close_minute:     0,
+  baccarat_max_bet:          200,
+  baccarat_house_edge:       100,
 };
 
 export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
@@ -568,6 +575,51 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <input type="number" min={1} max={200} style={{ width: 80 }}
                   value={settings.slot_house_edge}
                   onChange={e => setInt("slot_house_edge", e.target.value)} />
+                <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
+              </Row>
+            </section>
+
+            <section className="settings-section">
+              <h4>
+                🀄 娛樂城：百家樂
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.baccarat_enabled}
+                    onChange={e => setBool("baccarat_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+
+              <Row label="開放時間（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                  <input type="number" min={0} max={23} style={{ width: 56 }}
+                    value={settings.baccarat_open_hour}
+                    onChange={e => setInt("baccarat_open_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.baccarat_open_minute}
+                    onChange={e => setInt("baccarat_open_minute", e.target.value)} />
+                  <span>分 ～</span>
+                  <input type="number" min={0} max={24} style={{ width: 56 }}
+                    value={settings.baccarat_close_hour}
+                    onChange={e => setInt("baccarat_close_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.baccarat_close_minute}
+                    onChange={e => setInt("baccarat_close_minute", e.target.value)} />
+                  <span>分</span>
+                  <span style={{ color: "#aaa", fontSize: "0.8rem" }}>（24時 = 午夜）</span>
+                </div>
+              </Row>
+              <Row label="單注上限">
+                <input type="number" min={1} max={9999} style={{ width: 80 }}
+                  value={settings.baccarat_max_bet}
+                  onChange={e => setInt("baccarat_max_bet", e.target.value)} />
+                <span className="field-note">個金蘋果</span>
+              </Row>
+              <Row label="勝率偏向設定">
+                <input type="number" min={1} max={200} style={{ width: 80 }}
+                  value={settings.baccarat_house_edge}
+                  onChange={e => setInt("baccarat_house_edge", e.target.value)} />
                 <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
               </Row>
             </section>

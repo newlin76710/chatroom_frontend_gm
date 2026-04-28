@@ -3,6 +3,7 @@ import RouletteGame from "./RouletteGame";
 import BlackjackGame from "./BlackjackGame";
 import SicBoGame from "./SicBoGame";
 import SlotMachine from "./SlotMachine";
+import BaccaratGame from "./BaccaratGame";
 import "./CasinoPanel.css";
 
 const RULES = `🎰 金蘋果輪盤 遊戲規則
@@ -86,6 +87,10 @@ export default function CasinoPanel({ token, apples, onApplesChange, open, onClo
             className={`casino-tab ${tab === "slot" ? "active" : ""}`}
             onClick={() => setTab("slot")}
           >🎰 老虎機</button>
+          <button
+            className={`casino-tab ${tab === "baccarat" ? "active" : ""}`}
+            onClick={() => setTab("baccarat")}
+          >🀄 百家樂</button>
         </div>
 
         {/* ── Game area ── */}
@@ -113,6 +118,13 @@ export default function CasinoPanel({ token, apples, onApplesChange, open, onClo
           )}
           {tab === "slot" && (
             <SlotMachine
+              token={token}
+              apples={apples}
+              onApplesChange={onApplesChange}
+            />
+          )}
+          {tab === "baccarat" && (
+            <BaccaratGame
               token={token}
               apples={apples}
               onApplesChange={onApplesChange}
