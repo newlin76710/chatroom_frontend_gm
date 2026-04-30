@@ -220,6 +220,7 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
     };
 
     const onEnd = ({ scores }) => {
+      console.log("[WhackGame] onEnd received:", { scores });
       inputLockedRef.current = true;
       clearInterval(timerRef.current);
       stopHoles();
