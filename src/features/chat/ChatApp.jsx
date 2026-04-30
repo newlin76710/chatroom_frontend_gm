@@ -178,7 +178,7 @@ export default function ChatApp() {
     setShowReloadNotice(true);
     setTimeout(() => {
       window.location.reload();
-    }, 5000);
+    }, 30000);
   }, []);
 
   // ─── 心跳 + 版本檢查（整合版） ─────────────────────────────────────────────
@@ -605,7 +605,7 @@ export default function ChatApp() {
               {offline && <div className="offline-banner">⚠️ 網路不穩，重新連線中...</div>}
               {showReloadNotice && (
                 <div className="reload-banner">
-                  🔄 聊天室版本已更新，5 秒後系統自動重新整理...
+                  🔄 聊天室版本已更新，30 秒後系統自動重新整理...
                 </div>
               )}
             </div>
