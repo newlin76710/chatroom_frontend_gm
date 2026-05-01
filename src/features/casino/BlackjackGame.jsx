@@ -39,7 +39,6 @@ function handLabel(total, hand) {
 function Card({ card, small, highlight, dealIdx = 0 }) {
   if (!card) return null;
   
-  // 牌背
   if (card.hidden) {
     return (
       <div
@@ -56,9 +55,7 @@ function Card({ card, small, highlight, dealIdx = 0 }) {
   const isAce = card.v === "A";
   const numValue = isFace ? 0 : parseInt(card.v) || 1;
 
-  // 牌面中央內容
   const renderPips = () => {
-    // 人頭牌 J/Q/K
     if (isFace) {
       const FaceComponent = getFaceCardComponent(card.s, card.v);
       const svgSize = small ? 40 : 58;
@@ -73,7 +70,6 @@ function Card({ card, small, highlight, dealIdx = 0 }) {
       );
     }
 
-    // Ace
     if (isAce) {
       return (
         <div className="bj-card-center-ace">
@@ -82,7 +78,6 @@ function Card({ card, small, highlight, dealIdx = 0 }) {
       );
     }
 
-    // 數字牌 2-10
     const pipPositions = {
       2: ["top", "bottom"],
       3: ["top", "center", "bottom"],
@@ -200,23 +195,40 @@ function ChipSelector({ bet, setBet, min, max, disabled, apples }) {
   );
 }
 
-// ── Action Buttons ───────────────────────────────────────────────
-function ActionButtons({ game, onAction, loading }) {
+// ── Action Buttons (改進版：顯示保險金額並檢查餘額) ───────────────
+function ActionButtons({ game, onAction, loading, apples }) {
   if (!game || game.state === "finished") return null;
-  const { canHit, canStand, canDouble, canSplit, canSurrender, canInsurance } = game;
-  const insuranceCost = Math.floor((game.betAmounts?.[0] || 0) / 2);
+  const { canHit, canStand, canDouble, canSplit, canSurrender, canInsurance, insuranceCost = 0 } = game;
+  
+  // 檢查是否足夠投保
+  const canAffordInsurance = (apples ?? 0) >= insuranceCost && insuranceCost > 0;
 
   if (game.state === "insurance_offered") {
     return (
       <div className="bj-actions">
         <div className="bj-insurance-prompt">
-          莊家亮出 A，是否投保？（花費 {insuranceCost} 顆）
+          莊家亮出 A，是否投保？
+          <strong className="bj-insurance-cost">
+            （花費 {insuranceCost} 顆金蘋果，若莊家 BlackJack 賠付 {insuranceCost * 2} 顆）
+          </strong>
+          {!canAffordInsurance && insuranceCost > 0 && (
+            <span className="bj-insurance-warning"> ⚠️ 金蘋果不足</span>
+          )}
         </div>
         <div className="bj-actions-row">
-          <button className="bj-btn bj-btn-insurance" onClick={() => onAction("insurance")} disabled={loading || !canInsurance}>
-            投保 (2:1)
+          <button 
+            className="bj-btn bj-btn-insurance" 
+            onClick={() => onAction("insurance")} 
+            disabled={loading || !canInsurance || insuranceCost === 0 || !canAffordInsurance}
+            title={!canAffordInsurance ? "金蘋果不足" : "投保可獲得 2:1 賠付"}
+          >
+            🛡️ 投保 (2:1) - {insuranceCost} 🍎
           </button>
-          <button className="bj-btn bj-btn-no-insurance" onClick={() => onAction("no_insurance")} disabled={loading}>
+          <button 
+            className="bj-btn bj-btn-no-insurance" 
+            onClick={() => onAction("no_insurance")} 
+            disabled={loading}
+          >
             不投保
           </button>
         </div>
@@ -328,7 +340,11 @@ function HelpPanel({ onClose }) {
             <tr><td>加倍 (D)</td><td>前兩張時可加倍下注，只再取一張牌</td></tr>
             <tr><td>分牌 (P)</td><td>兩張同點數可分成兩手，各自對賭（最多4手）</td></tr>
             <tr><td>投降</td><td>放棄本局，收回半數下注</td></tr>
-            <tr><td>投保</td><td>莊家亮A時可投保（花費原注一半），若莊家有BlackJack則 1賠2；若無則保險金沒收</td></tr>
+            <tr>
+              <td>投保</td>
+              <td>莊家亮A時可投保（花費原注一半），若莊家有BlackJack則 1賠2；若無則保險金沒收<br/>
+              <strong>※ 下注需至少 2 顆才能投保</strong></td>
+            </tr>
           </tbody>
         </table>
         <table className="bj-help-table" style={{ marginTop: 8 }}>
@@ -362,7 +378,8 @@ function HelpPanel({ onClose }) {
         </table>
         <p className="bj-help-note">
           ⚠️ 莊家抽牌規則：點數 &lt;17 或軟17時補牌，其餘停牌。<br />
-          ⚠️ 分牌後的A只各取一張，不可再補牌。
+          ⚠️ 分牌後的A只各取一張，不可再補牌。<br />
+          ⚠️ 投保需下注至少 2 顆金蘋果。
         </p>
       </div>
     </div>
@@ -594,9 +611,9 @@ export default function BlackjackGame({ token, apples, onApplesChange }) {
           </>
         )}
 
-        {/* Playing phase */}
+        {/* Playing phase - 傳入 apples 讓 ActionButtons 檢查投保餘額 */}
         {phase === "playing" && (
-          <ActionButtons game={game} onAction={doAction} loading={loading} />
+          <ActionButtons game={game} onAction={doAction} loading={loading} apples={apples} />
         )}
 
         {/* Current bet info during play */}

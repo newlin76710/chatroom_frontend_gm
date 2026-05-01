@@ -88,10 +88,10 @@ export default function CasinoPanel({ token, apples, onApplesChange, open, onClo
             className={`casino-tab ${tab === "slot" ? "active" : ""}`}
             onClick={() => setTab("slot")}
           >🎰 老虎機</button>
-          {/* <button
+          <button
             className={`casino-tab ${tab === "baccarat" ? "active" : ""}`}
             onClick={() => setTab("baccarat")}
-          >🀄 百家樂</button> */}
+          >🀄 百家樂</button>
         </div>
 
         {/* ── Game area ── */}
@@ -125,13 +125,13 @@ export default function CasinoPanel({ token, apples, onApplesChange, open, onClo
                 onApplesChange={onApplesChange}
               />
             )}
-            {/* {tab === "baccarat" && (
+            {tab === "baccarat" && (
               <BaccaratGame
                 token={token}
                 apples={apples}
                 onApplesChange={onApplesChange}
               />
-            )} */}
+            )}
           </Suspense>
         </div>
 
