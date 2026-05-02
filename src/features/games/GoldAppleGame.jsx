@@ -1,5 +1,5 @@
 // GoldAppleGame.jsx — 撈金蘋果遊戲覆蓋層
-// 遊戲一：多顆金蘋果，全場搶，1 分鐘結算
+// 遊戲一：多顆金蘋果，即時提交撈取，結束直接查看結果
 // 遊戲二：一顆大金蘋果，第一個點到獲得全部獎勵
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./GoldAppleGame.css";
@@ -7,12 +7,12 @@ import "./GoldAppleGame.css";
 const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
 
 // ─── 常數 ─────────────────────────────────────────────────────────────────────
-const SIZE1 = 56;   // px — 遊戲一蘋果尺寸（平板放大後以最大值計算邊界）
-const SIZE2 = 100;  // px — 遊戲二蘋果尺寸（放大後視覺更清楚）
-const SPD_LO = 5;   // 遊戲一最低速度（像素/幀 @60fps）
-const SPD_HI = 9;   // 遊戲一最高速度
-const SPD2_LO = 40;  // 遊戲二最低速度（放慢，避免殘像）
-const SPD2_HI = 60;  // 遊戲二最高速度
+const SIZE1 = 56;
+const SIZE2 = 100;
+const SPD_LO = 5;
+const SPD_HI = 9;
+const SPD2_LO = 40;
+const SPD2_HI = 60;
 
 function randSpd(lo = SPD_LO, hi = SPD_HI) {
   const s = lo + Math.random() * (hi - lo);
@@ -20,7 +20,6 @@ function randSpd(lo = SPD_LO, hi = SPD_HI) {
   return { vx: Math.cos(a) * s, vy: Math.sin(a) * s };
 }
 
-// 反彈後旋轉速度向量 ±angle 度，讓軌跡不規則
 function jitterBounce(p, angleDeg = 20) {
   const a = (Math.random() - 0.5) * (angleDeg * Math.PI / 180);
   const cos = Math.cos(a), sin = Math.sin(a);
@@ -43,46 +42,46 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
   const [phase, setPhase] = useState("idle");
 
   // ── 30 秒預告
-  const [warnType, setWarnType] = useState(null); // null | 'game1' | 'game2'
+  const [warnType, setWarnType] = useState(null);
   const [warnSeconds, setWarnSeconds] = useState(30);
 
   // ── 遊戲一
-  const [g1AppleIds, setG1AppleIds] = useState([]); // React 控制 DOM 渲染
+  const [g1AppleIds, setG1AppleIds] = useState([]);
   const [g1Reward, setG1Reward] = useState(1);
   const [g1CatchLimit, setG1CatchLimit] = useState(0);
   const [g1CaughtCount, setG1CaughtCount] = useState(0);
-  const [g1Result, setG1Result] = useState(null); // catches map 結束時
+  const [g1Result, setG1Result] = useState(null);
+  const [g1Submitting, setG1Submitting] = useState(false);
 
   // ── 遊戲二
   const [g2Reward, setG2Reward] = useState(25);
-  const [g2Result, setG2Result] = useState(null); // { winner, reward }
+  const [g2Result, setG2Result] = useState(null);
 
   // ── 共用
   const [timeLeft, setTimeLeft] = useState(0);
   const [lateMsg, setLateMsg] = useState("");
 
-  // ── Refs（避免 re-render）
+  // ── Refs
   const containerRef = useRef(null);
   const physicsRef = useRef({});         // id → { id, x, y, vx, vy }
-  const domRefs = useRef({});         // id → DOM element（遊戲一）
-  const localCaughtRef = useRef(new Set()); // 已在本地點過的蘋果 ID（防重複點擊）
-  const apple2WrapRef = useRef(null);       // 遊戲二蘋果的包裝 div
+  const domRefs = useRef({});
+  const localCaughtRef = useRef(new Set()); // 本地已撈取 appleId（防止重複點擊）
+  const apple2WrapRef = useRef(null);
   const apple2Physics = useRef({ x: 200, y: 200, vx: 7, vy: 6 });
-  // 速度設定（從 server 取得，預設值僅在 server 未送時使用）
   const g1SpdRef = useRef({ lo: SPD_LO,  hi: SPD_HI  });
   const g2SpdRef = useRef({ lo: SPD2_LO, hi: SPD2_HI });
   const animRef = useRef(null);
   const timerRef = useRef(null);
-  const warnTimerRef = useRef(null); // 說明彈窗倒數計時器
+  const warnTimerRef = useRef(null);
   const phaseRef = useRef("idle");
   const inputLockedRef = useRef(true);
-  const activePointerRef = useRef(null); // 多點觸控保護：同時只允許一個 pointer
-  const lastCatchTimeRef = useRef(0);   // 連點冷卻：避免快速連續點擊搶多顆
-  const CATCH_COOLDOWN_MS = 400;        // 每次撈蘋果後冷卻時間（ms）
-  // 快取容器尺寸，避免每幀 layout thrashing
+  const activePointerRef = useRef(null);
+  const lastCatchTimeRef = useRef(0);
+  const CATCH_COOLDOWN_MS = 400; // 客戶端冷卻，服務端另有 300ms 節流
   const sizeRef = useRef({ W: window.innerWidth, H: window.innerHeight });
   const [netPos, setNetPos]           = useState({ x: -300, y: -300 });
   const [netScooping, setNetScooping] = useState(false);
+
   useEffect(() => { phaseRef.current = phase; }, [phase]);
 
   const refreshMyApples = useCallback(async () => {
@@ -100,7 +99,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
     } catch {}
   }, [token, setApples]);
 
-  // 容器尺寸只在 resize 時更新
+  // 容器尺寸監聽
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -110,7 +109,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [phase]); // phase 改變時容器可能重新 mount
+  }, [phase]);
 
   // ─── 動畫迴圈 ──────────────────────────────────────────────────────────────
   const startAnim = useCallback(() => {
@@ -118,14 +117,12 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
 
     function loop() {
       if (!containerRef.current) {
-        // container 尚未掛載，下一幀再試（不可直接 return 否則迴圈永久停止）
         animRef.current = requestAnimationFrame(loop);
         return;
       }
       const { W, H } = sizeRef.current;
 
       if (phaseRef.current === "game1") {
-        // 更新所有蘋果位置
         for (const p of Object.values(physicsRef.current)) {
           p.x += p.vx;
           p.y += p.vy;
@@ -136,7 +133,6 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
           const dom = domRefs.current[p.id];
           if (dom) dom.style.transform = `translate(${p.x}px, ${p.y}px)`;
         }
-
       } else if (phaseRef.current === "game2") {
         const p = apple2Physics.current;
         p.x += p.vx;
@@ -177,7 +173,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
 
   // ─── Socket 事件 ──────────────────────────────────────────────────────────
   useEffect(() => {
-    // ── 30 秒預告 ──
+    // 30 秒預告
     const startWarnCountdown = (type, secondsLeft) => {
       setWarnType(type);
       setWarnSeconds(secondsLeft || 30);
@@ -192,7 +188,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
     const onGame1Warn = ({ secondsLeft }) => startWarnCountdown('game1', secondsLeft);
     const onGame2Warn = ({ secondsLeft }) => startWarnCountdown('game2', secondsLeft);
 
-    // ── 遊戲一開始 ──
+    // 遊戲一開始
     const onG1Start = ({ duration, appleIds, reward, speedLo, speedHi, maxCatchPerUser, appleCount }) => {
       inputLockedRef.current = false;
       clearInterval(warnTimerRef.current);
@@ -201,10 +197,10 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
       setG1CatchLimit(Number(maxCatchPerUser || appleCount || appleIds?.length || 0));
       setG1CaughtCount(0);
       setG1Result(null);
+      setG1Submitting(false);
       setLateMsg("");
       if (speedLo !== undefined) g1SpdRef.current = { lo: speedLo, hi: speedHi };
 
-      // 清除上場記錄
       localCaughtRef.current.clear();
       activePointerRef.current = null;
       lastCatchTimeRef.current = 0;
@@ -225,18 +221,15 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
       startAnim();
     };
 
-    // ── 遊戲一有人撈到（server 確認）──
+    // 遊戲一結束（不再提交，直接切換到結果畫面等待伺服器廣播）
     const onG1End = () => {
       inputLockedRef.current = true;
       stopAnim();
       clearInterval(timerRef.current);
       activePointerRef.current = null;
       setNetScooping(false);
-      setG1Result(null);
-      socket.emit("submitGoldGame1Result", {
-        token,
-        caughtIds: Array.from(localCaughtRef.current),
-      });
+      setG1Submitting(true);
+      // 不再發送 submitGoldGame1Result
       setG1AppleIds([]);
       physicsRef.current = {};
       domRefs.current = {};
@@ -244,6 +237,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
     };
 
     const onG1Result = ({ catches }) => {
+      setG1Submitting(false);
       setG1Result(catches || {});
       if ((catches?.[name] || 0) > 0) {
         setTimeout(() => { refreshMyApples(); }, 300);
@@ -252,7 +246,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
       setG1CatchLimit(0);
     };
 
-    // ── 遊戲二開始（不限時，有人搶到才結束）──
+    // 遊戲二開始
     const onG2Start = ({ reward, speedLo, speedHi }) => {
       inputLockedRef.current = false;
       clearInterval(warnTimerRef.current);
@@ -268,11 +262,9 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
       apple2Physics.current = { x, y, ...randSpd(g2SpdRef.current.lo, g2SpdRef.current.hi) };
 
       setPhase("game2");
-      // 不限時，不呼叫 startTimer
       startAnim();
     };
 
-    // ── 遊戲二有人贏 ──
     const onG2Won = ({ winner, reward }) => {
       inputLockedRef.current = true;
       setG2Result({ winner, reward });
@@ -281,13 +273,11 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
       }
     };
 
-    // ── 遊戲二慢了 ──
     const onG2Late = ({ winner, secondsLate }) => {
       setLateMsg(`已被 ${winner} 搶先 ${secondsLate} 秒`);
       setTimeout(() => setLateMsg(""), 3500);
     };
 
-    // ── 遊戲二結束 ──
     const onG2End = () => {
       inputLockedRef.current = true;
       stopAnim();
@@ -318,7 +308,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
     };
   }, [socket, name, token, setApples, startAnim, stopAnim, startTimer, refreshMyApples]);
 
-  // ─── 離開時清理 ───────────────────────────────────────────────────────────
+  // 清理
   useEffect(() => {
     return () => {
       stopAnim();
@@ -327,7 +317,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
     };
   }, [stopAnim]);
 
-  // ─── 撈蘋果動作 ───────────────────────────────────────────────────────────
+  // ─── 撈蘋果動作（即時提交）─────────────────────────────────────────────────
   const handleNetCast = useCallback((e) => {
     if (inputLockedRef.current) return;
     if (phaseRef.current !== "game1") return;
@@ -338,7 +328,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
     activePointerRef.current = e.pointerId;
     setNetPos({ x: e.clientX, y: e.clientY });
 
-    const NET_RADIUS = 55; // px — matches the net SVG visual size
+    const NET_RADIUS = 55;
     let bestId = null;
     let bestDist = Infinity;
 
@@ -361,12 +351,16 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
     lastCatchTimeRef.current = now;
     localCaughtRef.current.add(bestId);
     delete physicsRef.current[bestId];
+
+    // ✅ 即時發送撈取事件，附帶 token
+    socket.emit("caughtApple1", { token, appleId: bestId });
+
     setG1CaughtCount(prev => {
       const next = prev + 1;
       return g1CatchLimit ? Math.min(next, g1CatchLimit) : next;
     });
     setG1AppleIds(prev => prev.filter(id => id !== bestId));
-  }, [g1CatchLimit]);
+  }, [socket, token, g1CatchLimit]);
 
   const handlePointerMove = useCallback((e) => {
     if (inputLockedRef.current) return;
@@ -377,7 +371,6 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
   const handleCatch2 = useCallback((e) => {
     if (inputLockedRef.current) return;
     e.stopPropagation();
-    // 多點觸控保護
     if (activePointerRef.current !== null && activePointerRef.current !== e.pointerId) return;
     activePointerRef.current = e.pointerId;
     socket.emit("catchApple2", { token });
@@ -389,7 +382,6 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
     }
   }, []);
 
-  // 點擊結果卡片可提前關閉
   const dismissResult = useCallback(() => {
     inputLockedRef.current = true;
     setPhase("idle");
@@ -397,6 +389,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
     setG1CaughtCount(0);
     setG1CatchLimit(0);
     setG2Result(null);
+    setG1Submitting(false);
     setLateMsg("");
   }, []);
 
@@ -437,12 +430,11 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
     );
   }
 
-  // ─── 沒有遊戲時不渲染 ────────────────────────────────────────────────────
   if (phase === "idle") return null;
 
-  // ─── 結果畫面 ─────────────────────────────────────────────────────────────
+  // ─── 結果畫面（遊戲一）────────────────────────────────────────────────────
   if (phase === "result1") {
-    const isSettling = g1Result === null;
+    const isSettling = g1Result === null || g1Submitting;
     const entries = Object.entries(g1Result || {})
       .sort((a, b) => b[1] - a[1])
       .slice(0, 100);
@@ -451,7 +443,10 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
         <div className="gag-result" onClick={e => e.stopPropagation()}>
           <h2>🍎 遊戲結束！</h2>
           {isSettling ? (
-            <p>正在結算中，請稍候...</p>
+            <>
+              <p>正在等待結算結果...</p>
+              <p>你撈到了 {localCaughtRef.current.size} 顆（最終以伺服器紀錄為準）</p>
+            </>
           ) : entries.length > 0 ? (
             <>
               <p>本次撈金蘋果得獎名單(前百)：</p>
@@ -466,14 +461,13 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
           ) : (
             <p>本次沒有人撈到金蘋果…</p>
           )}
-          <p className="gag-dismiss-hint">
-            {isSettling ? "點擊任意處可先關閉，結算完成後請看聊天室廣播" : "點擊任意處關閉"}
-          </p>
+          <p className="gag-dismiss-hint">點擊任意處關閉</p>
         </div>
       </div>
     );
   }
 
+  // ─── 結果畫面（遊戲二）────────────────────────────────────────────────────
   if (phase === "result2") {
     const won = g2Result?.winner;
     return (
@@ -509,8 +503,6 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
       onPointerCancel={handlePointerRelease}
       style={phase === "game1" ? { cursor: "none" } : undefined}
     >
-
-      {/* HUD — 遊戲一顯示倒計時，遊戲二只顯示提示 */}
       <div className="gag-hud">
         {phase === "game1" && (
           <>
@@ -525,10 +517,8 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
         )}
       </div>
 
-      {/* 「慢了 N 秒」浮層 */}
       {lateMsg && <div className="gag-late">{lateMsg}</div>}
 
-      {/* 遊戲一：多顆蘋果 */}
       {phase === "game1" && g1AppleIds.map(id => (
         <div
           key={id}
@@ -536,8 +526,6 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
           ref={el => {
             if (el) {
               domRefs.current[id] = el;
-              // 掛載時立即設定初始位置（參考大金蘋果做法）
-              // 不用 style prop，避免 setTimeLeft 重渲染時 React 覆蓋動畫迴圈的 transform
               const initP = physicsRef.current[id];
               if (initP) el.style.transform = `translate(${initP.x}px, ${initP.y}px)`;
             } else {
@@ -554,7 +542,6 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
         </div>
       ))}
 
-      {/* 遊戲一：撈網游標 */}
       {phase === "game1" && (
         <div
           className={`gag-net${netScooping ? " scooping" : ""}`}
@@ -585,7 +572,6 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
         </div>
       )}
 
-      {/* 遊戲二：一顆大蘋果 */}
       {phase === "game2" && (() => {
         const p = apple2Physics.current;
         return (
