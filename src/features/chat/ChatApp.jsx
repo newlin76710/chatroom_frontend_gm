@@ -33,13 +33,8 @@ import { HEARTBEAT_INTERVAL, COOLDOWN_MS, GENDER_COLORS } from "../../shared/con
 import { Converter } from "opencc-js";
 
 // ─── 環境設定 ────────────────────────────────────────────────────────────────
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
-const RN = import.meta.env.VITE_ROOM_NAME || "windsong";
-const CN = import.meta.env.VITE_CHATROOM_NAME || "聽風的歌";
-const AML = Number(import.meta.env.VITE_ADMIN_MAX_LEVEL) || 99;
-const ANL = Number(import.meta.env.VITE_ADMIN_MIN_LEVEL) || 91;
-const OPENAI = import.meta.env.VITE_OPENAI === "true";
-const NF = import.meta.env.VITE_NEW_FUNCTION === "true";
+import { roomConfig, loadRoomConfig, BACKEND, RN } from "../../shared/roomConfig";
+loadRoomConfig();
 const FRONTEND_VERSION = import.meta.env.VITE_APP_VERSION || "dev";
 
 // ✅ 模組層級建立（原本在 render 內建立，每次 render 都重新 new）
@@ -92,6 +87,21 @@ export default function ChatApp() {
   useNavigate(); // 保留 navigate（forceLogout 跳頁用）
   const socket = socketInstance;
   const [room] = useState(RN);
+  const [CN, setCN] = useState("");
+
+  const openaiRef = useRef(false);
+
+  // ─── 從後端 room_settings 取得設定 ──────────────────────────────────────
+  useEffect(() => {
+    loadRoomConfig().then(cfg => {
+      setCN(cfg.room_name || "");
+      openaiRef.current = cfg.openai === true;
+    });
+  }, []);
+  const AML    = roomConfig.admin_max_level || 99;
+  const ANL    = roomConfig.admin_min_level || 91;
+  const OPENAI = roomConfig.openai;
+  const NF     = roomConfig.new_function;
 
   // ── 自訂 Hooks ──
   const {
@@ -230,7 +240,7 @@ export default function ChatApp() {
     //  2. 同步自己的 level/exp/apples（委派給 useUserState hook）
     const handler = (list = []) => {
       if (!Array.isArray(list)) return;
-      const filtered = OPENAI ? list : list.filter((u) => u?.type !== "AI");
+      const filtered = openaiRef.current ? list : list.filter((u) => u?.type !== "AI");
 
       setUserList(
         filtered
@@ -304,7 +314,10 @@ export default function ChatApp() {
   useEffect(() => {
     // ✅ 關鍵：handler 本身在 closure 裡讀的是 ref，不是 state，
     //    所以整個 effect 只在 socket 改變時重新執行（綁定一次）
-    const handleMessage = (m) => addMessage(m, userListRef.current);
+    const handleMessage = (m) => {
+      if (m?.room && m.room !== roomRef.current) return;
+      addMessage(m, userListRef.current);
+    };
     const handleSystemMessage = (m) => addSystemMessage(m);
     const handleVideoUpdate = (v) => {
       if (!v) { setCurrentVideo(null); return; }
@@ -529,7 +542,7 @@ export default function ChatApp() {
   // ─── 讀取轉帳上限設定 ────────────────────────────────────────────────────
   useEffect(() => {
     if (!token) return;
-    fetch(`${BACKEND}/api/transfer-limits`, {
+    fetch(`${BACKEND}/api/transfer-limits?room=${RN}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.ok ? r.json() : null)
@@ -551,7 +564,7 @@ export default function ChatApp() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ targetUsername: target, amount: safeAmount }),
+        body: JSON.stringify({ targetUsername: target, amount: safeAmount, room: RN }),
       });
       const data = await res.json();
       if (!res.ok || data.success === false) {

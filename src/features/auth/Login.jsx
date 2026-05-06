@@ -3,10 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { aiAvatars } from "../../shared/aiConfig";
 import socket from "../../shared/socket";
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
-const RN = import.meta.env.VITE_ROOM_NAME || "windsong";
-const CN = import.meta.env.VITE_CHATROOM_NAME || "聽風的歌";
-const NF = import.meta.env.VITE_NEW_FUNCTION === "true";
+import { roomConfig, loadRoomConfig, BACKEND, RN } from "../../shared/roomConfig";
+loadRoomConfig();
 const inputStyle = {
   width: "100%",
   padding: "10px 12px",
@@ -31,6 +29,7 @@ const buttonStyle = {
 
 export default function Login() {
   const navigate = useNavigate();
+  const [roomName, setRoomName] = useState("");
   const [mode, setMode] = useState("guest"); // guest | login | register | edit | forgot
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -43,6 +42,10 @@ export default function Login() {
   const [editLoggedIn, setEditLoggedIn] = useState(false);
   const [phoneConfirm, setPhoneConfirm] = useState(false);
   const [emailConfirm, setEmailConfirm] = useState(false);
+
+  useEffect(() => {
+    loadRoomConfig().then(cfg => setRoomName(cfg.room_name || RN));
+  }, []);
 
   useEffect(() => {
     const type = sessionStorage.getItem("type");
@@ -70,7 +73,7 @@ export default function Login() {
       const res = await fetch(`${BACKEND}/auth/guest`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gender, username }),
+        body: JSON.stringify({ gender, username, room: RN }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "訪客登入失敗");
@@ -80,6 +83,7 @@ export default function Login() {
       sessionStorage.setItem("gender", data.gender);
       sessionStorage.setItem("last_login", data.last_login);
       sessionStorage.setItem("type", "guest");
+      sessionStorage.setItem("room", RN);
       navigate("/chat");
     } catch (e) {
       alert("訪客登入失敗：" + e.message);
@@ -92,7 +96,7 @@ export default function Login() {
       const res = await fetch(`${BACKEND}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password, gender }),
+        body: JSON.stringify({ username, password, gender, room: RN }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "登入失敗");
@@ -103,13 +107,17 @@ export default function Login() {
       sessionStorage.setItem("avatar", data.avatar || "");
       sessionStorage.setItem("last_login", data.last_login);
       sessionStorage.setItem("type", "account");
+      sessionStorage.setItem("room", RN);
+      sessionStorage.setItem("level", data.level ?? 1);
+      sessionStorage.setItem("exp", data.exp ?? 0);
+      sessionStorage.setItem("apples", data.gold_apples ?? 0);
 
       setUsername(data.name);
       setGender(data.gender);
       setAvatar(data.avatar || "");
 
       // ⭐ 首次登入獲得 1 顆金蘋果
-      if (NF && data.reward_apple > 0) {
+      if (roomConfig.new_function && data.reward_apple > 0) {
         alert(`🎉 本日首次登入獲得 ${data.reward_apple} 顆金蘋果！`);
       }
       navigate("/chat");
@@ -192,7 +200,7 @@ export default function Login() {
   // ----- JSX -----
   return (
     <div style={{ maxWidth: 420, margin: "60px auto", padding: 20 }}>
-      <h2 style={{ textAlign: "center", marginBottom: 10 }}>{CN}聊天室</h2>
+      <h2 style={{ textAlign: "center", marginBottom: 10 }}>{roomName}聊天室</h2>
       <div style={{ textAlign: "center", color: "#aaa", fontSize: 14 }}>
         聊天越多，等級越高（最高 Lv.90）
       </div>

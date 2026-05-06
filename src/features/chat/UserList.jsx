@@ -2,6 +2,7 @@
 import React from "react";
 import { aiAvatars } from "../../shared/aiConfig";
 import "./UserList.css";
+import { roomConfig } from "../../shared/roomConfig";
 
 export default function UserList({
   userList = [],
@@ -20,9 +21,9 @@ export default function UserList({
   focusInput
 }) {
   const formatLv = (lv) => String(lv).padStart(2, "0");
-  const ANL = import.meta.env.VITE_ADMIN_MIN_LEVEL || 91;
-  const AML = import.meta.env.VITE_ADMIN_MAX_LEVEL || 99;
-  const OPENAI = import.meta.env.VITE_OPENAI === "true";
+  const ANL = roomConfig.admin_min_level || 91;
+  const AML = roomConfig.admin_max_level || 99;
+  const OPENAI = roomConfig.openai;
   const [openMenu, setOpenMenu] = React.useState(null);
 
   const toggleAdminMenu = (name) => {

@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import "./AdminSettingsModal.css";
+import { RN } from "../../shared/roomConfig";
 
 const DEFAULT = {
+  show_ip:              true,
   daily_login_reward:   1,
   singing_reward:       2,
   per_transfer_limit:   0,
@@ -86,7 +88,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
   /* ─── 讀取設定 ───────────────────────────────────────────────── */
   const fetchSettings = async () => {
     try {
-      const res  = await fetch(`${BACKEND}/admin/settings`, {
+      const res  = await fetch(`${BACKEND}/admin/settings?room=${RN}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -112,7 +114,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(settings),
+        body: JSON.stringify({ ...settings, room: RN }),
       });
       const data = await res.json();
       if (!res.ok) { alert(data.error || "更新失敗"); return; }
@@ -150,6 +152,13 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             {/* ─── 基本獎勵 ──────────────────────────────────────── */}
             <section className="settings-section">
               <h4>基本獎勵</h4>
+              <Row label="聊天室顯示 IP">
+                <label className="toggle-label">
+                  <input type="checkbox" checked={settings.show_ip !== false}
+                    onChange={e => setBool("show_ip", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </Row>
               <Row label="每日登入獎勵">
                 <input type="number" value={settings.daily_login_reward}
                   onChange={e => setInt("daily_login_reward", e.target.value)} />

@@ -16,8 +16,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./WhackAppleGame.css";
 
-// 後端 API 基礎網址
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
+import { BACKEND, RN } from "../../shared/roomConfig";
 
 // 洞的總數（3x3 排列）
 const HOLE_COUNT = 9;
@@ -88,7 +87,7 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
   const refreshMyApples = useCallback(async () => {
     if (!token || typeof setApples !== "function") return;
     try {
-      const res = await fetch(`${BACKEND}/auth/me`, {
+      const res = await fetch(`${BACKEND}/auth/me?room=${RN}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) return;
@@ -424,7 +423,7 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
     setTimeout(() => setHitEffects(fx => fx.filter(f => f.id !== id)), 700);
 
     // 向伺服器發送打擊事件
-    socket.emit("catchWhackApple", { token });
+    socket.emit("catchWhackApple", { token, room: RN });
 
     // 短暫延遲後清除該洞的蘋果，並排程下一個蘋果
     setTimeout(() => {

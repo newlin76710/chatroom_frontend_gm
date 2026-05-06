@@ -24,7 +24,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./GoldAppleGame.css";
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
+import { BACKEND, RN } from "../../shared/roomConfig";
 
 // ─── 常數 ─────────────────────────────────────────────────────────────────────
 const SIZE1 = 56;       // 遊戲一蘋果尺寸 (px)
@@ -132,7 +132,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
   const refreshMyApples = useCallback(async () => {
     if (!token || typeof setApples !== "function") return;
     try {
-      const res = await fetch(`${BACKEND}/auth/me`, {
+      const res = await fetch(`${BACKEND}/auth/me?room=${RN}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) return;
@@ -436,7 +436,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
     delete physicsRef.current[bestId]; // 從物理世界移除
 
     // 即時向伺服器回報撈取
-    socket.emit("caughtApple1", { token, appleId: bestId });
+    socket.emit("caughtApple1", { token, room: RN, appleId: bestId });
 
     // 更新本地計數
     setG1CaughtCount(prev => {
@@ -463,7 +463,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
     e.stopPropagation();
     if (activePointerRef.current !== null && activePointerRef.current !== e.pointerId) return;
     activePointerRef.current = e.pointerId;
-    socket.emit("catchApple2", { token });
+    socket.emit("catchApple2", { token, room: RN });
   }, [socket, token]);
 
   /**

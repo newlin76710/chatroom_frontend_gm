@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import "./RouletteGame.css";
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
+import { BACKEND, RN } from "../../shared/roomConfig";
 
 const WHEEL_ORDER = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
 const RED_SET = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
@@ -402,7 +402,7 @@ export default function RouletteGame({ token, onApplesChange }) {
   // Load settings
   useEffect(() => {
     if (!token) return;
-    fetch(`${BACKEND}/api/roulette/settings`, {
+    fetch(`${BACKEND}/api/roulette/settings?room=${RN}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.json())
@@ -478,7 +478,7 @@ export default function RouletteGame({ token, onApplesChange }) {
       const res = await fetch(`${BACKEND}/api/roulette/bet`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ bets: selectedBets, amount: betAmount }),
+        body: JSON.stringify({ bets: selectedBets, amount: betAmount, room: RN }),
       });
       const data = await res.json();
       if (!res.ok) { setPhase("idle"); setErrMsg(data.error || "下注失敗"); return; }

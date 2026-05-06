@@ -2,7 +2,7 @@
 import { useState } from "react";
 import "./AdminLoginLogPanel.css";
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
+import { BACKEND, RN } from "../../shared/roomConfig";
 const PAGE_SIZE = 50;
 
 const toUtc = (localDatetime) => {
@@ -11,7 +11,7 @@ const toUtc = (localDatetime) => {
   return new Date(normalized).toISOString();
 };
 
-const typeLabel = (t) => (t === "level" ? "等級" : t === "gold_apples" ? "金蘋果" : t);
+const typeLabel = (t) => (t === "level" ? "等級" : t === "exp" ? "積分" : t === "gold_apples" ? "金蘋果" : t);
 
 export default function AdminAdjustmentLogPanel({ token }) {
   const [open, setOpen] = useState(false);
@@ -37,6 +37,7 @@ export default function AdminAdjustmentLogPanel({ token }) {
       const toUtcDate = toUtc(toDate);
       if (fromUtc) body.from = fromUtc;
       if (toUtcDate) body.to = toUtcDate;
+      body.room = RN;
 
       const res = await fetch(`${BACKEND}/admin/adjustment-logs`, {
         method: "POST",
@@ -121,6 +122,7 @@ export default function AdminAdjustmentLogPanel({ token }) {
               <select value={adjType} onChange={e => setAdjType(e.target.value)}>
                 <option value="">全部類型</option>
                 <option value="level">等級</option>
+                <option value="exp">積分</option>
                 <option value="gold_apples">金蘋果</option>
               </select>
               <label>

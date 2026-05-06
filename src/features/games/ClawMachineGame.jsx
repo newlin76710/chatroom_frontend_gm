@@ -20,8 +20,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./ClawMachineGame.css";
 
-// 後端 API 基礎網址
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
+import { BACKEND, RN } from "../../shared/roomConfig";
 
 // 動畫基準時間 (毫秒)，這些值會根據 dropSpeed 進行縮放
 const BASE_DROP_MS = 600;   // 爪子下降所需時間
@@ -144,7 +143,7 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
   const refreshMyApples = useCallback(async () => {
     if (!token || typeof setApples !== "function") return;
     try {
-      const res = await fetch(`${BACKEND}/auth/me`, {
+      const res = await fetch(`${BACKEND}/auth/me?room=${RN}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) return;
@@ -460,7 +459,7 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
     setDropping(true);
     stopOscillation();
     // 發送爪子當前位置 (0~1 比例)
-    socket.emit("clawDropClaw", { token, position: +(clawXRef.current / 100).toFixed(2) });
+    socket.emit("clawDropClaw", { token, room: RN, position: +(clawXRef.current / 100).toFixed(2) });
     runDropAnimation();
   }, [socket, token, stopOscillation, runDropAnimation]);
 

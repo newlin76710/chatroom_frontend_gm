@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "./Leaderboard.css";
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
+import { BACKEND } from "../../shared/roomConfig";
 
 export default function Leaderboard({ room, token }) {
   const [open, setOpen] = useState(false);

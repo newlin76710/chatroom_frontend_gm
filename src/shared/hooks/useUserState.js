@@ -7,8 +7,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { EXP_TIP_DURATION, LEVEL_UP_TIP_DURATION } from "../constants";
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
-const ANL = Number(import.meta.env.VITE_ADMIN_MIN_LEVEL) || 91;
+import { roomConfig, BACKEND, RN } from "../roomConfig";
 
 import { safeText } from "../utils";
 
@@ -77,7 +76,7 @@ export function useUserState(socket) {
   // --- fetchUserData: 從後端取得最新資料 ---
   const fetchUserData = useCallback(async (t) => {
     try {
-      const res = await fetch(`${BACKEND}/auth/me`, {
+      const res = await fetch(`${BACKEND}/auth/me?room=${RN}`, {
         headers: { Authorization: `Bearer ${t}` },
       });
       if (!res.ok) throw new Error("無法取得使用者資料");
@@ -147,7 +146,7 @@ export function useUserState(socket) {
 
     if (me.exp !== expRef.current) {
       const diff = me.exp - expRef.current;
-      if (diff > 0 && me.level > 1 && me.level < ANL) {
+      if (diff > 0 && me.level > 1 && me.level < (roomConfig.admin_min_level || 91)) {
         setExpTips((s) => [...s, { id: Date.now(), value: `+${diff}` }]);
       }
       setExp(me.exp || 0);

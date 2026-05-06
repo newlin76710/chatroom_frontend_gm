@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import "./SicBoGame.css";
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
+import { BACKEND, RN } from "../../shared/roomConfig";
 
 const DOT_MAPS = {
   1: [[0,0,0],[0,1,0],[0,0,0]],
@@ -111,16 +111,24 @@ function HelpPanel({ onClose }) {
 }
 
 function ResultPopup({ result, onClose }) {
-  const win = result.net > 0;
+  const hasWin = result.winTypes?.length > 0;
+  const netPositive = result.net > 0;
+  const icon  = netPositive ? "🎉" : hasWin ? "🎲" : "😢";
+  const title = netPositive ? "恭喜獲勝！" : hasWin ? "部分中獎" : "再接再厲";
   return (
     <div className="sic-result-overlay" onClick={onClose}>
       <div className="sic-result-card" onClick={e => e.stopPropagation()}>
-        <div className="sic-result-icon">{win ? "🎉" : "😢"}</div>
-        <div className="sic-result-title">{win ? "恭喜獲勝！" : "再接再厲"}</div>
+        <div className="sic-result-icon">{icon}</div>
+        <div className="sic-result-title">{title}</div>
         <div className="sic-result-amount">
-          {win ? `+${result.net}` : `-${Math.abs(result.net)}`}
+          {result.net >= 0 ? `+${result.net}` : `-${Math.abs(result.net)}`}
           <img src="/gifts/gold_apple.gif" alt="" className="sic-result-apple" />
         </div>
+        {hasWin && (
+          <div className="sic-result-wintypes">
+            中獎：{result.winTypes.map(t => BET_TYPES[t]?.name ?? t).join("、")}
+          </div>
+        )}
         <div className="sic-result-detail">
           骰子：{result.dice[0]} - {result.dice[1]} - {result.dice[2]}　總和 {result.total}
         </div>
@@ -143,7 +151,7 @@ export default function SicBoGame({ token, apples, onApplesChange }) {
   const rootRef = useRef(null);
 
   useEffect(() => {
-    fetch(`${BACKEND}/api/sicbo/settings`, {
+    fetch(`${BACKEND}/api/sicbo/settings?room=${RN}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.json())
@@ -185,7 +193,7 @@ export default function SicBoGame({ token, apples, onApplesChange }) {
       const res  = await fetch(`${BACKEND}/api/sicbo/roll`, {
         method:  "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ bets }),
+        body: JSON.stringify({ bets, room: RN }),
       });
       const data = await res.json();
       clearInterval(rollInterval);
@@ -200,7 +208,7 @@ export default function SicBoGame({ token, apples, onApplesChange }) {
       setDice(data.dice);
       setRolling(false);
       setBets({});
-      setLastResult({ dice: data.dice, total: data.total, net: data.net });
+      setLastResult({ dice: data.dice, total: data.total, net: data.net, winTypes: data.winTypes || [] });
       if (onApplesChange) onApplesChange(data.newApples);
     } catch {
       clearInterval(rollInterval);

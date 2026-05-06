@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./SurpriseHistoryPanel.css";
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
+import { BACKEND, RN } from "../../shared/roomConfig";
 
 const fmt = (iso) => {
   if (!iso) return "—";
@@ -20,7 +20,7 @@ export default function SurpriseHistoryPanel({ token }) {
     setLoading(true);
     try {
       const res = await fetch(
-        `${BACKEND}/admin/surprise-history`,
+        `${BACKEND}/admin/surprise-history?room=${RN}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await res.json();

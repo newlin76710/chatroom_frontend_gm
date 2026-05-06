@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Room } from "livekit-client";
 import "./Listener.css";
+import { roomConfig, BACKEND } from "../../shared/roomConfig";
 
 export default function Listener({ room, name, socket, onSingerChange }) {
   const [lkRoom, setLkRoom] = useState(null);
@@ -138,7 +139,7 @@ export default function Listener({ room, name, socket, onSingerChange }) {
   /* ===== 開始 ===== */
   const startListening = async () => {
     const res = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/livekit-token?room=${room}&name=${name}`
+      `${BACKEND}/livekit-token?room=${room}&name=${name}`
     );
     const data = await res.json();
     if (!data.token) return;
@@ -163,7 +164,7 @@ export default function Listener({ room, name, socket, onSingerChange }) {
       delete audioTracksRef.current[participant.identity];
     });
 
-    await lk.connect(import.meta.env.VITE_LIVEKIT_URL, data.token, {
+    await lk.connect(roomConfig.livekit_url, data.token, {
       autoSubscribe: true,
     });
 

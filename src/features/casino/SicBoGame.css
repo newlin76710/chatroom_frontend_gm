@@ -333,6 +333,7 @@
   margin-bottom: 8px;
 }
 .sic-result-apple  { width: 28px; height: 28px; }
+.sic-result-wintypes { font-size: 0.85rem; color: #f5c518; margin-bottom: 8px; }
 .sic-result-detail { font-size: 0.9rem; margin-bottom: 16px; color: #aaa; }
 .sic-result-btn {
   background: #d4af37;

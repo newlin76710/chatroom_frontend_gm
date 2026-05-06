@@ -5,10 +5,10 @@ import AdminLevelPanel from "./AdminLevelPanel";
 import AdminIPPanel from "./AdminIPPanel";
 import AdminNicknamePanel from "./AdminNicknamePanel";
 import AdminAdjustmentLogPanel from "./AdminAdjustmentLogPanel";
+import AdminRoomSettingsPanel from "./AdminRoomSettingsPanel";
 import "./AdminToolPanel.css";
 
-const AML = import.meta.env.VITE_ADMIN_MAX_LEVEL || 99;
-const ANL = import.meta.env.VITE_ADMIN_MIN_LEVEL || 91;
+import { roomConfig } from "../../shared/roomConfig";
 
 export default function AdminToolPanel({ myName, myLevel, token, userList, initialOpen = false }) {
   const [open, setOpen] = useState(initialOpen);
@@ -16,14 +16,14 @@ export default function AdminToolPanel({ myName, myLevel, token, userList, initi
 
   // ⭐ 用 useEffect 在 mount 或 myLevel 改變時設定初始 tab
   useEffect(() => {
-    if (myLevel >= ANL && myLevel < AML) {
+    if (myLevel >= (roomConfig.admin_min_level || 91) && myLevel < (roomConfig.admin_max_level || 99)) {
       setTab("nickname");
-    } else if (myLevel >= AML) {
+    } else if (myLevel >= (roomConfig.admin_max_level || 99)) {
       setTab("login");
     }
   }, [myLevel]);
 
-  if (myLevel < ANL) return null;
+  if (myLevel < (roomConfig.admin_min_level || 91)) return null;
 
   return (
     <div className="admin-tool">
@@ -32,11 +32,17 @@ export default function AdminToolPanel({ myName, myLevel, token, userList, initi
       </button>
 
       {open && (
-        <div className={`admin-popup ${myLevel < AML ? "small" : ""}`}>
+        <div className={`admin-popup ${myLevel < (roomConfig.admin_max_level || 99) ? "small" : ""}`}>
           {/* Tabs */}
           <div className="admin-tabs">
-            {myLevel >= AML && (
+            {myLevel >= (roomConfig.admin_max_level || 99) && (
               <>
+                <button
+                  className={tab === "roomsettings" ? "active" : ""}
+                  onClick={() => setTab("roomsettings")}
+                >
+                  房間設定
+                </button>
                 <button
                   className={tab === "login" ? "active" : ""}
                   onClick={() => setTab("login")}
@@ -64,7 +70,7 @@ export default function AdminToolPanel({ myName, myLevel, token, userList, initi
               </>
             )}
 
-            {myLevel >= ANL && (
+            {myLevel >= (roomConfig.admin_min_level || 91) && (
               <button
                 className={tab === "nickname" ? "active" : ""}
                 onClick={() => setTab("nickname")}
@@ -73,7 +79,7 @@ export default function AdminToolPanel({ myName, myLevel, token, userList, initi
               </button>
             )}
 
-            {myLevel >= AML && (
+            {myLevel >= (roomConfig.admin_max_level || 99) && (
               <button
                 className={tab === "ip" ? "active" : ""}
                 onClick={() => setTab("ip")}
@@ -85,6 +91,7 @@ export default function AdminToolPanel({ myName, myLevel, token, userList, initi
 
           {/* Content */}
           <div className="admin-content">
+            {tab === "roomsettings" && <AdminRoomSettingsPanel token={token} />}
             {tab === "login" && <AdminLoginLogPanel token={token} />}
             {tab === "message" && <MessageLogPanel myName={myName} myLevel={myLevel} token={token} userList={userList}/>}
             {tab === "level" && <AdminLevelPanel token={token} myLevel={myLevel} />}

@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Room, LocalAudioTrack } from "livekit-client";
 import "./SongRoom.css";
-
-const ANL = import.meta.env.VITE_ADMIN_MIN_LEVEL || 91;
+import { roomConfig } from "../../shared/roomConfig";
 
 export default function SongRoom({ room, name, socket, currentSinger, myLevel }) {
   const [lkRoom, setLkRoom] = useState(null);
@@ -119,7 +118,7 @@ export default function SongRoom({ room, name, socket, currentSinger, myLevel })
         }
       });
       roomRef.current = lk;
-      await lk.connect(import.meta.env.VITE_LIVEKIT_URL, jwtToken, {
+      await lk.connect(roomConfig.livekit_url, jwtToken, {
         autoSubscribe: true,
       });
 
@@ -216,7 +215,7 @@ export default function SongRoom({ room, name, socket, currentSinger, myLevel })
               {currentSinger && (
                 <div className="queue-item">
                   <span>{currentSinger}</span>
-                  {myLevel >= ANL && <button className="kick-button" onClick={() => forceStopSinger(currentSinger)}>踢下麥</button>}
+                  {myLevel >= (roomConfig.admin_min_level || 91) && <button className="kick-button" onClick={() => forceStopSinger(currentSinger)}>踢下麥</button>}
                 </div>
               )}
               {!currentSinger && <div className="queue-item">無 </div>}
@@ -228,7 +227,7 @@ export default function SongRoom({ room, name, socket, currentSinger, myLevel })
                 queue.map((q, i) => (
                   <div key={i} className={`queue-item ${q === name ? "me" : ""}`}>
                     <span>{i + 1}. {q}{q === name && " (我)"}</span>
-                    {myLevel >= ANL && <div className="admin-controls">
+                    {myLevel >= (roomConfig.admin_min_level || 91) && <div className="admin-controls">
                       {i === 0 && currentSinger && (
                         <button
                           className="force-button"

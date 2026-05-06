@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import "./BlackjackGame.css";
 import { getFaceCardComponent } from "./CardFaces";
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
+import { BACKEND, RN } from "../../shared/roomConfig";
 
 // ── Card helpers ────────────────────────────────────────────────
 const RED_SUITS = new Set(["♥", "♦"]);
@@ -417,8 +417,8 @@ export default function BlackjackGame({ token, apples, onApplesChange }) {
   useEffect(() => {
     if (!token) return;
     Promise.all([
-      fetch(`${BACKEND}/api/blackjack/settings`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
-      fetch(`${BACKEND}/api/blackjack/active`,   { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
+      fetch(`${BACKEND}/api/blackjack/settings?room=${RN}`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
+      fetch(`${BACKEND}/api/blackjack/active?room=${RN}`,   { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
     ]).then(([s, a]) => {
       setSettings(s);
       if (a.game) {
@@ -438,7 +438,7 @@ export default function BlackjackGame({ token, apples, onApplesChange }) {
       const res = await fetch(`${BACKEND}/api/blackjack/start`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ bet }),
+        body: JSON.stringify({ bet, room: RN }),
       });
       const data = await res.json();
       if (!res.ok) { setErrMsg(data.error || "開局失敗"); return; }
@@ -457,7 +457,7 @@ export default function BlackjackGame({ token, apples, onApplesChange }) {
       const res = await fetch(`${BACKEND}/api/blackjack/action`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ gameId: game.gameId, action }),
+        body: JSON.stringify({ gameId: game.gameId, action, room: RN }),
       });
       const data = await res.json();
       if (!res.ok) { setErrMsg(data.error || "操作失敗"); return; }

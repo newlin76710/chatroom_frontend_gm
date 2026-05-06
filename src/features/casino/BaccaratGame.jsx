@@ -3,7 +3,7 @@ import "./BlackjackGame.css";
 import "./BaccaratGame.css";
 import { getFaceCardComponent } from "./CardFaces";
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
+import { BACKEND, RN } from "../../shared/roomConfig";
 const RED_SUITS = new Set(["♥", "♦"]);
 const CHIPS = [1, 5, 10, 25, 50, 100];
 const BET_AREAS = [
@@ -194,7 +194,7 @@ export default function BaccaratGame({ token, apples, onApplesChange }) {
 
   useEffect(() => {
     if (!token) return;
-    fetch(`${BACKEND}/api/baccarat/settings`, {
+    fetch(`${BACKEND}/api/baccarat/settings?room=${RN}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.json())
@@ -258,7 +258,7 @@ export default function BaccaratGame({ token, apples, onApplesChange }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ betType: selectedBet, betAmount }),
+        body: JSON.stringify({ betType: selectedBet, betAmount, room: RN }),
       });
       const data = await res.json();
       if (!res.ok) {

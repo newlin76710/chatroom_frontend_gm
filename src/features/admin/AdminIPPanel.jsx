@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
 import "./AdminLoginLogPanel.css"; // 直接沿用樣式
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
-const AML = import.meta.env.VITE_ADMIN_MAX_LEVEL || 99;
+import { roomConfig, BACKEND, RN } from "../../shared/roomConfig";
+import { countryZh } from "../../shared/countryZh";
+
+const countryFlag = code =>
+  code?.length === 2
+    ? String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
+    : "";
 const PAGE_SIZE = 20;
 
 export default function AdminIPPanel({ myLevel, token }) {
@@ -14,7 +19,7 @@ export default function AdminIPPanel({ myLevel, token }) {
   const [reason, setReason] = useState("");
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  if (myLevel < AML) return null;
+  if (myLevel < (roomConfig.admin_max_level || 99)) return null;
 
   const headers = {
     "Content-Type": "application/json",
@@ -23,7 +28,7 @@ export default function AdminIPPanel({ myLevel, token }) {
 
   const loadIPs = async (pageNum = 1) => {
     try {
-      const res = await fetch(`${BACKEND}/api/blocked-ips`, { headers });
+      const res = await fetch(`${BACKEND}/api/blocked-ips?room=${RN}`, { headers });
       if (!res.ok) throw new Error("載入失敗");
       const data = await res.json();
       setIps(data);
@@ -45,7 +50,7 @@ export default function AdminIPPanel({ myLevel, token }) {
       const res = await fetch(`${BACKEND}/api/blocked-ips/block`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ ip: newIP.trim(), reason: reason.trim() }),
+        body: JSON.stringify({ ip: newIP.trim(), reason: reason.trim(), room: RN }),
       });
       if (!res.ok) throw new Error("封鎖失敗");
       setNewIP("");
@@ -63,7 +68,7 @@ export default function AdminIPPanel({ myLevel, token }) {
       const res = await fetch(`${BACKEND}/api/blocked-ips/unblock`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id, room: RN }),
       });
       if (!res.ok) throw new Error("解除失敗");
       loadIPs(page);
@@ -134,6 +139,7 @@ export default function AdminIPPanel({ myLevel, token }) {
                 <thead>
                   <tr>
                     <th>IP</th>
+                    <th>國家</th>
                     <th>原因</th>
                     <th>操作</th>
                   </tr>
@@ -145,6 +151,7 @@ export default function AdminIPPanel({ myLevel, token }) {
                       .map((ip) => (
                         <tr key={ip.id}>
                           <td>{ip.ip}</td>
+                          <td>{ip.country ? `${countryFlag(ip.country.countryCode)} ${countryZh(ip.country.countryCode) ?? ip.country.country}` : "-"}</td>
                           <td>{ip.reason || "-"}</td>
                           <td>
                             <button onClick={() => unblockIP(ip.id)}>解除</button>
@@ -153,7 +160,7 @@ export default function AdminIPPanel({ myLevel, token }) {
                       ))
                   ) : (
                     <tr>
-                      <td colSpan={3} style={{ textAlign: "center" }}>無資料</td>
+                      <td colSpan={4} style={{ textAlign: "center" }}>無資料</td>
                     </tr>
                   )}
                 </tbody>

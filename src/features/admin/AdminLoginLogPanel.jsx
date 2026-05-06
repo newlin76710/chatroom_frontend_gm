@@ -2,9 +2,13 @@
 import { useState } from "react";
 import "./AdminLoginLogPanel.css";
 
-const BACKEND =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
-const AML = import.meta.env.VITE_ADMIN_MAX_LEVEL || 99;
+import { roomConfig, BACKEND, RN } from "../../shared/roomConfig";
+import { countryZh } from "../../shared/countryZh";
+
+const countryFlag = code =>
+  code?.length === 2
+    ? String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
+    : "";
 const PAGE_SIZE = 20;
 
 // local → UTC
@@ -35,7 +39,7 @@ export default function AdminLoginLogPanel({
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  if (!token || myLevel < AML) return null;
+  if (!token || myLevel < (roomConfig.admin_max_level || 99)) return null;
 
   const loadLogs = async (pageNum = 1) => {
     try {
@@ -49,6 +53,7 @@ export default function AdminLoginLogPanel({
 
       if (fromUtc) body.from = fromUtc;
       if (toUtcDate) body.to = toUtcDate;
+      body.room = RN;
 
       const res = await fetch(`${BACKEND}/admin/login-logs`, {
         method: "POST",
@@ -181,7 +186,10 @@ export default function AdminLoginLogPanel({
                       <tr key={l.id}>
                         <td>{l.username}</td>
                         <td>{l.login_type}</td>
-                        <td>{l.ip_address}</td>
+                        <td>
+                          {l.ip_address}
+                          {l.country && <span style={{ marginLeft: 4, color: "#aaa" }}>{countryFlag(l.country.countryCode)} {countryZh(l.country.countryCode) ?? l.country.country}</span>}
+                        </td>
                         <td>{l.success ? "✅" : "❌"}</td>
                         <td>{l.fail_reason || "-"}</td>
                         <td>

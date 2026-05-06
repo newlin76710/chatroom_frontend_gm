@@ -2,10 +2,8 @@
 import { useEffect, useState } from "react";
 import "./AdminLevelPanel.css";
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
+import { roomConfig, BACKEND, RN } from "../../shared/roomConfig";
 const PAGE_SIZE = 20;
-const MAX_GOLD_APPLES = parseInt(import.meta.env.MAX_GOLD_APPLES || "999999999", 10);
-const NF = import.meta.env.VITE_NEW_FUNCTION === "true";
 
 export default function AdminLevelPanel({ token, myLevel, minLevel }) {
     const [open, setOpen] = useState(false);
@@ -31,6 +29,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                     page: pageNum,
                     pageSize: PAGE_SIZE,
                     keyword: search,
+                    room: RN,
                 }),
             });
 
@@ -43,6 +42,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
             setUsers((data.users || []).map(u => ({
                 ...u,
                 editLevel: u.level,
+                editExp: u.exp || 0,
                 editGold: u.gold_apples || 0,
             })));
             setPage(pageNum);
@@ -70,6 +70,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                     username,
                     level: Number(newLevel),
                     reason,
+                    room: RN,
                 }),
             });
 
@@ -94,6 +95,46 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
     };
 
     /* ================= 修改金蘋果 ================= */
+    const handleExpChange = async (username, newExp) => {
+        if (!window.confirm(`確定將 ${username} 的積分設為 ${newExp} 嗎？`)) return;
+        const reason = window.prompt("請輸入修改原因（必填）", "");
+        if (!reason || !reason.trim()) { alert("修改原因必填"); return; }
+
+        try {
+            const res = await fetch(`${BACKEND}/admin/set-user-exp`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    username,
+                    exp: Number(newExp),
+                    reason,
+                    room: RN,
+                }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                alert(data.error || "更新失敗");
+                return;
+            }
+
+            alert("積分已更新");
+            setUsers(prev =>
+                prev.map(u =>
+                    u.username === username
+                        ? { ...u, exp: Number(newExp), editExp: Number(newExp) }
+                        : u
+                )
+            );
+        } catch (err) {
+            console.error(err);
+            alert("更新失敗");
+        }
+    };
+
     const handleGoldChange = async (username, newGold) => {
         if (!window.confirm(`確定將 ${username} 的金蘋果設為 ${newGold} 顆嗎？`)) return;
         const reason = window.prompt("請輸入調整原因（必填）", "");
@@ -110,6 +151,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                     username,
                     gold_apples: Number(newGold),
                     reason,
+                    room: RN,
                 }),
             });
 
@@ -176,7 +218,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
     return (
         <>
             <button className="admin-btn" onClick={() => { setOpen(true); loadUsers(1); }}>
-                🛡 管理使用者等級 {NF && "& 金蘋果"}
+                🛡 管理使用者等級 {roomConfig.new_function && "& 金蘋果"}
             </button>
 
             {open && (
@@ -204,7 +246,8 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                     <tr>
                                         <th>帳號</th>
                                         <th>等級</th>
-                                        {NF && <th>金蘋果</th>}
+                                        <th>積分</th>
+                                        {roomConfig.new_function && <th>金蘋果</th>}
                                         <th>建立時間</th>
                                         <th>最近登入</th>
                                     </tr>
@@ -238,11 +281,35 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                                     修改
                                                 </button>
                                             </td>
-                                            {NF && (<td>
+                                            <td>
                                                 <input
                                                     type="number"
                                                     min="0"
-                                                    max={MAX_GOLD_APPLES}
+                                                    value={u.editExp}
+                                                    style={{ width: "70px", marginRight: "6px" }}
+                                                    onChange={e =>
+                                                        setUsers(prev =>
+                                                            prev.map(x =>
+                                                                x.id === u.id
+                                                                    ? { ...x, editExp: e.target.value }
+                                                                    : x
+                                                            )
+                                                        )
+                                                    }
+                                                />
+                                                <button
+                                                    className="admin-btn"
+                                                    onClick={() => handleExpChange(u.username, u.editExp)}
+                                                    style={{ marginRight: "6px" }}
+                                                >
+                                                    修改
+                                                </button>
+                                            </td>
+                                            {roomConfig.new_function && (<td>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    max={roomConfig.max_gold_apples ?? 999999999}
                                                     value={u.editGold}
                                                     style={{ width: "60px", marginRight: "6px" }}
                                                     onChange={e =>
@@ -267,7 +334,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                         </tr>
                                     )) : (
                                         <tr>
-                                            <td colSpan={NF ? 5 : 4} style={{ textAlign: "center" }}>無資料</td>
+                                            <td colSpan={roomConfig.new_function ? 6 : 5} style={{ textAlign: "center" }}>無資料</td>
                                         </tr>
                                     )}
                                 </tbody>

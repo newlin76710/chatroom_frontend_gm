@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import "./AdminLoginLogPanel.css";
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
-const ANL = import.meta.env.VITE_ADMIN_MIN_LEVEL || 91;
+import { roomConfig, BACKEND, RN } from "../../shared/roomConfig";
 const PAGE_SIZE = 20;
 
 export default function AdminNicknamePanel({ myLevel, token, myName }) {
@@ -14,7 +13,7 @@ export default function AdminNicknamePanel({ myLevel, token, myName }) {
   const [nickname, setNickname] = useState("");
   const [reason, setReason] = useState("");
 
-  if (myLevel < ANL) return null;
+  if (myLevel < (roomConfig.admin_min_level || 91)) return null;
 
   const headers = {
     "Content-Type": "application/json",
@@ -24,7 +23,7 @@ export default function AdminNicknamePanel({ myLevel, token, myName }) {
   // 載入黑名單列表
   const load = async (pageNum = 1) => {
     try {
-      const res = await fetch(`${BACKEND}/api/blocked-nicknames`, {
+      const res = await fetch(`${BACKEND}/api/blocked-nicknames?room=${RN}`, {
         headers,
       });
       if (!res.ok) throw new Error();
@@ -55,6 +54,7 @@ export default function AdminNicknamePanel({ myLevel, token, myName }) {
           nickname: nickname.trim(),
           reason: reason.trim(),
           executor: myName || "未知管理員", // 送執行者
+          room: RN,
         }),
       });
 
@@ -77,7 +77,7 @@ export default function AdminNicknamePanel({ myLevel, token, myName }) {
       const res = await fetch(`${BACKEND}/api/blocked-nicknames/unblock`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id, room: RN }),
       });
 
       if (!res.ok) throw new Error();

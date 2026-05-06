@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
+import { BACKEND, RN } from "../../shared/roomConfig";
 
 export default function QuickPhrasePanel({ token, onSelect }) {
   const [open, setOpen] = useState(false);
@@ -16,7 +16,7 @@ export default function QuickPhrasePanel({ token, onSelect }) {
   // 讀取列表
   const load = async () => {
     try {
-      const res = await fetch(`${BACKEND}/api/quick-phrases`, { headers });
+      const res = await fetch(`${BACKEND}/api/quick-phrases?room=${RN}`, { headers });
       if (res.ok) {
         const data = await res.json();
         setPhrases(data.phrases || data); // 後端可能回 { phrases: [...] }
@@ -40,7 +40,7 @@ export default function QuickPhrasePanel({ token, onSelect }) {
         const res = await fetch(`${BACKEND}/api/quick-phrases/update`, {
           method: "POST",
           headers,
-          body: JSON.stringify({ id: editingId, content: value }),
+          body: JSON.stringify({ id: editingId, content: value, room: RN }),
         });
         const data = await res.json();
         if (!data.phrase) alert(data.error || "更新失敗");
@@ -49,7 +49,7 @@ export default function QuickPhrasePanel({ token, onSelect }) {
         const res = await fetch(`${BACKEND}/api/quick-phrases/new`, {
           method: "POST",
           headers,
-          body: JSON.stringify({ content: value }),
+          body: JSON.stringify({ content: value, room: RN }),
         });
         const data = await res.json();
         if (!data.phrase) alert(data.error || "新增失敗");
@@ -70,7 +70,7 @@ export default function QuickPhrasePanel({ token, onSelect }) {
       const res = await fetch(`${BACKEND}/api/quick-phrases/delete`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id, room: RN }),
       });
       const data = await res.json();
       if (!data.success) alert(data.error || "刪除失敗");

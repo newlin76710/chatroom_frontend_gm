@@ -2,10 +2,14 @@
 import { useState } from "react";
 import "./MessageLogPanel.css";
 
-const BACKEND =
-  import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
-const AML = import.meta.env.VITE_ADMIN_MAX_LEVEL || 99;
+import { roomConfig, BACKEND, RN } from "../../shared/roomConfig";
+import { countryZh } from "../../shared/countryZh";
 const PAGE_SIZE = 20;
+
+const countryFlag = code =>
+  code?.length === 2
+    ? String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
+    : "";
 
 // local → UTC
 const toUtc = (localDatetime) => {
@@ -39,7 +43,7 @@ export default function MessageLogPanel({
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  if (!token || myLevel < AML) return null;
+  if (!token || myLevel < (roomConfig.admin_max_level || 99)) return null;
 
   const loadLogs = async (pageNum = 1) => {
     try {
@@ -57,6 +61,7 @@ export default function MessageLogPanel({
 
       if (fromUtc) body.from = fromUtc;
       if (toUtcDate) body.to = toUtcDate;
+      body.room = RN;
 
       const res = await fetch(`${BACKEND}/admin/message-logs`, {
         method: "POST",
@@ -238,7 +243,10 @@ export default function MessageLogPanel({
                             : "公開"}
                         </td>
 
-                        <td>{l.ip || "-"}</td>
+                        <td>
+                          {l.ip || "-"}
+                          {l.country && <span style={{ marginLeft: 4, color: "#aaa" }}>{countryFlag(l.country.countryCode)} {countryZh(l.country.countryCode) ?? l.country.country}</span>}
+                        </td>
 
                         <td>
                           {new Date(l.created_at).toLocaleString("zh-TW", {hour12: false,})}

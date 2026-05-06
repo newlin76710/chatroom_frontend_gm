@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "./ShopPanel.css";
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
+import { BACKEND, RN } from "../../shared/roomConfig";
 
 const CAKE_VARIANTS = [
   { id: "original",       emoji: "🎂", name: "原味蛋糕",   image: "/gifts/cake.gif" },
@@ -40,7 +40,7 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
     try {
       setBuying(item.id);
 
-      const body = { itemId: item.id, targetName };
+      const body = { itemId: item.id, targetName, room: RN };
       if (cakeVariant) body.cakeVariant = cakeVariant;
 
       const res = await fetch(`${BACKEND}/api/shop/buy`, {

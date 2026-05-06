@@ -1,8 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import "./AnnouncementPanel.css";
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL;
-const AML = import.meta.env.VITE_ADMIN_MAX_LEVEL || 99;
+import { roomConfig, BACKEND, RN } from "../../shared/roomConfig";
 
 export default function AnnouncementPanel({ open, onClose, myLevel, token }) {
   const [announcements, setAnnouncements] = useState([]);
@@ -10,7 +9,7 @@ export default function AnnouncementPanel({ open, onClose, myLevel, token }) {
   const [loading, setLoading] = useState(false);
   const [color, setColor] = useState("#ffffff");
   const panelRef = useRef(null);
-  const isAdmin = myLevel >= AML;
+  const isAdmin = myLevel >= (roomConfig.admin_max_level || 99);
 
   const pos = useRef({ x: 20, y: 80, offsetX: 0, offsetY: 0, dragging: false });
 
@@ -18,7 +17,7 @@ export default function AnnouncementPanel({ open, onClose, myLevel, token }) {
   useEffect(() => {
     if (!open) return;
 
-    fetch(`${BACKEND}/api/announcement`)
+    fetch(`${BACKEND}/api/announcement?room=${RN}`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) setAnnouncements([...data].reverse());
@@ -52,6 +51,7 @@ export default function AnnouncementPanel({ open, onClose, myLevel, token }) {
           title: current.title || "",
           content: current.content || "",
           color: current.color || "#ffffff",
+          room: RN,
         }),
       });
 
@@ -112,7 +112,7 @@ export default function AnnouncementPanel({ open, onClose, myLevel, token }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ id: current.id }),
+        body: JSON.stringify({ id: current.id, room: RN }),
       });
 
       if (!res.ok) throw new Error("刪除失敗");

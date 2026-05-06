@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import "./MessageBoard.css"; // 匯入分開的 CSS
 
-const AML = Number(import.meta.env.VITE_ADMIN_MAX_LEVEL || 99);
-const CN = import.meta.env.VITE_CHATROOM_NAME || "聽風的歌";
-const BACKEND = import.meta.env.VITE_BACKEND_URL;
+import { roomConfig, loadRoomConfig, BACKEND, RN } from "../../shared/roomConfig";
 
 export default function MessageBoard({ token, myName, myLevel, open, onClose }) {
     const [messages, setMessages] = useState([]);
@@ -11,13 +9,18 @@ export default function MessageBoard({ token, myName, myLevel, open, onClose }) 
     const [isPrivate, setIsPrivate] = useState(false);
     const [loading, setLoading] = useState(false);
     const [replyText, setReplyText] = useState({}); // 管理員回覆文字
+    const [roomName, setRoomName] = useState("");
 
-    const isAdmin = myLevel >= AML;
+    useEffect(() => {
+        loadRoomConfig().then(cfg => setRoomName(cfg.room_name || RN));
+    }, []);
+
+    const isAdmin = myLevel >= (roomConfig.admin_max_level || 99);
 
     /* ===== 載入留言 ===== */
     const loadMessages = async () => {
         try {
-            const res = await fetch(`${BACKEND}/api/message-board`, {
+            const res = await fetch(`${BACKEND}/api/message-board?room=${RN}`, {
                 headers: token ? { Authorization: `Bearer ${token}` } : undefined,
             });
             if (!res.ok) throw new Error("載入留言失敗");
@@ -44,7 +47,7 @@ export default function MessageBoard({ token, myName, myLevel, open, onClose }) 
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ content, isPrivate }),
+                body: JSON.stringify({ content, isPrivate, room: RN }),
             });
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
@@ -72,7 +75,7 @@ export default function MessageBoard({ token, myName, myLevel, open, onClose }) 
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ id }),
+                body: JSON.stringify({ id, room: RN }),
             });
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
@@ -96,7 +99,7 @@ export default function MessageBoard({ token, myName, myLevel, open, onClose }) 
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ id, reply }),
+                body: JSON.stringify({ id, reply, room: RN }),
             });
             const data = await res.json();
             if (!res.ok || !data.success) throw new Error(data.error || "回覆失敗");
@@ -114,7 +117,7 @@ export default function MessageBoard({ token, myName, myLevel, open, onClose }) 
         <div className="message-board-overlay">
             <div className="message-board">
                 <div className="message-board-header">
-                    <h3>💬 {CN}留言板</h3>
+                    <h3>💬 {roomName}留言板</h3>
                     <button className="close-btn" onClick={onClose}>✖</button>
                 </div>
 

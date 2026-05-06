@@ -2,6 +2,13 @@ import { useLayoutEffect, useRef } from "react";
 import { aiAvatars } from "../../shared/aiConfig";
 import "./MessageList.css";
 import { safeText } from "../../shared/utils";
+import { roomConfig } from "../../shared/roomConfig";
+import { countryZh } from "../../shared/countryZh";
+
+const countryFlag = code =>
+  code?.length === 2
+    ? String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
+    : "";
 
 export default function MessageList({
   messages = [],
@@ -14,7 +21,7 @@ export default function MessageList({
   scrollLocked = false,
   scrollLockedRef,         // 從 ChatApp 傳入的 ref，點擊時同步更新
 }) {
-  const AML = import.meta.env.VITE_ADMIN_MAX_LEVEL || 99;
+  const AML = roomConfig.admin_max_level || 99;
   const containerRef = useRef(null);
   const _localRef = useRef(scrollLocked);            // 沒傳 ref 時的後備
   const activeScrollLockedRef = scrollLockedRef || _localRef;
@@ -216,7 +223,11 @@ export default function MessageList({
                   </>
                 )}
 
-                {Number(level) === Number(AML) && m.ip && <span style={{ color: "#B84A4A", marginLeft: 4 }}>(IP: {m.ip})</span>}
+                {Number(level) === Number(AML) && (m.ip || m.country) && (
+                  <span style={{ color: "#B84A4A", marginLeft: 4 }}>
+                    ({m.ip ? `IP: ${m.ip}${m.country ? " " : ""}` : ""}{m.country ? `${countryFlag(m.country.countryCode)} ${countryZh(m.country.countryCode) ?? m.country.country}` : ""})
+                  </span>
+                )}
                 <span style={{ fontSize: "0.7rem", color: "#888", marginLeft: 6, whiteSpace: "nowrap" }}>{timestamp}</span>
               </div>
             </div>

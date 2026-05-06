@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "./SlotMachine.css";
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
+import { BACKEND, RN } from "../../shared/roomConfig";
 
 const SYMBOLS = [
   "☀️", "⚔️", "🐍", "🦊", "🐢",
@@ -128,7 +128,7 @@ export default function SlotMachine({ token, apples, onApplesChange }) {
 
   useEffect(() => {
     if (!token) return;
-    fetch(`${BACKEND}/api/slot/settings`, {
+    fetch(`${BACKEND}/api/slot/settings?room=${RN}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.json())
@@ -140,6 +140,8 @@ export default function SlotMachine({ token, apples, onApplesChange }) {
     if (apples != null) setBet(b => Math.min(b, apples, settings?.max_bet || 200));
   }, [apples, settings]);
 
+  const MIN_SPIN_MS = 1400;
+
   const spin = async () => {
     if (spinning || (apples ?? 0) < bet) return;
     setSpinning(true);
@@ -150,17 +152,19 @@ export default function SlotMachine({ token, apples, onApplesChange }) {
     const interval = setInterval(() => setReels(randomReels()), 80);
 
     try {
-      const res  = await fetch(`${BACKEND}/api/slot/spin`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ bet }),
-      });
+      const [res] = await Promise.all([
+        fetch(`${BACKEND}/api/slot/spin`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ bet, room: RN }),
+        }),
+        new Promise(r => setTimeout(r, MIN_SPIN_MS)),
+      ]);
       const data = await res.json();
       clearInterval(interval);
 
       if (!res.ok) {
         setError(data.error || "旋轉失敗");
-        setSpinning(false);
         return;
       }
 

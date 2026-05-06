@@ -2,8 +2,7 @@
 import { useState } from "react";
 import "./MessageLogPanel.css";
 
-const BACKEND =
-    import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
+import { BACKEND, RN } from "../../shared/roomConfig";
 
 const PAGE_SIZE = 20;
 
@@ -47,6 +46,7 @@ export default function MyMessageLogPanel({ token }) {
 
             if (fromUtc) body.from = fromUtc;
             if (toUtcDate) body.to = toUtcDate;
+            body.room = RN;
 
             const res = await fetch(`${BACKEND}/admin/my-message-logs`, {
                 method: "POST",
