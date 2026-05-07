@@ -12,6 +12,9 @@ export default function Listener({ room, name, socket, onSingerChange }) {
   const [ratedSinger, setRatedSinger] = useState(null);
   const [averageScore, setAverageScore] = useState(null);
   const [scoreCount, setScoreCount] = useState(0);
+  const [singStartTime, setSingStartTime] = useState(null);
+  const [countdown, setCountdown] = useState(null);
+  const countdownRef = useRef(null);
   const togglingRef = useRef(false); // ⭐ 防止連續 toggle
   const audioElementsRef = useRef({});
   const audioTracksRef = useRef({});
@@ -66,6 +69,24 @@ export default function Listener({ room, name, socket, onSingerChange }) {
     setRatedSinger(null);
   }, [currentSinger]);
 
+  useEffect(() => {
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+    if (!singStartTime) { setCountdown(null); return; }
+
+    const SING_DURATION = 480;
+    const tick = () => {
+      const remaining = Math.max(0, SING_DURATION - Math.floor((Date.now() - singStartTime) / 1000));
+      setCountdown(remaining);
+      if (remaining <= 0) { clearInterval(countdownRef.current); countdownRef.current = null; }
+    };
+    tick();
+    countdownRef.current = setInterval(tick, 1000);
+    return () => { clearInterval(countdownRef.current); countdownRef.current = null; };
+  }, [singStartTime]);
+
   /* ===== Socket：目前演唱者 ===== */
   useEffect(() => {
     if (!socket) return;
@@ -75,6 +96,7 @@ export default function Listener({ room, name, socket, onSingerChange }) {
       const queue = data.queue || [];
       setNextSinger(queue.length > 0 ? queue[0] : null);
       setCurrentSinger(singer);
+      setSingStartTime(data.singStartTime || null);
       onSingerChange?.(singer);
     };
 
@@ -193,6 +215,9 @@ export default function Listener({ room, name, socket, onSingerChange }) {
       <span className="current-singer">
         🎤 演唱者：{currentSinger || "無"} &nbsp;
       </span>
+      {countdown !== null && currentSinger && (
+        <span className="sing-countdown">⏱ 尚餘 {countdown} 秒 &nbsp;</span>
+      )}
       <span className="next-singer">
         ⏭ 下一位：{nextSinger || "無"} &nbsp;
       </span>

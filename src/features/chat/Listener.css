@@ -20,6 +20,13 @@
   white-space: nowrap;
 }
 
+.sing-countdown {
+  font-size: 14px;
+  white-space: nowrap;
+  color: #fb923c;
+  font-weight: bold;
+}
+
 .listen-btn {
   flex-shrink: 0;
   padding: 6px 12px;
