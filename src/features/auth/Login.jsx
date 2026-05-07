@@ -246,7 +246,7 @@ export default function Login() {
               const res = await fetch(`${BACKEND}/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password, allowProfileIncomplete: true }),
+                body: JSON.stringify({ username, password, room: RN, allowProfileIncomplete: true }),
               });
               const data = await res.json();
               if (!res.ok) throw new Error(data.error || "登入失敗");

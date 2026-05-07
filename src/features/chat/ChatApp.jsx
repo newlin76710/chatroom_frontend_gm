@@ -150,6 +150,9 @@ export default function ChatApp() {
   const [scrollLocked, setScrollLocked] = useState(false);
   const scrollLockedRef = useRef(false); // 同步更新，避免 useLayoutEffect 讀到過期值
 
+  const [invalidTokenCountdown, setInvalidTokenCountdown] = useState(null);
+  const invalidTokenTimerRef = useRef(null);
+
   const joinedRef = useRef(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -309,6 +312,26 @@ export default function ChatApp() {
     };
   }, [socket]);
   // ✅ 不依賴 room / name，改用 ref，不會因為 name 改變就重新綁定
+
+  // ─── Invalid token 全域偵測 ───────────────────────────────────────────────
+  useEffect(() => {
+    const handler = () => {
+      if (invalidTokenTimerRef.current) return;
+      let remaining = 30;
+      setInvalidTokenCountdown(remaining);
+      invalidTokenTimerRef.current = setInterval(() => {
+        remaining -= 1;
+        setInvalidTokenCountdown(remaining);
+        if (remaining <= 0) {
+          clearInterval(invalidTokenTimerRef.current);
+          invalidTokenTimerRef.current = null;
+          window.location.reload();
+        }
+      }, 1000);
+    };
+    window.addEventListener("invalidToken", handler);
+    return () => window.removeEventListener("invalidToken", handler);
+  }, []);
 
   // ─── 聊天 / 系統 / 影片 / 交易 socket 事件 ────────────────────────────────
   useEffect(() => {
@@ -615,7 +638,12 @@ export default function ChatApp() {
                   🎰 娛樂城
                 </button>
               )}
-              {offline && <div className="offline-banner">⚠️ 網路不穩，重新連線中...</div>}
+              {offline && !invalidTokenCountdown && <div className="offline-banner">⚠️ 網路不穩，重新連線中...</div>}
+              {invalidTokenCountdown !== null && (
+                <div className="reload-banner">
+                  🔐 連線驗證過期，{invalidTokenCountdown} 秒後自動重新登入...
+                </div>
+              )}
               {showReloadNotice && (
                 <div className="reload-banner">
                   🔄 聊天室版本已更新，30 秒後系統自動重新整理...
