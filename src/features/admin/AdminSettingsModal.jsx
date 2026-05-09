@@ -152,13 +152,6 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             {/* ─── 基本獎勵 ──────────────────────────────────────── */}
             <section className="settings-section">
               <h4>基本獎勵</h4>
-              <Row label="聊天室顯示 IP">
-                <label className="toggle-label">
-                  <input type="checkbox" checked={settings.show_ip !== false}
-                    onChange={e => setBool("show_ip", e.target.checked)} />
-                  {" "}啟用
-                </label>
-              </Row>
               <Row label="每日登入獎勵">
                 <input type="number" value={settings.daily_login_reward}
                   onChange={e => setInt("daily_login_reward", e.target.value)} />
