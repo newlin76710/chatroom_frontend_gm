@@ -92,14 +92,14 @@ export default function AnnouncementPanel({ open, onClose, myLevel, token }) {
 
   /* ===== 刪除公告 ===== */
   const deleteAnnouncement = async () => {
-    if (!isAdmin || announcements.length <= 1) return;
+    if (!isAdmin || announcements.length === 0) return;
     const current = announcements[currentIndex];
 
     if (!current.id) {
       // 未儲存公告直接從 state 刪除
       const newArr = announcements.filter((_, idx) => idx !== currentIndex);
       setAnnouncements(newArr);
-      setCurrentIndex(i => Math.max(i - 1, 0));
+      setCurrentIndex(i => Math.min(Math.max(i - 1, 0), Math.max(newArr.length - 1, 0)));
       return;
     }
 
@@ -119,7 +119,7 @@ export default function AnnouncementPanel({ open, onClose, myLevel, token }) {
 
       const newArr = announcements.filter((_, idx) => idx !== currentIndex);
       setAnnouncements(newArr);
-      setCurrentIndex(i => Math.max(i - 1, 0));
+      setCurrentIndex(i => Math.min(Math.max(i - 1, 0), Math.max(newArr.length - 1, 0)));
       alert("公告已刪除");
     } catch (err) {
       console.error(err);
@@ -171,7 +171,7 @@ export default function AnnouncementPanel({ open, onClose, myLevel, token }) {
           {isAdmin && (
             <>
               <button onClick={addAnnouncement}>➕</button>
-              <button onClick={deleteAnnouncement} disabled={announcements.length <= 1}>🗑️</button>
+              <button onClick={deleteAnnouncement} disabled={announcements.length === 0}>🗑️</button>
             </>
           )}
         </div>
