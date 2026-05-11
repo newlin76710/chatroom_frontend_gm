@@ -65,7 +65,7 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
   const upCountRef         = useRef(0);       // 當前同時冒出的蘋果數量
   const activePointerRef   = useRef(null);    // 多點觸控保護：只允許第一個接觸點觸發打擊
   const lastWhackTimeRef   = useRef(0);       // 上次打擊時間，用於冷卻
-  const WHACK_COOLDOWN_MS  = 250;             // 打擊後冷卻時間（毫秒）
+  const WHACK_COOLDOWN_MS  = 300;             // 打擊後冷卻時間（毫秒），需與後端 THROTTLE_MS 對齊
   const maxConcurrentRef   = useRef(4);       // 目前允許同時存在的蘋果數（會隨時間增加）
   const initConcurrentRef  = useRef(4);       // 開場時的同時蘋果數（來自伺服器設定）
   const finalConcurrentRef = useRef(7);       // 遊戲後期的最高同時蘋果數（來自伺服器設定）

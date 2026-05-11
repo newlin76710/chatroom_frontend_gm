@@ -4,7 +4,7 @@ import "./Listener.css";
 import { roomConfig, BACKEND } from "../../shared/roomConfig";
 
 export default function Listener({ room, name, socket, onSingerChange }) {
-  const [lkRoom, setLkRoom] = useState(null);
+  const lkRoomRef = useRef(null); // ← ref 取代 state，避免 stale closure
   const [listening, setListening] = useState(false);
   const [currentSinger, setCurrentSinger] = useState(null);
   const [nextSinger, setNextSinger] = useState(null);
@@ -15,21 +15,23 @@ export default function Listener({ room, name, socket, onSingerChange }) {
   const [singStartTime, setSingStartTime] = useState(null);
   const [countdown, setCountdown] = useState(null);
   const countdownRef = useRef(null);
-  const togglingRef = useRef(false); // ⭐ 防止連續 toggle
+  const togglingRef = useRef(false);
   const audioElementsRef = useRef({});
   const audioTracksRef = useRef({});
   const wasListeningBeforeSingRef = useRef(false);
+  const listeningRef = useRef(false); // ref 版本供 effect 讀取
   const [isSinging, setIsSinging] = useState(false);
+
+  // 同步 listening state → ref
+  useEffect(() => { listeningRef.current = listening; }, [listening]);
 
   useEffect(() => {
     if (isSinging) {
-      console.log("🎤 I start singing");
-      wasListeningBeforeSingRef.current = listening;
-      if (listening) {
+      wasListeningBeforeSingRef.current = listeningRef.current;
+      if (listeningRef.current) {
         stopListening();
       }
     } else {
-      console.log("🛑 I stop singing");
       if (wasListeningBeforeSingRef.current) {
         startListening();
         wasListeningBeforeSingRef.current = false;
@@ -41,27 +43,13 @@ export default function Listener({ room, name, socket, onSingerChange }) {
     if (!currentSinger) { setIsSinging(false); return; }
     if (togglingRef.current) return;
 
-    // ===== 1️⃣ 輪到自己 =====
     if (currentSinger === name) {
-      setIsSinging(true)
+      setIsSinging(true);
       return;
     }
 
-    // ===== 2️⃣ 自己剛下麥 =====
-    if (currentSinger !== name) {
-      setIsSinging(false)
-    }
-
-    // ===== 3️⃣ 其他人換人（保持原本 toggle 兩次邏輯）=====
-    if (listening) {
-      (async () => {
-        togglingRef.current = true;
-        await stopListening();
-        await startListening();
-        togglingRef.current = false;
-      })();
-    }
-
+    setIsSinging(false);
+    // autoSubscribe: true 會自動訂閱新的演唱者，不需要重新連線
   }, [currentSinger]);
 
   useEffect(() => {
@@ -118,6 +106,11 @@ export default function Listener({ room, name, socket, onSingerChange }) {
     return () => socket.off("scoreUpdate", handler);
   }, [socket, currentSinger]);
 
+  // 離開頁面時確保斷線
+  useEffect(() => {
+    return () => { stopListening(); };
+  }, []);
+
   const submitScore = (value) => {
     if (!currentSinger || ratedSinger === currentSinger) return;
 
@@ -142,29 +135,34 @@ export default function Listener({ room, name, socket, onSingerChange }) {
 
   /* ===== 停止 ===== */
   const stopListening = async () => {
-    if (!lkRoom) return;
+    const lk = lkRoomRef.current; // 永遠讀最新值
+    if (!lk) return;
+
+    lkRoomRef.current = null;
+    setListening(false);
+    listeningRef.current = false;
 
     try {
-      lkRoom.removeAllListeners();
-      lkRoom.disconnect();
+      lk.removeAllListeners();
+      await lk.disconnect();
     } catch { }
 
     clearAllAudio();
     audioTracksRef.current = {};
-    setLkRoom(null);
-    setListening(false);
-
-    // ⭐ 給 LiveKit 一點時間清乾淨（關鍵）
-    await new Promise((r) => setTimeout(r, 300));
   };
 
   /* ===== 開始 ===== */
   const startListening = async () => {
+    if (lkRoomRef.current) return; // 已連線，不重複建立
+
     const res = await fetch(
       `${BACKEND}/livekit-token?room=${room}&name=${name}`
     );
     const data = await res.json();
     if (!data.token) return;
+
+    // fetch 期間若已有人連上（race condition），放棄
+    if (lkRoomRef.current) return;
 
     const lk = new Room();
 
@@ -173,16 +171,17 @@ export default function Listener({ room, name, socket, onSingerChange }) {
 
       audioTracksRef.current[participant.identity] = track;
 
-      if (participant.identity === currentSinger) {
-        clearAllAudio();
-        const el = track.attach();
-        el.autoplay = true;
-        document.body.appendChild(el);
-        audioElementsRef.current[participant.identity] = el;
-      }
+      // 直接播放，不用判斷是否為 currentSinger（currentSinger 是 stale closure）
+      clearAllAudio();
+      const el = track.attach();
+      el.autoplay = true;
+      document.body.appendChild(el);
+      audioElementsRef.current[participant.identity] = el;
     });
 
     lk.on("trackUnsubscribed", (track, pub, participant) => {
+      const el = audioElementsRef.current[participant.identity];
+      if (el) { el.pause(); el.remove(); delete audioElementsRef.current[participant.identity]; }
       delete audioTracksRef.current[participant.identity];
     });
 
@@ -190,8 +189,9 @@ export default function Listener({ room, name, socket, onSingerChange }) {
       autoSubscribe: true,
     });
 
-    setLkRoom(lk);
+    lkRoomRef.current = lk;
     setListening(true);
+    listeningRef.current = true;
   };
 
   /* ===== 手動 toggle ===== */
@@ -200,7 +200,7 @@ export default function Listener({ room, name, socket, onSingerChange }) {
     togglingRef.current = true;
 
     try {
-      if (listening) {
+      if (listeningRef.current) {
         await stopListening();
       } else {
         await startListening();
