@@ -65,7 +65,7 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
   const upCountRef         = useRef(0);       // 當前同時冒出的蘋果數量
   const activePointerRef   = useRef(null);    // 多點觸控保護：只允許第一個接觸點觸發打擊
   const lastWhackTimeRef   = useRef(0);       // 上次打擊時間，用於冷卻
-  const WHACK_COOLDOWN_MS  = 300;             // 打擊後冷卻時間（毫秒），需與後端 THROTTLE_MS 對齊
+  const WHACK_COOLDOWN_MS  = 200;             // 打擊後冷卻時間（毫秒），需與後端 THROTTLE_MS 對齊
   const maxConcurrentRef   = useRef(4);       // 目前允許同時存在的蘋果數（會隨時間增加）
   const initConcurrentRef  = useRef(4);       // 開場時的同時蘋果數（來自伺服器設定）
   const finalConcurrentRef = useRef(7);       // 遊戲後期的最高同時蘋果數（來自伺服器設定）
@@ -287,37 +287,49 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
     };
 
     /**
-     * 遊戲結束事件
+     * 遊戲即將結算（後端通知前端提交本地分數）
      */
-    const onEnd = ({ scores }) => {
-      console.log("[WhackGame] onEnd received:", { scores });
+    const onEnding = () => {
       inputLockedRef.current = true;
       clearInterval(timerRef.current);
-      stopHoles(); // 清除所有洞活動
+      stopHoles();
+      activePointerRef.current = null;
+      setHammerSwinging(false);
+      // 回傳本地計分給後端做比對
+      socket.emit("submitWhackScore", { token, room: RN, count: myScoreRef.current });
+    };
+
+    /**
+     * 遊戲結束事件（後端比對完成後傳送最終分數）
+     */
+    const onEnd = ({ scores }) => {
+      inputLockedRef.current = true;
+      clearInterval(timerRef.current);
+      stopHoles();
       activePointerRef.current = null;
       setHammerSwinging(false);
       setResult(scores || {});
       phaseRef.current = "result";
       setPhase("result");
 
-      // 如果自己有得分，直接更新本機金蘋果（避免等待 HTTP）
       if (scores?.[name] && typeof setApples === "function") {
         setApples(prev => prev + scores[name]);
-        // 延遲再從伺服器確認一次（確保同步）
         setTimeout(() => { refreshMyApples(); }, 300);
       }
     };
 
     // 註冊事件監聽
-    socket.on("whackGameWarn",  onWarn);
-    socket.on("whackGameStart", onStart);
-    socket.on("whackGameEnd",   onEnd);
+    socket.on("whackGameWarn",    onWarn);
+    socket.on("whackGameStart",   onStart);
+    socket.on("whackGameEnding",  onEnding);
+    socket.on("whackGameEnd",     onEnd);
 
     // 清除事件與所有計時器
     return () => {
-      socket.off("whackGameWarn",  onWarn);
-      socket.off("whackGameStart", onStart);
-      socket.off("whackGameEnd",   onEnd);
+      socket.off("whackGameWarn",    onWarn);
+      socket.off("whackGameStart",   onStart);
+      socket.off("whackGameEnding",  onEnding);
+      socket.off("whackGameEnd",     onEnd);
       clearInterval(timerRef.current);
       clearInterval(warnTimerRef.current);
       clearHoleTimers();

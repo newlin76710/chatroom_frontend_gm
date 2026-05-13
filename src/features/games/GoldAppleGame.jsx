@@ -115,7 +115,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
   const inputLockedRef = useRef(true);    // 輸入鎖 (非遊戲中或正在下爪時鎖定)
   const activePointerRef = useRef(null);  // 多點觸控保護：只允許第一個接觸點
   const lastCatchTimeRef = useRef(0);     // 上次撈取時間 (客戶端本地冷卻)
-  const CATCH_COOLDOWN_MS = 400;          // 客戶端撈取冷卻時間 (ms)
+  const CATCH_COOLDOWN_MS = 200;          // 客戶端撈取冷卻時間 (ms)
   // 容器尺寸快取 (避免每幀 reflow)
   const sizeRef = useRef({ W: window.innerWidth, H: window.innerHeight });
 
@@ -288,7 +288,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
       startAnim();
     };
 
-    // 遊戲一結束（不再提交，等待伺服器結算）
+    // 遊戲一結束：回傳本地撈取總數給後端比對
     const onG1End = () => {
       inputLockedRef.current = true;
       stopAnim();
@@ -296,7 +296,8 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
       activePointerRef.current = null;
       setNetScooping(false);
       setG1Submitting(true);
-      // 清除蘋果物理資料，切換到結果畫面
+      // 回傳本地計數給後端做比對（取較高值結算）
+      socket.emit("submitGame1Score", { token, room: RN, count: localCaughtRef.current.size });
       setG1AppleIds([]);
       physicsRef.current = {};
       domRefs.current = {};
