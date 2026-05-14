@@ -172,7 +172,7 @@ export default function Login() {
       sessionStorage.setItem("name", username);
       sessionStorage.setItem("gender", gender);
       sessionStorage.setItem("avatar", avatar);
-      if (oldName && oldName !== username) {
+      if (oldName && oldName.toLowerCase() !== username.toLowerCase()) {
         socket.emit("updateMyName", { room: RN, oldName, newName: username });
       }
     } catch (e) {
