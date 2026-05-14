@@ -3,12 +3,14 @@
 // 
 // Socket 事件：
 //   接收 (in):
-//     clawGameStart  { duration, reward, speed, dropSpeed }
-//     clawDropResult { success, caught }
-//     clawGameEnd    { scores: { [username]: count } }
-//     clawGameWarn   { secondsLeft }
+//     clawGameStart    { duration, reward, speed, dropSpeed }
+//     clawDropResult   { success, caught }
+//     clawGameEnding   {}                             (1.5 秒結算視窗，提交本地計數)
+//     clawGameEnd      { scores: { [username]: count } }
+//     clawGameWarn     { secondsLeft }
 //   發送 (out):
-//     clawDropClaw   { token, position }   (position 為 0~1 的比例值)
+//     clawDropClaw     { token, position }   (position 為 0~1 的比例值)
+//     submitClawScore  { token, room, count }  (結算視窗內提交本地夾取次數)
 //
 // 主要遊戲邏輯：
 //   - 爪子會自動左右擺動 (requestAnimationFrame)
@@ -132,6 +134,7 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
   const catchResultRef  = useRef(null);     // 存放伺服器回傳的下爪結果 { success, earned }
   const effectIdRef     = useRef(0);        // 特效遞增 ID
   const windowRef       = useRef(null);     // 遊戲視窗 DOM 參考
+  const myCatchCountRef = useRef(0);        // 本場成功夾取次數（提交給後端比對用）
 
   // 同步 state 到 ref
   useEffect(() => { phaseRef.current  = phase;  }, [phase]);
@@ -287,6 +290,7 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
         const res = catchResultRef.current;
         if (res?.success) {
           const earned = res.earned ?? rewardRef.current; // 伺服器可能回傳實際獲得數
+          myCatchCountRef.current += 1;
           myScoreRef.current += earned;
           setMyScore(myScoreRef.current);
           setApples(prev => prev + earned);
@@ -361,6 +365,7 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
       rewardRef.current      = r || 1;
       setMyScore(0);
       myScoreRef.current     = 0;
+      myCatchCountRef.current = 0;
       setResult(null);
       setDropping(false);
       droppingRef.current    = false;
@@ -393,7 +398,26 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
     };
 
     /**
-     * 遊戲結束事件
+     * 遊戲即將結算（後端通知前端提交本地分數）
+     */
+    const onEnding = () => {
+      inputLockedRef.current = true;
+      clearInterval(timerRef.current);
+      stopOscillation();
+      if (dropAnimRef.current) cancelAnimationFrame(dropAnimRef.current);
+      clearTimeout(closeTimerRef.current);
+      clearTimeout(slideTimerRef.current);
+      droppingRef.current = false;
+      setDropping(false);
+      setClawY(0);
+      setProngsOpen(true);
+      setHasCatch(false);
+      // 回傳本地夾取次數給後端做比對（取較高值結算）
+      socket.emit("submitClawScore", { token, room: RN, count: myCatchCountRef.current });
+    };
+
+    /**
+     * 遊戲結束事件（後端比對完成後傳送最終分數）
      */
     const onEnd = ({ scores }) => {
       inputLockedRef.current = true;
@@ -402,23 +426,19 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
       if (dropAnimRef.current) cancelAnimationFrame(dropAnimRef.current);
       clearTimeout(closeTimerRef.current);
       clearTimeout(slideTimerRef.current);
-
-      // 進入 closing 過渡階段
-      setPhase("closing");
-      phaseRef.current    = "closing";
-      setDropping(false);
       droppingRef.current = false;
+      setDropping(false);
       setClawY(0);
       setProngsOpen(true);
       setHasCatch(false);
       setResult(scores);
 
-      // 如果自己有得分，重新查詢金蘋果數量
       if ((scores?.[name] || 0) > 0) {
         setTimeout(() => { refreshMyApples(); }, 300);
       }
 
-      // 短暫過渡後顯示結果畫面
+      setPhase("closing");
+      phaseRef.current = "closing";
       closeTimerRef.current = setTimeout(() => {
         setPhase("result");
         phaseRef.current = "result";
@@ -426,17 +446,19 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
     };
 
     // 註冊事件
-    socket.on("clawGameWarn",   onWarn);
-    socket.on("clawGameStart",  onStart);
-    socket.on("clawDropResult", onDropResult);
-    socket.on("clawGameEnd",    onEnd);
+    socket.on("clawGameWarn",    onWarn);
+    socket.on("clawGameStart",   onStart);
+    socket.on("clawDropResult",  onDropResult);
+    socket.on("clawGameEnding",  onEnding);
+    socket.on("clawGameEnd",     onEnd);
 
     // 清除事件監聽與所有計時器
     return () => {
-      socket.off("clawGameWarn",   onWarn);
-      socket.off("clawGameStart",  onStart);
-      socket.off("clawDropResult", onDropResult);
-      socket.off("clawGameEnd",    onEnd);
+      socket.off("clawGameWarn",    onWarn);
+      socket.off("clawGameStart",   onStart);
+      socket.off("clawDropResult",  onDropResult);
+      socket.off("clawGameEnding",  onEnding);
+      socket.off("clawGameEnd",     onEnd);
       clearInterval(timerRef.current);
       clearInterval(warnTimerRef.current);
       clearTimeout(closeTimerRef.current);
@@ -444,7 +466,7 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
       stopOscillation();
       if (dropAnimRef.current) cancelAnimationFrame(dropAnimRef.current);
     };
-  }, [socket, startOscillation, stopOscillation, resetApples, name, refreshMyApples]);
+  }, [socket, token, startOscillation, stopOscillation, resetApples, name, refreshMyApples]);
 
   // ===== 玩家互動 =====
 
