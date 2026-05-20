@@ -184,9 +184,12 @@ export default function SongRoom({ room, name, socket, currentSinger, myLevel })
       socket.off("livekit-token", livekitTokenHandlerRef.current);
     }
     livekitTokenHandlerRef.current = async ({ token }) => {
-      await startSing(token);
-      setIsProcessing(false);
-      livekitTokenHandlerRef.current = null;
+      try {
+        await startSing(token);
+      } finally {
+        setIsProcessing(false);
+        livekitTokenHandlerRef.current = null;
+      }
     };
     socket.once("livekit-token", livekitTokenHandlerRef.current);
   };

@@ -6,6 +6,11 @@ const DEFAULT = {
   show_ip:              true,
   daily_login_reward:   1,
   singing_reward:       2,
+  singing_double_enabled:       false,
+  singing_double_start_hour:    20,
+  singing_double_start_minute:  0,
+  singing_double_end_hour:      22,
+  singing_double_end_minute:    0,
   per_transfer_limit:   0,
   daily_transfer_limit: 0,
   surprise_reward:      10,
@@ -160,6 +165,39 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <input type="number" value={settings.singing_reward}
                   onChange={e => setInt("singing_reward", e.target.value)} />
               </Row>
+              <Row label="唱歌雙倍獎勵">
+                <label className="toggle-label">
+                  <input type="checkbox" checked={!!settings.singing_double_enabled}
+                    onChange={e => setBool("singing_double_enabled", e.target.checked)} />
+                  {" "}啟用每日指定時段雙倍金蘋果
+                </label>
+              </Row>
+              {settings.singing_double_enabled && (
+                <Row label="雙倍時段（台灣時間）">
+                  <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                    <input type="number" min={0} max={23} style={{ width: 56 }}
+                      value={settings.singing_double_start_hour}
+                      onChange={e => setInt("singing_double_start_hour", e.target.value)} />
+                    <span>時</span>
+                    <input type="number" min={0} max={59} style={{ width: 56 }}
+                      value={settings.singing_double_start_minute}
+                      onChange={e => setInt("singing_double_start_minute", e.target.value)} />
+                    <span>分 ～</span>
+                    <input type="number" min={0} max={23} style={{ width: 56 }}
+                      value={settings.singing_double_end_hour}
+                      onChange={e => setInt("singing_double_end_hour", e.target.value)} />
+                    <span>時</span>
+                    <input type="number" min={0} max={59} style={{ width: 56 }}
+                      value={settings.singing_double_end_minute}
+                      onChange={e => setInt("singing_double_end_minute", e.target.value)} />
+                    <span>分</span>
+                    <span style={{ color: "#aaa", fontSize: "0.8rem" }}>
+                      （{fmtTime(settings.singing_double_start_hour, settings.singing_double_start_minute)}
+                      ～{fmtTime(settings.singing_double_end_hour, settings.singing_double_end_minute)}）
+                    </span>
+                  </div>
+                </Row>
+              )}
               <Row label="單筆轉帳上限">
                 <input type="number" value={settings.per_transfer_limit}
                   onChange={e => setInt("per_transfer_limit", e.target.value)} />
