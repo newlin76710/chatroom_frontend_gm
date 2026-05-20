@@ -7,6 +7,7 @@ const DEFAULT = {
   daily_login_reward:   1,
   singing_reward:       2,
   singing_double_enabled:       false,
+  singing_double_multiplier:    2,
   singing_double_start_hour:    20,
   singing_double_start_minute:  0,
   singing_double_end_hour:      22,
@@ -169,11 +170,19 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <label className="toggle-label">
                   <input type="checkbox" checked={!!settings.singing_double_enabled}
                     onChange={e => setBool("singing_double_enabled", e.target.checked)} />
-                  {" "}啟用每日指定時段雙倍金蘋果
+                  {" "}啟用每日指定時段加倍金蘋果
                 </label>
               </Row>
               {settings.singing_double_enabled && (
-                <Row label="雙倍時段（台灣時間）">
+                <Row label="獎勵倍數">
+                  <input type="number" min={2} max={10} style={{ width: 64 }}
+                    value={settings.singing_double_multiplier}
+                    onChange={e => setInt("singing_double_multiplier", e.target.value)} />
+                  <span className="field-note">倍（最少 2，最多 10）</span>
+                </Row>
+              )}
+              {settings.singing_double_enabled && (
+                <Row label="時段（台灣時間）">
                   <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                     <input type="number" min={0} max={23} style={{ width: 56 }}
                       value={settings.singing_double_start_hour}
