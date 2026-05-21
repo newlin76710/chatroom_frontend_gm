@@ -63,9 +63,7 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
   const comboTimer  = useRef(null);           // combo 重置計時器
   const hitIdRef           = useRef(0);       // 特效遞增 ID
   const upCountRef         = useRef(0);       // 當前同時冒出的蘋果數量
-  const activePointerRef   = useRef(null);    // 多點觸控保護：只允許第一個接觸點觸發打擊
-  const lastWhackTimeRef   = useRef(0);       // 上次打擊時間，用於冷卻
-  const WHACK_COOLDOWN_MS  = 200;             // 打擊後冷卻時間（毫秒），需與後端 THROTTLE_MS 對齊
+  const isHittingRef        = useRef(false);   // 打擊鎖：同時只允許一顆蘋果被打中（防多點觸控），380ms 後解鎖
   const maxConcurrentRef   = useRef(4);       // 目前允許同時存在的蘋果數（會隨時間增加）
   const initConcurrentRef  = useRef(4);       // 開場時的同時蘋果數（來自伺服器設定）
   const finalConcurrentRef = useRef(7);       // 遊戲後期的最高同時蘋果數（來自伺服器設定）
@@ -350,10 +348,8 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
   /**
    * 釋放指針（觸控結束），用於多點觸控管理
    */
-  const handlePointerRelease = useCallback((e) => {
-    if (activePointerRef.current === e.pointerId) {
-      activePointerRef.current = null;
-    }
+  const handlePointerRelease = useCallback(() => {
+    // 不在此處清除 isHittingRef，讓 380ms 動畫結束後才解鎖，確保整段動畫期間不能再打
   }, []);
 
   /**
@@ -371,12 +367,8 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
   const handleHammerStrike = useCallback((e) => {
     if (inputLockedRef.current) return;
     if (phaseRef.current !== "playing") return;
-    // 多點觸控保護：如果已有其他指針在進行打擊，忽略
-    if (activePointerRef.current !== null && activePointerRef.current !== e.pointerId) return;
-
-    const now = Date.now();
-    // 冷卻檢查：防止過快連續打擊
-    if (now - lastWhackTimeRef.current < WHACK_COOLDOWN_MS) return;
+    // 打擊鎖：上一顆蘋果動畫結束前，拒絕任何新的打擊（防多點觸控同時打多顆）
+    if (isHittingRef.current) return;
 
     const STRIKE_RADIUS = 80; // 打擊有效半徑 (px)
     let bestIdx = -1;
@@ -403,9 +395,8 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
 
     if (bestIdx < 0) return; // 沒有擊中任何蘋果
 
-    // 鎖定當前指針
-    activePointerRef.current = e.pointerId;
-    lastWhackTimeRef.current = now;
+    // 鎖定打擊，380ms 動畫期間不允許再打
+    isHittingRef.current = true;
 
     // 將該洞標記為已擊中
     holeStateRef.current = holeStateRef.current.map((hole, idx) =>
@@ -444,7 +435,7 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
       );
       setHoles([...holeStateRef.current]);
       upCountRef.current = Math.max(0, upCountRef.current - 1);
-      if (activePointerRef.current !== null) activePointerRef.current = null;
+      isHittingRef.current = false;
       if (phaseRef.current === "playing") scheduleNextHole(rand(80, 250));
     }, 380);
   }, [socket, token, scheduleNextHole]);
