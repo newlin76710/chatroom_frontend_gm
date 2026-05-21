@@ -75,6 +75,8 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
     Array.from({ length: HOLE_COUNT }, () => ({ up: false, whacked: false }))
   );
   const holeRefs = useRef([]); // 每個洞包的 DOM 元素引用
+  const activePointerRef  = useRef(null); // 當前活躍的指針 ID（多點觸控管理）
+  const lastWhackTimeRef  = useRef(0);    // 上次打擊的時間戳
 
   // 同步 phase state 到 phaseRef
   useEffect(() => { phaseRef.current = phase; }, [phase]);
