@@ -6,6 +6,7 @@ const _cfg = {
   show_ip:          true,
   new_function:     false,
   livekit_url:      "",
+  room_setting:     "prod",
 };
 
 export const roomConfig = _cfg;
