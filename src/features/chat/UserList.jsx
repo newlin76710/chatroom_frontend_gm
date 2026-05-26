@@ -18,28 +18,28 @@ export default function UserList({
   myName,
   filteredUsers = [],
   setFilteredUsers,
-  focusInput
+  focusInput,
+  token,
 }) {
-  const formatLv = (lv) => String(lv).padStart(2, "0");
   const ANL = roomConfig.admin_min_level || 91;
   const AML = roomConfig.admin_max_level || 99;
   const OPENAI = roomConfig.openai;
   const [openMenu, setOpenMenu] = React.useState(null);
+  const [peonyPopup, setPeonyPopup] = React.useState(null); // { x, y }
 
   const toggleAdminMenu = (name) => {
     setOpenMenu(openMenu === name ? null : name);
   };
-  // 依照 OPENAI 過濾 AI
+
   const visibleUsers = userList.filter(u => OPENAI || u.type !== "AI");
 
   const toggleFilter = (userName) => {
     if (!setFilteredUsers) return;
-
-    if (filteredUsers.includes(userName)) {
-      setFilteredUsers(filteredUsers.filter(u => u !== userName));
-    } else {
-      setFilteredUsers([...filteredUsers, userName]);
-    }
+    setFilteredUsers(
+      filteredUsers.includes(userName)
+        ? filteredUsers.filter(u => u !== userName)
+        : [...filteredUsers, userName]
+    );
   };
 
   const getUserColorByGender = (gender) => {
@@ -49,6 +49,7 @@ export default function UserList({
   };
 
   return (
+    <>
     <div className={`user-list ${userListCollapsed ? "collapsed" : ""}`}>
       <div
         className="user-list-header"
@@ -60,20 +61,13 @@ export default function UserList({
       {!userListCollapsed &&
         visibleUsers.map((u, idx) => {
           const avatarUrl = u.avatar || aiAvatars[u.name];
-
-          const canKick =
-            myLevel >= ANL &&
-            u.level < myLevel &&
-            u.name !== myName &&
-            kickUser;
-
-          const canKickAndBlock =
-            myLevel >= AML &&
-            u.level < myLevel &&
-            u.name !== myName &&
-            kickAndBlockUser;
-
           const isFiltered = filteredUsers.includes(u.name);
+          const isSelf = u.name === myName;
+          const isAI = u.type === "AI";
+
+          const canKick = myLevel >= ANL && u.level < myLevel && !isSelf && kickUser;
+          const canBan = myLevel >= AML && u.level < myLevel && !isSelf && kickAndBlockUser;
+          const showManage = !isSelf && !isAI;
 
           return (
             <div
@@ -96,9 +90,26 @@ export default function UserList({
                 {u.name}
               </span>
               &nbsp;
-              {u.type === "AI" ? "AI" : u.type === "guest" ? 1 : u.level} 
+              {isAI ? "AI" : u.type === "guest" ? 1 : u.level}
 
-              {canKick && (
+              {(u.golden_peonies > 0) && (
+                <span
+                  className="ul-peony-badge"
+                  onMouseEnter={e => {
+                    const r = e.currentTarget.getBoundingClientRect();
+                    const imgW = 120, imgH = 80;
+                    const x = Math.min(r.left + r.width / 2 - imgW / 2, window.innerWidth - imgW - 12);
+                    const y = r.top - imgH - 14;
+                    setPeonyPopup({ x: Math.max(4, x), y: Math.max(4, y) });
+                  }}
+                  onMouseLeave={() => setPeonyPopup(null)}
+                >
+                  <img src="/gifts/peony.gif" alt="金牡丹" className="ul-peony-icon" />
+                  {u.golden_peonies}
+                </span>
+              )}
+
+              {showManage && (
                 <div className="ul-admin-wrap">
                   <button
                     className="ul-admin-trigger"
@@ -112,31 +123,53 @@ export default function UserList({
 
                   {openMenu === u.name && (
                     <div className="ul-admin-panel">
-                      <button
-                        className="ul-admin-kick"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (window.confirm(`確定踢出 ${u.name}?`)) {
-                            kickUser(u.name);
-                          }
-                        }}
-                      >
-                        👢 踢出
-                      </button>
 
-                      <button
-                        className="ul-admin-mute"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (window.confirm(`禁言 ${u.name} 30秒?`)) {
-                            muteUser(u.name);
-                          }
-                        }}
-                      >
-                        🔇 禁言30秒
-                      </button>
+                      {/* 過濾 — 所有人可用 */}
+                      {setFilteredUsers && (
+                        <button
+                          className="ul-admin-filter"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFilter(u.name);
+                            setOpenMenu(null);
+                          }}
+                        >
+                          {isFiltered ? "🔊 解除過濾" : "🙈 過濾"}
+                        </button>
+                      )}
 
-                      {canKickAndBlock && (
+                      {/* 踢出 / 禁言 — level 91+ */}
+                      {canKick && (
+                        <>
+                          <button
+                            className="ul-admin-kick"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (window.confirm(`確定踢出 ${u.name}?`)) {
+                                kickUser(u.name);
+                                setOpenMenu(null);
+                              }
+                            }}
+                          >
+                            👢 踢出
+                          </button>
+                          <button
+                            className="ul-admin-mute"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (window.confirm(`禁言 ${u.name} 30秒?`)) {
+                                muteUser(u.name);
+                                setOpenMenu(null);
+                              }
+                            }}
+                          >
+                            🔇 禁言30秒
+                          </button>
+                        </>
+                      )}
+
+                      {/* 封鎖 — level 99+ */}
+                      {canBan && (
                         <button
                           className="ul-admin-ban"
                           onClick={(e) => {
@@ -155,33 +188,24 @@ export default function UserList({
                           ⛔ 徹底封鎖
                         </button>
                       )}
+
                     </div>
                   )}
                 </div>
               )}
-
-              {/* 過濾按鈕，不管 OPENAI */}
-              {setFilteredUsers && (
-                <button
-                  className="filter-btn"
-                  style={{
-                    marginLeft: "1px", fontSize: "0.7rem",
-                    backgroundColor: "#1976d2",
-                    color: "white",
-                    borderColor: "#1976d2"
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleFilter(u.name);
-                  }}
-                >
-                  {isFiltered ? "解除" : "過濾"}
-                </button>
-              )
-              }
             </div>
           );
         })}
-    </div >
+    </div>
+
+      {peonyPopup && (
+        <div
+          className="ul-peony-popup"
+          style={{ left: peonyPopup.x, top: peonyPopup.y }}
+        >
+          <img src="/gifts/peony.gif" alt="金牡丹" />
+        </div>
+      )}
+    </>
   );
 }

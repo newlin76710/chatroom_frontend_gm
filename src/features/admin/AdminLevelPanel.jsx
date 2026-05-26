@@ -44,6 +44,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                 editLevel: u.level,
                 editExp: u.exp || 0,
                 editGold: u.gold_apples || 0,
+                editPeony: u.golden_peonies || 0,
             })));
             setPage(pageNum);
             setTotalCount(data.total || 0);
@@ -126,6 +127,33 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                 prev.map(u =>
                     u.username === username
                         ? { ...u, exp: Number(newExp), editExp: Number(newExp) }
+                        : u
+                )
+            );
+        } catch (err) {
+            console.error(err);
+            alert("更新失敗");
+        }
+    };
+
+    /* ================= 修改金牡丹 ================= */
+    const handlePeonyChange = async (username, newPeony) => {
+        if (!window.confirm(`確定將 ${username} 的金牡丹設為 ${newPeony} 嗎？`)) return;
+        const reason = window.prompt("請輸入調整原因（必填）", "");
+        if (!reason || !reason.trim()) { alert("調整原因為必填，操作已取消"); return; }
+        try {
+            const res = await fetch(`${BACKEND}/admin/set-user-peonies`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ username, amount: Number(newPeony), reason }),
+            });
+            const data = await res.json();
+            if (!res.ok) { alert(data.error || "更新失敗"); return; }
+            alert("金牡丹更新成功");
+            setUsers(prev =>
+                prev.map(u =>
+                    u.username === username
+                        ? { ...u, golden_peonies: Number(newPeony), editPeony: Number(newPeony) }
                         : u
                 )
             );
@@ -218,7 +246,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
     return (
         <>
             <button className="admin-btn" onClick={() => { setOpen(true); loadUsers(1); }}>
-                🛡 管理使用者等級 {roomConfig.new_function && "& 金蘋果"}
+                🛡 管理使用者等級 {roomConfig.new_function && "& 金蘋果 & 金牡丹"}
             </button>
 
             {open && (
@@ -248,6 +276,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                         <th>等級</th>
                                         <th>積分</th>
                                         {roomConfig.new_function && <th>金蘋果</th>}
+                                        {roomConfig.new_function && <th>金牡丹</th>}
                                         <th>建立時間</th>
                                         <th>最近登入</th>
                                     </tr>
@@ -329,12 +358,35 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                                     修改
                                                 </button>
                                             </td>)}
+                                            {roomConfig.new_function && (<td>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    value={u.editPeony}
+                                                    style={{ width: "60px", marginRight: "6px" }}
+                                                    onChange={e =>
+                                                        setUsers(prev =>
+                                                            prev.map(x =>
+                                                                x.id === u.id
+                                                                    ? { ...x, editPeony: e.target.value }
+                                                                    : x
+                                                            )
+                                                        )
+                                                    }
+                                                />
+                                                <button
+                                                    className="admin-btn"
+                                                    onClick={() => handlePeonyChange(u.username, u.editPeony)}
+                                                >
+                                                    修改
+                                                </button>
+                                            </td>)}
                                             <td>{new Date(u.created_at).toLocaleString()}</td>
                                             <td>{u.last_login_at ? new Date(u.last_login_at).toLocaleString() : "-"}</td>
                                         </tr>
                                     )) : (
                                         <tr>
-                                            <td colSpan={roomConfig.new_function ? 6 : 5} style={{ textAlign: "center" }}>無資料</td>
+                                            <td colSpan={roomConfig.new_function ? 7 : 5} style={{ textAlign: "center" }}>無資料</td>
                                         </tr>
                                     )}
                                 </tbody>

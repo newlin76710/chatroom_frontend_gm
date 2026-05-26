@@ -253,6 +253,7 @@ export default function ChatApp() {
             level: u?.level || 1,
             exp: u?.exp || 0,
             gold_apples: u.gold_apples || 0,
+            golden_peonies: u.golden_peonies || 0,
             gender: u?.gender || "女",
             type: u?.type || "guest",
             avatar:
@@ -890,6 +891,7 @@ export default function ChatApp() {
               filteredUsers={filteredUsers}
               setFilteredUsers={setFilteredUsers}
               focusInput={focusInput}
+              token={token}
             />
           </AppErrorBoundary>
         </div>

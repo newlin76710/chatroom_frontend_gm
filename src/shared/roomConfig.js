@@ -5,6 +5,7 @@ const _cfg = {
   openai:           false,
   show_ip:          true,
   new_function:     false,
+  open_peony:       false,
   livekit_url:      "",
   room_setting:     "prod",
 };

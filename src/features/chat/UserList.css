@@ -75,3 +75,90 @@
 .ul-admin-ban:hover {
   background: #ffccc7;
 }
+
+/* 🙈 過濾（藍灰） */
+.ul-admin-filter {
+  background: #f0f5ff;
+  color: #1d39c4;
+}
+
+.ul-admin-filter:hover {
+  background: #d6e4ff;
+}
+
+/* 🌸 金牡丹徽章（名單旁顯示） */
+.ul-peony-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 4px;
+  color: #e8960c;
+  font-weight: bold;
+  cursor: default;
+}
+
+.ul-peony-icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+}
+
+.ul-peony-popup {
+  position: fixed;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 10px;
+  padding: 6px;
+  z-index: 99999;
+  pointer-events: none;
+}
+
+.ul-peony-popup img {
+  width: 120px;
+  height: auto;
+  display: block;
+}
+
+/* 🌸 金牡丹調整區（下拉選單內） */
+.ul-peony-section {
+  border-top: 1px solid #ffe0e0;
+  margin-top: 4px;
+  padding-top: 6px;
+}
+
+.ul-peony-section-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #a8071a;
+  margin-bottom: 4px;
+}
+
+.ul-peony-section-row {
+  display: flex;
+  gap: 4px;
+}
+
+.ul-peony-input {
+  width: 56px;
+  padding: 3px 4px;
+  border: 1px solid #ffadd2;
+  border-radius: 4px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.ul-peony-btn {
+  background: linear-gradient(135deg, #ff85c2, #eb2f96);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ul-peony-btn:hover {
+  background: linear-gradient(135deg, #ff9de2, #c41d7f);
+}
