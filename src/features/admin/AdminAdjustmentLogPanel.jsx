@@ -2,7 +2,7 @@
 import { useState } from "react";
 import "./AdminLoginLogPanel.css";
 
-import { BACKEND, RN } from "../../shared/roomConfig";
+import { BACKEND, RN, roomConfig } from "../../shared/roomConfig";
 const PAGE_SIZE = 50;
 
 const toUtc = (localDatetime) => {
@@ -152,13 +152,15 @@ export default function AdminAdjustmentLogPanel({ token }) {
                 >
                   等級 / 金蘋果
                 </button>
-                <button
-                  className="admin-btn"
-                  style={{ fontSize: 12, padding: "2px 10px", background: logType === "peony" ? "#1565c0" : "#1976d2" }}
-                  onClick={() => handleTabSwitch("peony")}
-                >
-                  🌸 金牡丹
-                </button>
+                {roomConfig.open_peony && (
+                  <button
+                    className="admin-btn"
+                    style={{ fontSize: 12, padding: "2px 10px", background: logType === "peony" ? "#1565c0" : "#1976d2" }}
+                    onClick={() => handleTabSwitch("peony")}
+                  >
+                    🌸 金牡丹
+                  </button>
+                )}
               </div>
               <button onClick={() => setOpen(false)}>✖</button>
             </div>

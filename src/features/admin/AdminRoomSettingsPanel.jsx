@@ -2,20 +2,9 @@ import { useEffect, useState } from "react";
 
 import { BACKEND, RN } from "../../shared/roomConfig";
 
-const PEONY_PAGE_SIZE = 20;
-
 export default function AdminRoomSettingsPanel({ token }) {
   const [settings, setSettings] = useState(null);
   const [saving, setSaving] = useState(false);
-
-  // 金牡丹紀錄
-  const [peonyLogs, setPeonyLogs] = useState([]);
-  const [peonyTotal, setPeonyTotal] = useState(0);
-  const [peonyPage, setPeonyPage] = useState(1);
-  const [peonyLoading, setPeonyLoading] = useState(false);
-  const [peonyLoaded, setPeonyLoaded] = useState(false);
-
-  const peonyTotalPages = Math.ceil(peonyTotal / PEONY_PAGE_SIZE);
 
   useEffect(() => {
     fetch(`${BACKEND}/admin/settings?room=${RN}`, {
@@ -42,27 +31,6 @@ export default function AdminRoomSettingsPanel({ token }) {
       alert("更新失敗");
     } finally {
       setSaving(false);
-    }
-  };
-
-  const loadPeonyLogs = async (pageNum = 1) => {
-    setPeonyLoading(true);
-    try {
-      const res = await fetch(`${BACKEND}/admin/peony-logs`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ page: pageNum, pageSize: PEONY_PAGE_SIZE }),
-      });
-      const data = await res.json();
-      if (!res.ok) { alert(data.error || "查詢失敗"); return; }
-      setPeonyLogs(data.logs || []);
-      setPeonyTotal(data.total || 0);
-      setPeonyPage(pageNum);
-      setPeonyLoaded(true);
-    } catch {
-      alert("載入金牡丹紀錄失敗");
-    } finally {
-      setPeonyLoading(false);
     }
   };
 
@@ -118,10 +86,7 @@ export default function AdminRoomSettingsPanel({ token }) {
           <input
             type="checkbox"
             checked={!!settings.open_peony}
-            onChange={e => {
-              setSettings(s => ({ ...s, open_peony: e.target.checked }));
-              if (e.target.checked && !peonyLoaded) loadPeonyLogs(1);
-            }}
+            onChange={e => setSettings(s => ({ ...s, open_peony: e.target.checked }))}
           />
           啟用
         </label>
@@ -139,72 +104,6 @@ export default function AdminRoomSettingsPanel({ token }) {
       >
         {saving ? "儲存中…" : "儲存"}
       </button>
-
-      {settings.open_peony && (
-        <div style={{ borderTop: "1px solid #eee", paddingTop: 12, marginTop: 4 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-            <span style={{ fontSize: 13, fontWeight: "bold", color: "#a8071a" }}>
-              🌸 金牡丹紀錄
-            </span>
-            {peonyLoaded && (
-              <span style={{ fontSize: 12, color: "#666" }}>共 {peonyTotal} 筆</span>
-            )}
-            <button
-              className="admin-btn"
-              style={{ fontSize: 12, padding: "2px 10px" }}
-              onClick={() => loadPeonyLogs(1)}
-              disabled={peonyLoading}
-            >
-              {peonyLoading ? "載入中…" : "重新載入"}
-            </button>
-          </div>
-
-          {peonyLoaded && (
-            <>
-              <div className="admin-table-wrapper">
-                <table className="admin-table" style={{ fontSize: 12 }}>
-                  <thead>
-                    <tr>
-                      <th>帳號</th>
-                      <th>異動</th>
-                      <th>新總量</th>
-                      <th>操作者</th>
-                      <th>原因</th>
-                      <th>時間</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {peonyLogs.length > 0 ? peonyLogs.map(l => (
-                      <tr key={l.id}>
-                        <td>{l.username}</td>
-                        <td style={{ color: l.amount_changed >= 0 ? "#389e0d" : "#cf1322", fontWeight: "bold" }}>
-                          {l.amount_changed >= 0 ? `+${l.amount_changed}` : l.amount_changed}
-                        </td>
-                        <td>{l.new_total}</td>
-                        <td>{l.granted_by}</td>
-                        <td>{l.reason}</td>
-                        <td>{new Date(l.created_at).toLocaleString("zh-TW", { hour12: false })}</td>
-                      </tr>
-                    )) : (
-                      <tr>
-                        <td colSpan={6} style={{ textAlign: "center", color: "#999" }}>無紀錄</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {peonyTotalPages > 1 && (
-                <div className="admin-pagination" style={{ marginTop: 6 }}>
-                  <button className="admin-btn" disabled={peonyPage <= 1} onClick={() => loadPeonyLogs(peonyPage - 1)}>上一頁</button>
-                  <span style={{ padding: "0 8px", fontSize: 12 }}>{peonyPage} / {peonyTotalPages}</span>
-                  <button className="admin-btn" disabled={peonyPage >= peonyTotalPages} onClick={() => loadPeonyLogs(peonyPage + 1)}>下一頁</button>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      )}
     </div>
   );
 }

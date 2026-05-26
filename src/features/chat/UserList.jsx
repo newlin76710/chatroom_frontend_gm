@@ -92,7 +92,7 @@ export default function UserList({
               &nbsp;
               {isAI ? "AI" : u.type === "guest" ? 1 : u.level}
 
-              {(u.golden_peonies > 0) && (
+              {roomConfig.open_peony && (u.golden_peonies > 0) && (
                 <span
                   className="ul-peony-badge"
                   onMouseEnter={e => {

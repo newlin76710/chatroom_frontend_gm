@@ -246,7 +246,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
     return (
         <>
             <button className="admin-btn" onClick={() => { setOpen(true); loadUsers(1); }}>
-                🛡 管理使用者等級 {roomConfig.new_function && "& 金蘋果 & 金牡丹"}
+                🛡 管理使用者等級 {roomConfig.new_function && (roomConfig.open_peony ? "& 金蘋果 & 金牡丹" : "& 金蘋果")}
             </button>
 
             {open && (
@@ -276,7 +276,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                         <th>等級</th>
                                         <th>積分</th>
                                         {roomConfig.new_function && <th>金蘋果</th>}
-                                        {roomConfig.new_function && <th>金牡丹</th>}
+                                        {roomConfig.new_function && roomConfig.open_peony && <th>金牡丹</th>}
                                         <th>建立時間</th>
                                         <th>最近登入</th>
                                     </tr>
@@ -358,7 +358,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                                     修改
                                                 </button>
                                             </td>)}
-                                            {roomConfig.new_function && (<td>
+                                            {roomConfig.new_function && roomConfig.open_peony && (<td>
                                                 <input
                                                     type="number"
                                                     min="0"
@@ -386,7 +386,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                         </tr>
                                     )) : (
                                         <tr>
-                                            <td colSpan={roomConfig.new_function ? 7 : 5} style={{ textAlign: "center" }}>無資料</td>
+                                            <td colSpan={roomConfig.new_function ? (roomConfig.open_peony ? 7 : 6) : 5} style={{ textAlign: "center" }}>無資料</td>
                                         </tr>
                                     )}
                                 </tbody>
