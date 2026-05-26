@@ -118,7 +118,7 @@ export default function UserList({
                       toggleAdminMenu(u.name);
                     }}
                   >
-                    管理
+                    互動
                   </button>
 
                   {openMenu === u.name && (
