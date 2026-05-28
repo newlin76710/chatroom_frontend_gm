@@ -133,6 +133,22 @@ export function useMessages() {
     );
   }, []);
 
+  // 金牡丹贈送訊息
+  const addPeonyMessage = useCallback((data) => {
+    if (!data) return;
+    const { from, to } = data;
+    setMessages((prev) =>
+      appendMsg(prev, {
+        user: { name: "系統", avatar: SYSTEM_AVATAR, type: "system" },
+        message: `🌸 ${from} 送給 ${to} 1 顆金牡丹！`,
+        timestamp: new Date().toLocaleTimeString(),
+        type: "peony",
+        from,
+        to,
+      })
+    );
+  }, []);
+
   const clearMessages = useCallback(() => setMessages([]), []);
 
   return {
@@ -142,6 +158,7 @@ export function useMessages() {
     addTransactionMessage,
     addGiftMessage,
     addSurpriseMessage,
+    addPeonyMessage,
     clearMessages,
   };
 }

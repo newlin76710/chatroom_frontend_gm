@@ -94,6 +94,7 @@ export default function MessageList({
           const isTransaction = m.type === "transaction";
           const isGift = m.type === "gift";
           const isSurprise = m.type === "surprise";
+          const isPeony = m.type === "peony";
           // 處理系統訊息：進入 & 升級卡
           let relatedUser = null;
           if (isSystem && messageText) {
@@ -153,6 +154,18 @@ export default function MessageList({
                   <span className="surprise-icon">🎊</span>
                   <span className="surprise-text">{messageText}</span>
                   <span className="surprise-icon">🎊</span>
+                </div>
+              </div>
+            );
+          }
+
+          if (isPeony) {
+            return (
+              <div key={i} className="message-row peony-message" style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
+                <div className="peony-banner">
+                  <img src="/gifts/peony.gif" alt="金牡丹" className="peony-big-icon" />
+                  <span className="peony-text">{messageText}</span>
+                  <img src="/gifts/peony.gif" alt="金牡丹" className="peony-big-icon" />
                 </div>
               </div>
             );

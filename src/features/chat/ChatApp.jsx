@@ -114,7 +114,7 @@ export default function ChatApp() {
   const {
     messages,
     addMessage, addSystemMessage, addTransactionMessage, addGiftMessage,
-    addSurpriseMessage,
+    addSurpriseMessage, addPeonyMessage,
     clearMessages,
   } = useMessages();
 
@@ -381,6 +381,12 @@ export default function ChatApp() {
     socket.on("goldenAppleSurprise", handleSurprise);
     return () => socket.off("goldenAppleSurprise", handleSurprise);
   }, [socket, addSurpriseMessage]);
+
+  useEffect(() => {
+    const handlePeonySent = (data) => addPeonyMessage(data);
+    socket.on("peonySent", handlePeonySent);
+    return () => socket.off("peonySent", handlePeonySent);
+  }, [socket, addPeonyMessage]);
 
   useEffect(() => {
     const handleFrontendVersionUpdated = ({ version } = {}) => {
