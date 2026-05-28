@@ -145,6 +145,7 @@ export default function ChatApp() {
   const [convertTC, setConvertTC] = useState(true);
   const [appleAmount, setAppleAmount] = useState(1);
   const [sendingApple, setSendingApple] = useState(false);
+  const [sendingPeony, setSendingPeony] = useState(false);
   const [showAppleSetting, setShowAppleSetting] = useState(false);
   const [perTransferLimit, setPerTransferLimit] = useState(0); // 0 = 不限制
   const [scrollLocked, setScrollLocked] = useState(false);
@@ -602,6 +603,29 @@ export default function ChatApp() {
     }
   }, [target, appleAmount, token, apples, perTransferLimit]);
 
+  const sendPeony = useCallback(async () => {
+    if (!target) { alert("請選擇對象"); return; }
+    setSendingPeony(true);
+    try {
+      const res = await fetch(`${BACKEND}/admin/send-peony`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ targetUsername: target }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.success === false) {
+        throw new Error(data.error || "送出失敗");
+      }
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setSendingPeony(false);
+    }
+  }, [target, token]);
+
   const focusInput = useCallback(() => {
     requestAnimationFrame(() => inputRef.current?.focus());
   }, []);
@@ -853,6 +877,13 @@ export default function ChatApp() {
                     送金蘋果{" "}
                     <img src="/gifts/gold_apple.gif" alt="金蘋果" style={{ width: 20, height: 20, marginTop: -5 }} />
                   </button>
+
+                  {level >= AML && (
+                    <button disabled={sendingPeony} onClick={sendPeony} className="apple-send-btn">
+                      送金牡丹{" "}
+                      <img src="/gifts/peony.gif" alt="金牡丹" style={{ width: 20, height: 20, marginTop: -5 }} />
+                    </button>
+                  )}
                 </div>
               )}
             </>
