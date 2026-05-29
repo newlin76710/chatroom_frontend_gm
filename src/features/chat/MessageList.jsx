@@ -163,9 +163,9 @@ export default function MessageList({
             return (
               <div key={i} className="message-row peony-message" style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
                 <div className="peony-banner">
-                  <img src="/gifts/peony.gif" alt="金牡丹" className="peony-big-icon" />
+                  <img src="/gifts/peony1.gif" alt="金牡丹" className="peony-big-icon" />
                   <span className="peony-text">{messageText}</span>
-                  <img src="/gifts/peony.gif" alt="金牡丹" className="peony-big-icon" />
+                  <img src="/gifts/peony1.gif" alt="金牡丹" className="peony-big-icon" />
                 </div>
               </div>
             );

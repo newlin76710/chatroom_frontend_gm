@@ -885,7 +885,7 @@ export default function ChatApp() {
                   </button>
 
                   {level >= AML && (
-                    <button disabled={sendingPeony} onClick={sendPeony} className="apple-send-btn">
+                    <button disabled={sendingPeony} onClick={sendPeony} className="apple-send-btn" style={{ backgroundColor: "#87CEEB" }}>
                       送金牡丹{" "}
                       <img src="/gifts/peony.gif" alt="金牡丹" style={{ width: 20, height: 20, marginTop: -5 }} />
                     </button>

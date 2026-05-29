@@ -140,7 +140,7 @@ export function useMessages() {
     setMessages((prev) =>
       appendMsg(prev, {
         user: { name: "系統", avatar: SYSTEM_AVATAR, type: "system" },
-        message: `🌸 ${from} 送給 ${to} 1 顆金牡丹！`,
+        message: `🌸 ${from} 送給 ${to} 1 朵金牡丹！`,
         timestamp: new Date().toLocaleTimeString(),
         type: "peony",
         from,

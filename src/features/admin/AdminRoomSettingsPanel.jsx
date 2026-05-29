@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { BACKEND, RN } from "../../shared/roomConfig";
+import { BACKEND, RN, roomConfig } from "../../shared/roomConfig";
 
 export default function AdminRoomSettingsPanel({ token }) {
   const [settings, setSettings] = useState(null);
@@ -91,6 +91,20 @@ export default function AdminRoomSettingsPanel({ token }) {
           啟用
         </label>
       </div>
+
+      {roomConfig.new_function && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>相同IP可贈送</span>
+          <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13 }}>
+            <input
+              type="checkbox"
+              checked={!!settings.same_ip_gift}
+              onChange={e => setSettings(s => ({ ...s, same_ip_gift: e.target.checked }))}
+            />
+            相同IP可互送金蘋果與禮物
+          </label>
+        </div>
+      )}
 
       <button
         onClick={save}
