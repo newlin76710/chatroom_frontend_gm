@@ -95,6 +95,7 @@ export default function MessageList({
           const isGift = m.type === "gift";
           const isSurprise = m.type === "surprise";
           const isPeony = m.type === "peony";
+          const isRPS = isSystem && (messageText.includes("猜拳") || messageText.includes("✊") || messageText.includes("✌") || messageText.includes("🖐"));
           // 處理系統訊息：進入 & 升級卡
           let relatedUser = null;
           if (isSystem && messageText) {
@@ -131,6 +132,7 @@ export default function MessageList({
           // 顏色
           let color = "#eee";
           if (m.color) color = m.color;
+          else if (isRPS) color = "#ffd700";
           else if (isSystem && relatedUser) color = "#ff9900";
           else if (isTransaction || isGift) color = "#ff9900";
           else if (isSystem) color = "#BBECE2";
@@ -181,7 +183,7 @@ export default function MessageList({
                 />
               )}
 
-              <div style={{ maxWidth: "75%", color, background: bgColor, padding: isRelatedToMe ? "6px 10px" : 0, borderRadius: isRelatedToMe ? 8 : 0, fontSize: "1rem", whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: 1.4 }}>
+              <div style={{ maxWidth: "75%", color, background: bgColor, padding: isRelatedToMe ? "6px 10px" : 0, borderRadius: isRelatedToMe ? 8 : 0, fontSize: isRPS ? "1.15rem" : "1rem", whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: 1.4 }}>
                 {tag && <span style={{ fontSize: "0.7rem", color: "#e60909", marginRight: 4 }}>{tag}</span>}
 
                 {(isTransaction || isGift) ? (

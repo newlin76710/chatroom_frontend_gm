@@ -37,17 +37,20 @@ export function useMessages() {
   }, []);
 
   // 系統訊息（進入 / 離開 / 公告等）
+  // 相容字串和 { message } 物件兩種格式
   const addSystemMessage = useCallback((m) => {
     if (!m) return;
+    const text = typeof m === "string" ? m : (m?.message ?? "");
+    if (!text) return;
 
     // 離開：先等 PENDING_LEAVE_DELAY，讓重連有機會取消
-    if (m.includes("離開聊天室")) {
-      const user = m.replace(" 離開聊天室", "");
+    if (text.includes("離開聊天室")) {
+      const user = text.replace(" 離開聊天室", "");
       const timer = setTimeout(() => {
         setMessages((prev) =>
           appendMsg(prev, {
             user: { name: "系統", avatar: SYSTEM_AVATAR, type: "system" },
-            message: m,
+            message: text,
             timestamp: new Date().toLocaleTimeString(),
           })
         );
@@ -58,8 +61,8 @@ export function useMessages() {
     }
 
     // 進入：若有待處理的離開計時器，說明是快速重連，取消並靜默
-    if (m.includes("進入聊天室")) {
-      const user = m.replace(" 進入聊天室", "");
+    if (text.includes("進入聊天室")) {
+      const user = text.replace(" 進入聊天室", "");
       const timer = pendingLeaves.current.get(user);
       if (timer) {
         clearTimeout(timer);
@@ -71,7 +74,7 @@ export function useMessages() {
     setMessages((prev) =>
       appendMsg(prev, {
         user: { name: "系統", avatar: SYSTEM_AVATAR, type: "system" },
-        message: m,
+        message: text,
         timestamp: new Date().toLocaleTimeString(),
       })
     );

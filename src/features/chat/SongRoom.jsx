@@ -3,6 +3,9 @@ import { Room, LocalAudioTrack } from "livekit-client";
 import "./SongRoom.css";
 import { roomConfig } from "../../shared/roomConfig";
 
+const MAX_SING_DURATION = 5000;
+const BASE_SING_DURATION = 480;
+
 export default function SongRoom({ room, name, socket, currentSinger, myLevel }) {
   const [lkRoom, setLkRoom] = useState(null);
   const [singing, setSinging] = useState(false);
@@ -11,6 +14,7 @@ export default function SongRoom({ room, name, socket, currentSinger, myLevel })
   const [queue, setQueue] = useState([]);
   const [panelOpen, setPanelOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [addedSeconds, setAddedSeconds] = useState(0);
   const inQueue = queue.includes(name);
   const roomRef = useRef(null);
   const livekitTokenHandlerRef = useRef(null);
@@ -197,6 +201,16 @@ export default function SongRoom({ room, name, socket, currentSinger, myLevel })
   const leaveQueue = () => { socket.emit("leaveQueue", { room, name }); setWaiting(false); };
   const forceStopSinger = (singerName) => { socket.emit("forceStopSinger", { room, singer: singerName }); };
 
+  useEffect(() => { setAddedSeconds(0); }, [currentSinger]);
+
+  const maxAddable = MAX_SING_DURATION - BASE_SING_DURATION;
+  const addSingTime = (seconds) => {
+    const actualAdd = Math.min(seconds, maxAddable - addedSeconds);
+    if (actualAdd <= 0) return;
+    socket.emit("adminAddSingTime", { room, seconds: actualAdd });
+    setAddedSeconds(prev => prev + actualAdd);
+  };
+
   const otherSinger = currentSinger && currentSinger !== name;
 
   return (
@@ -216,10 +230,22 @@ export default function SongRoom({ room, name, socket, currentSinger, myLevel })
             <div style={{ marginBottom: 8 }}>
               <strong>正在唱：</strong>
               {currentSinger && (
-                <div className="queue-item">
-                  <span>{currentSinger}</span>
-                  {myLevel >= (roomConfig.admin_min_level || 91) && <button className="kick-button" onClick={() => forceStopSinger(currentSinger)}>踢下麥</button>}
-                </div>
+                <>
+                  <div className="queue-item">
+                    <span>{currentSinger}</span>
+                    {myLevel >= (roomConfig.admin_min_level || 91) && <button className="kick-button" onClick={() => forceStopSinger(currentSinger)}>踢下麥</button>}
+                  </div>
+                  {myLevel >= (roomConfig.admin_min_level || 91) && (
+                    <div className="admin-time-controls">
+                      <span className="time-label">⏱ 加秒：</span>
+                      <button className="add-time-button" onClick={() => addSingTime(30)} disabled={addedSeconds >= maxAddable}>+30秒</button>
+                      <button className="add-time-button" onClick={() => addSingTime(60)} disabled={addedSeconds >= maxAddable}>+1分</button>
+                      <button className="add-time-button" onClick={() => addSingTime(300)} disabled={addedSeconds >= maxAddable}>+5分</button>
+                      <button className="add-time-button" onClick={() => addSingTime(600)} disabled={addedSeconds >= maxAddable}>+10分</button>
+                      <div className="time-info">已加 {addedSeconds} 秒（上限 {MAX_SING_DURATION} 秒）</div>
+                    </div>
+                  )}
+                </>
               )}
               {!currentSinger && <div className="queue-item">無 </div>}
             </div>

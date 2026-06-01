@@ -13,6 +13,7 @@ export default function Listener({ room, name, socket, onSingerChange }) {
   const [averageScore, setAverageScore] = useState(null);
   const [scoreCount, setScoreCount] = useState(0);
   const [singStartTime, setSingStartTime] = useState(null);
+  const [singEndTime, setSingEndTime] = useState(null);
   const [countdown, setCountdown] = useState(null);
   const countdownRef = useRef(null);
   const togglingRef = useRef(false);
@@ -65,15 +66,16 @@ export default function Listener({ room, name, socket, onSingerChange }) {
     if (!singStartTime) { setCountdown(null); return; }
 
     const SING_DURATION = 480;
+    const endTime = singEndTime ?? (singStartTime + SING_DURATION * 1000);
     const tick = () => {
-      const remaining = Math.max(0, SING_DURATION - Math.floor((Date.now() - singStartTime) / 1000));
+      const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
       setCountdown(remaining);
       if (remaining <= 0) { clearInterval(countdownRef.current); countdownRef.current = null; }
     };
     tick();
     countdownRef.current = setInterval(tick, 1000);
     return () => { clearInterval(countdownRef.current); countdownRef.current = null; };
-  }, [singStartTime]);
+  }, [singStartTime, singEndTime]);
 
   /* ===== Socket：目前演唱者 ===== */
   useEffect(() => {
@@ -85,6 +87,7 @@ export default function Listener({ room, name, socket, onSingerChange }) {
       setNextSinger(queue.length > 0 ? queue[0] : null);
       setCurrentSinger(singer);
       setSingStartTime(data.singStartTime || null);
+      setSingEndTime(data.singEndTime || null);
       onSingerChange?.(singer);
     };
 

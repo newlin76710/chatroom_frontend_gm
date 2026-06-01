@@ -76,6 +76,16 @@
   background: #ffccc7;
 }
 
+/* ✊ 猜拳（綠色） */
+.ul-admin-rps {
+  background: #f6ffed;
+  color: #389e0d;
+}
+
+.ul-admin-rps:hover {
+  background: #d9f7be;
+}
+
 /* 🙈 過濾（藍灰） */
 .ul-admin-filter {
   background: #f0f5ff;

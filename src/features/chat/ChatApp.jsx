@@ -20,6 +20,7 @@ import VideoSafeBoundary from "./VideoSafeBoundary";
 import SongRoom from "./SongRoom";
 import Listener from "./Listener";
 import UserList from "./UserList";
+import RPS from "./RPS";
 import SurpriseHistoryPanel from "./SurpriseHistoryPanel";
 import QuickPhrasePanel from "./QuickPhrasePanel";
 import AnnouncementPanel from "./AnnouncementPanel";
@@ -102,6 +103,7 @@ export default function ChatApp() {
   const ANL    = roomConfig.admin_min_level || 91;
   const OPENAI = roomConfig.openai;
   const NF     = roomConfig.new_function;
+  const LB     = roomConfig.leaderboard_enabled;
 
   // ── 自訂 Hooks ──
   const {
@@ -150,6 +152,7 @@ export default function ChatApp() {
   const [perTransferLimit, setPerTransferLimit] = useState(0); // 0 = 不限制
   const [scrollLocked, setScrollLocked] = useState(false);
   const scrollLockedRef = useRef(false); // 同步更新，避免 useLayoutEffect 讀到過期值
+  const [rpsPending, setRpsPending] = useState(null); // 等待對方接受猜拳的目標名
 
   const [invalidTokenCountdown, setInvalidTokenCountdown] = useState(null);
   const invalidTokenTimerRef = useRef(null);
@@ -656,7 +659,7 @@ export default function ChatApp() {
               </button>
               {isMember && <MyMessageLogPanel token={token} />}
               <DeferredPanel>
-                {NF && <Leaderboard room={room} token={token} />}
+                {NF && <Leaderboard room={room} token={token} enabled={!!LB} />}
               </DeferredPanel>
               {NF && isMember && (
                 <button className="announce-btn" title="商城" onClick={() => setShowShop(true)}>
@@ -923,6 +926,10 @@ export default function ChatApp() {
               kickUser={(targetName) => socket.emit("kickUser", { room, targetName })}
               kickAndBlockUser={(targetName, reason) => socket.emit("kickAndBlockUser", { room, targetName, reason })}
               muteUser={(targetName) => socket.emit("muteUser", { room, targetName })}
+              onRpsChallenge={(targetName) => {
+                socket.emit("rpsChallenge", { room, challenger: name, target: targetName });
+                setRpsPending(targetName);
+              }}
               myLevel={level}
               myName={name}
               filteredUsers={filteredUsers}
@@ -933,6 +940,15 @@ export default function ChatApp() {
           </AppErrorBoundary>
         </div>
       </div>
+
+      {/* 猜拳遊戲浮動元件 */}
+      <RPS
+        socket={socket}
+        room={room}
+        name={name}
+        pendingTarget={rpsPending}
+        onClearPending={() => setRpsPending(null)}
+      />
 
       {showAppleSetting && (
         <DeferredPanel>

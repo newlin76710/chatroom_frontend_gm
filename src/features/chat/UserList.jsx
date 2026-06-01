@@ -20,6 +20,7 @@ export default function UserList({
   setFilteredUsers,
   focusInput,
   token,
+  onRpsChallenge,
 }) {
   const ANL = roomConfig.admin_min_level || 91;
   const AML = roomConfig.admin_max_level || 99;
@@ -123,6 +124,20 @@ export default function UserList({
 
                   {openMenu === u.name && (
                     <div className="ul-admin-panel">
+
+                      {/* 猜拳 — 所有人可用 */}
+                      {onRpsChallenge && (
+                        <button
+                          className="ul-admin-rps"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onRpsChallenge(u.name);
+                            setOpenMenu(null);
+                          }}
+                        >
+                          ✊ 猜拳
+                        </button>
+                      )}
 
                       {/* 過濾 — 所有人可用 */}
                       {setFilteredUsers && (

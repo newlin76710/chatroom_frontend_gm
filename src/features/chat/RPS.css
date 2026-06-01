@@ -1,0 +1,137 @@
+/* ===== 浮動通知 toast ===== */
+.rps-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 14px;
+  z-index: 99999;
+  pointer-events: none;
+  animation: rps-fadein 0.2s ease;
+}
+
+/* ===== 覆蓋層 ===== */
+.rps-overlay {
+  position: fixed;
+  bottom: 80px;
+  right: 24px;
+  z-index: 9999;
+  animation: rps-fadein 0.2s ease;
+}
+
+@keyframes rps-fadein {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== 彈出框 ===== */
+.rps-modal {
+  background: #1e1e2e;
+  border: 1px solid #444;
+  border-radius: 14px;
+  padding: 16px 20px;
+  min-width: 220px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  color: #fff;
+  text-align: center;
+}
+
+.rps-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.rps-desc {
+  font-size: 14px;
+  color: #ccc;
+  margin-bottom: 14px;
+}
+
+/* ===== 倒數 ===== */
+.rps-countdown {
+  font-size: 22px;
+  font-weight: bold;
+  color: #4ade80;
+  margin-bottom: 12px;
+  transition: color 0.3s;
+}
+
+.rps-countdown.urgent {
+  color: #f87171;
+  animation: rps-pulse 0.5s ease infinite alternate;
+}
+
+@keyframes rps-pulse {
+  from { transform: scale(1); }
+  to   { transform: scale(1.12); }
+}
+
+/* ===== 按鈕共用 ===== */
+.rps-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.rps-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 7px 18px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: opacity 0.15s;
+}
+
+.rps-btn:hover { opacity: 0.85; }
+
+.rps-accept  { background: #22c55e; color: #fff; }
+.rps-decline { background: #ef4444; color: #fff; }
+
+/* ===== 選擇區 ===== */
+.rps-choices {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.rps-choice-btn {
+  background: #2d2d3f;
+  border: 2px solid #555;
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: border-color 0.15s, background 0.15s;
+  min-width: 60px;
+}
+
+.rps-choice-btn:hover {
+  border-color: #4ade80;
+  background: #1a3a28;
+}
+
+.rps-choice-emoji {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.rps-choice-name {
+  font-size: 12px;
+  color: #ccc;
+}
+
+/* ===== 等待對手 ===== */
+.rps-waiting {
+  font-size: 14px;
+  color: #a3e635;
+  padding: 8px 0;
+}

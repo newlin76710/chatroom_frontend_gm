@@ -1,13 +1,14 @@
 const _cfg = {
-  room_name:        null,
-  admin_max_level:  99,
-  admin_min_level:  91,
-  openai:           false,
-  show_ip:          true,
-  new_function:     false,
-  open_peony:       false,
-  livekit_url:      "",
-  room_setting:     "prod",
+  room_name:           null,
+  admin_max_level:     99,
+  admin_min_level:     91,
+  openai:              false,
+  show_ip:             true,
+  new_function:        false,
+  open_peony:          false,
+  livekit_url:         "",
+  room_setting:        "prod",
+  leaderboard_enabled: false,
 };
 
 export const roomConfig = _cfg;

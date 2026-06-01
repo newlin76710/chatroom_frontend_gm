@@ -3,6 +3,7 @@ import "./AdminSettingsModal.css";
 import { RN } from "../../shared/roomConfig";
 
 const DEFAULT = {
+  leaderboard_enabled:  false,
   show_ip:              true,
   daily_login_reward:   1,
   singing_reward:       2,
@@ -155,6 +156,18 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
 
         {loading ? <div>讀取中…</div> : (
           <>
+            {/* ─── 功能顯示 ──────────────────────────────────────── */}
+            <section className="settings-section">
+              <h4>功能顯示</h4>
+              <Row label="排行榜按鈕">
+                <label className="toggle-label">
+                  <input type="checkbox" checked={!!settings.leaderboard_enabled}
+                    onChange={e => setBool("leaderboard_enabled", e.target.checked)} />
+                  {" "}啟用排行榜
+                </label>
+              </Row>
+            </section>
+
             {/* ─── 基本獎勵 ──────────────────────────────────────── */}
             <section className="settings-section">
               <h4>基本獎勵</h4>

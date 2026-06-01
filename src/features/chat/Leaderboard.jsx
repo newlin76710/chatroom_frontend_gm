@@ -3,7 +3,7 @@ import "./Leaderboard.css";
 
 import { BACKEND } from "../../shared/roomConfig";
 
-export default function Leaderboard({ room, token }) {
+export default function Leaderboard({ room, token, enabled }) {
   const [open, setOpen] = useState(false);
   const [rankData, setRankData] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -79,9 +79,11 @@ export default function Leaderboard({ room, token }) {
 
   return (
     <>
-      <button className="announce-btn" onClick={handleOpen}>
-        🏆 排行榜
-      </button>
+      {enabled && (
+        <button className="announce-btn" onClick={handleOpen}>
+          🏆 排行榜
+        </button>
+      )}
 
       {open && (
         <div className="gold-overlay" onClick={() => setOpen(false)}>

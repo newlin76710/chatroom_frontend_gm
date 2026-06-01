@@ -91,6 +91,50 @@
   margin-left: 6px;
 }
 
+/* ===== 加秒控制區 ===== */
+.admin-time-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 6px 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  margin-top: 4px;
+}
+
+.time-label {
+  font-size: 12px;
+  color: #a3e635;
+  white-space: nowrap;
+}
+
+.add-time-button {
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.add-time-button:hover:not(:disabled) {
+  background: #15803d;
+}
+
+.add-time-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.time-info {
+  width: 100%;
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
 /* ===== 響應式：手機 ===== */
 @media (max-width: 768px) {
   .queue-panel {
