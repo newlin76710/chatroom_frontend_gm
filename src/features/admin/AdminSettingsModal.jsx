@@ -15,6 +15,7 @@ const DEFAULT = {
   singing_double_end_minute:    0,
   per_transfer_limit:   0,
   daily_transfer_limit: 0,
+  daily_receive_limit:  0,
   surprise_reward:      10,
   game1_enabled:        true,
   game1_hour:           20,
@@ -227,6 +228,10 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
               <Row label="每日轉帳上限">
                 <input type="number" value={settings.daily_transfer_limit}
                   onChange={e => setInt("daily_transfer_limit", e.target.value)} />
+              </Row>
+              <Row label="每日收禮上限">
+                <input type="number" value={settings.daily_receive_limit}
+                  onChange={e => setInt("daily_receive_limit", e.target.value)} />
               </Row>
               <Row label="每日樂透獎勵">
                 <input type="number" value={settings.surprise_reward}
