@@ -122,30 +122,62 @@ export default function SongRoom({ room, name, socket, currentSinger, myLevel })
         }
       });
       roomRef.current = lk;
+
+      lk.on("connectionStateChanged", (state) => {
+        console.log(`[LiveKit] connectionStateChanged → ${state}`, { room, singer: name, ts: new Date().toISOString() });
+      });
+      lk.on("error", (err) => {
+        console.error(`[LiveKit] error: ${err?.message}`, { room, singer: name, ts: new Date().toISOString() });
+      });
+      lk.on("disconnected", (reason) => {
+        console.warn(`[LiveKit] disconnected, reason: ${reason}`, { room, singer: name, ts: new Date().toISOString() });
+      });
+      lk.on("reconnecting", () => {
+        console.warn(`[LiveKit] reconnecting…`, { room, singer: name, ts: new Date().toISOString() });
+      });
+      lk.on("reconnected", () => {
+        console.log(`[LiveKit] reconnected`, { room, singer: name, ts: new Date().toISOString() });
+      });
+
       await lk.connect(roomConfig.livekit_url, jwtToken, {
         autoSubscribe: true,
       });
+      console.log(`[LiveKit] connected`, { room, singer: name, ts: new Date().toISOString() });
 
       const audioCtx = new AudioContext();
       audioCtxRef.current = audioCtx;
       const dest = audioCtx.createMediaStreamDestination();
       destRef.current = dest;
 
-      const micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+      let micStream;
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+      } catch (micErr) {
+        console.error(`[LiveKit] getUserMedia failed: ${micErr?.message}`, { room, singer: name, ts: new Date().toISOString() });
+        throw micErr;
+      }
       const micSource = audioCtx.createMediaStreamSource(micStream);
       micSource.connect(dest);
       micSourceRef.current = micSource;
       micStreamRef.current = micStream;
-      const micTrack = new LocalAudioTrack(dest.stream.getAudioTracks()[0]);
+      const audioTracks = dest.stream.getAudioTracks();
+      if (!audioTracks.length) {
+        console.error(`[LiveKit] no audio tracks after getUserMedia`, { room, singer: name, ts: new Date().toISOString() });
+        throw new Error("no audio tracks");
+      }
+      const micTrack = new LocalAudioTrack(audioTracks[0]);
       micTrackRef.current = micTrack;
       await lk.localParticipant.publishTrack(micTrack, {
         audioBitrate: 32000
       });
+      console.log(`[LiveKit] track published`, { room, singer: name, ts: new Date().toISOString() });
 
       setLkRoom(lk);
       setSinging(true);
 
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(`[LiveKit] startSing failed: ${err?.message}`, { room, singer: name, ts: new Date().toISOString() });
+    }
   };
 
   const stopSing = async () => {

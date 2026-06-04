@@ -73,6 +73,7 @@ const AdminSettingsModal = lazy(() => import("../admin/AdminSettingsModal"));
 const GoldAppleGame = lazy(() => import("../games/GoldAppleGame"));
 const WhackAppleGame = lazy(() => import("../games/WhackAppleGame"));
 const ClawMachineGame = lazy(() => import("../games/ClawMachineGame"));
+const MarqueeGame = lazy(() => import("../games/MarqueeGame"));
 const AdminToolPanel = lazy(() => import("../admin/AdminToolPanel"));
 const ShopPanel = lazy(() => import("./ShopPanel"));
 const CasinoPanel = lazy(() => import("../casino/CasinoPanel"));
@@ -153,6 +154,7 @@ export default function ChatApp() {
   const [scrollLocked, setScrollLocked] = useState(false);
   const scrollLockedRef = useRef(false); // 同步更新，避免 useLayoutEffect 讀到過期值
   const [rpsPending, setRpsPending] = useState(null); // 等待對方接受猜拳的目標名
+  const [marqueeActive, setMarqueeActive] = useState(false);
 
   const [invalidTokenCountdown, setInvalidTokenCountdown] = useState(null);
   const invalidTokenTimerRef = useRef(null);
@@ -390,6 +392,17 @@ export default function ChatApp() {
     socket.on("peonySent", handlePeonySent);
     return () => socket.off("peonySent", handlePeonySent);
   }, [socket, addPeonyMessage]);
+
+  useEffect(() => {
+    const onStart = () => setMarqueeActive(true);
+    const onEnd   = () => setMarqueeActive(false);
+    socket.on("marqueeStart", onStart);
+    socket.on("marqueeEnd",   onEnd);
+    return () => {
+      socket.off("marqueeStart", onStart);
+      socket.off("marqueeEnd",   onEnd);
+    };
+  }, [socket]);
 
   useEffect(() => {
     const handleFrontendVersionUpdated = ({ version } = {}) => {
@@ -857,6 +870,16 @@ export default function ChatApp() {
                     {level >= AML && (
                       <button className="admin-btn" onClick={() => setShowAppleSetting(true)}>⚙️ 設定</button>
                     )}
+                    {level >= AML && (
+                      <button
+                        className="admin-btn"
+                        disabled={marqueeActive}
+                        onClick={() => socket.emit("startMarquee", { token, room: RN })}
+                        title={marqueeActive ? "跑馬燈進行中" : "開始跑馬燈抽獎"}
+                      >
+                        {marqueeActive ? "🎰 進行中…" : "🎰 跑馬燈"}
+                      </button>
+                    )}
                     <SurpriseHistoryPanel token={token} />
                     金蘋果樂園{" "}
                     <img src="/gifts/gold_apple.gif" alt="金蘋果" style={{ width: 20, height: 20, marginTop: -5 }} />{" "}
@@ -993,6 +1016,17 @@ export default function ChatApp() {
             token={token}
             name={name}
             setApples={setApples}
+          />
+        )}
+      </DeferredPanel>
+
+      {/* 跑馬燈抽獎遊戲（管理員手動觸發） */}
+      <DeferredPanel>
+        {NF && (
+          <MarqueeGame
+            socket={socket}
+            name={name}
+            userList={userList}
           />
         )}
       </DeferredPanel>

@@ -16,6 +16,8 @@ const DEFAULT = {
   per_transfer_limit:   0,
   daily_transfer_limit: 0,
   daily_receive_limit:  0,
+  marquee_reward:       10,
+  marquee_duration:     30,
   surprise_reward:      10,
   game1_enabled:        true,
   game1_hour:           20,
@@ -232,6 +234,14 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
               <Row label="每日收禮上限">
                 <input type="number" value={settings.daily_receive_limit}
                   onChange={e => setInt("daily_receive_limit", e.target.value)} />
+              </Row>
+              <Row label="跑馬燈獎勵">
+                <input type="number" value={settings.marquee_reward}
+                  onChange={e => setInt("marquee_reward", e.target.value)} />
+              </Row>
+              <Row label="跑馬燈時長(秒)">
+                <input type="number" value={settings.marquee_duration}
+                  onChange={e => setInt("marquee_duration", e.target.value)} />
               </Row>
               <Row label="每日樂透獎勵">
                 <input type="number" value={settings.surprise_reward}

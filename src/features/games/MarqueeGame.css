@@ -1,0 +1,150 @@
+.mq-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+
+.mq-panel {
+  background: linear-gradient(150deg, #1a1a2e 0%, #16213e 100%);
+  border: 2px solid #f0a500;
+  border-radius: 16px;
+  padding: 2rem 2.5rem;
+  min-width: 560px;
+  max-width: 92vw;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 0 50px rgba(240, 165, 0, 0.35);
+}
+
+.mq-title {
+  font-size: 1.75rem;
+  color: #f0a500;
+  margin: 0 0 0.3rem;
+}
+
+.mq-prize {
+  color: #aaa;
+  margin: 0 0 1.6rem;
+  font-size: 0.95rem;
+}
+
+/* ─── 跑馬燈條帶 ─── */
+.mq-strip-area {
+  margin-bottom: 0.6rem;
+}
+
+.mq-strip {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.mq-item {
+  width: 110px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: #666;
+  border-radius: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+  padding: 0 6px;
+  transition: transform 0.12s ease, color 0.12s ease;
+  user-select: none;
+}
+
+.mq-item.center {
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 700;
+  background: rgba(240, 165, 0, 0.18);
+  border: 2px solid #f0a500;
+  box-shadow: 0 0 18px rgba(240, 165, 0, 0.55);
+  transform: scale(1.12);
+  z-index: 1;
+  position: relative;
+}
+
+.mq-pointer {
+  text-align: center;
+  color: #f0a500;
+  font-size: 1.1rem;
+  margin-top: 4px;
+  line-height: 1;
+}
+
+/* ─── 結果頁 ─── */
+.mq-result {
+  padding: 0.5rem 0 0.2rem;
+  animation: mq-appear 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes mq-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.75);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.mq-winner-label {
+  font-size: 0.95rem;
+  color: #aaa;
+  margin-bottom: 0.6rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.mq-winner-name {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: #f0a500;
+  animation: mq-glow 0.7s ease-in-out infinite alternate;
+  margin-bottom: 0.4rem;
+  word-break: break-all;
+}
+
+.mq-winner-name.is-me {
+  color: #ff7b7b;
+}
+
+@keyframes mq-glow {
+  from {
+    text-shadow: 0 0 8px rgba(240, 165, 0, 0.4);
+  }
+  to {
+    text-shadow: 0 0 28px rgba(240, 165, 0, 1), 0 0 50px rgba(240, 165, 0, 0.5);
+  }
+}
+
+.mq-winner-reward {
+  font-size: 1.15rem;
+  color: #fff;
+  margin-top: 0.3rem;
+}
+
+.mq-congrats {
+  font-size: 1.05rem;
+  color: #ff7b7b;
+  margin-top: 0.4rem;
+  font-weight: 700;
+}
+
+.mq-dismiss {
+  font-size: 0.8rem;
+  color: #555;
+  margin-top: 1.4rem;
+}
