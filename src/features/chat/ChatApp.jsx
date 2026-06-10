@@ -348,7 +348,10 @@ export default function ChatApp() {
       if (m?.room && m.room !== roomRef.current) return;
       addMessage(m, userListRef.current);
     };
-    const handleSystemMessage = (m) => addSystemMessage(m);
+    const handleSystemMessage = (m) => {
+      if (!import.meta.env.VITE_NEW_FUNCTION && m?.message?.includes('唱歌獲得') && m?.message?.includes('金蘋果')) return;
+      addSystemMessage(m);
+    };
     const handleVideoUpdate = (v) => {
       if (!v) { setCurrentVideo(null); return; }
       const id = extractVideoID(v.url);

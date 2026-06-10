@@ -201,6 +201,10 @@ export default function SongRoom({ room, name, socket, currentSinger, myLevel })
       await audioCtxRef.current?.close();
       audioCtxRef.current = null;
       destRef.current = null;
+      if (livekitTokenHandlerRef.current) {
+        socket.off("livekit-token", livekitTokenHandlerRef.current);
+        livekitTokenHandlerRef.current = null;
+      }
       setSinging(false);
       socket.emit("stopSing", { room, singer: name });
     } catch (err) {
@@ -221,13 +225,29 @@ export default function SongRoom({ room, name, socket, currentSinger, myLevel })
     }
     livekitTokenHandlerRef.current = async ({ token }) => {
       try {
+        // 重連情境：先清掉舊的 LiveKit 連線
+        if (roomRef.current) {
+          try { await roomRef.current.disconnect(); } catch (_) {}
+          roomRef.current = null;
+          setLkRoom(null);
+          micTrackRef.current?.mediaStreamTrack?.stop();
+          micTrackRef.current?.stop();
+          micTrackRef.current = null;
+          micSourceRef.current?.disconnect();
+          micSourceRef.current = null;
+          micStreamRef.current?.getTracks().forEach(t => t.stop());
+          micStreamRef.current = null;
+          try { await audioCtxRef.current?.close(); } catch (_) {}
+          audioCtxRef.current = null;
+          destRef.current = null;
+        }
         await startSing(token);
       } finally {
         setIsProcessing(false);
-        livekitTokenHandlerRef.current = null;
+        // 不 null out：保留 handler 以接收重連 token
       }
     };
-    socket.once("livekit-token", livekitTokenHandlerRef.current);
+    socket.on("livekit-token", livekitTokenHandlerRef.current);
   };
   const joinQueue = () => { socket.emit("joinQueue", { room, name }); setWaiting(true); };
   const leaveQueue = () => { socket.emit("leaveQueue", { room, name }); setWaiting(false); };
