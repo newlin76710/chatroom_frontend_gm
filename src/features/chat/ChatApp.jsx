@@ -349,7 +349,7 @@ export default function ChatApp() {
       addMessage(m, userListRef.current);
     };
     const handleSystemMessage = (m) => {
-      if (!import.meta.env.VITE_NEW_FUNCTION && m?.message?.includes('唱歌獲得') && m?.message?.includes('金蘋果')) return;
+      if (!roomConfig.new_function && m?.message?.includes('唱歌獲得') && m?.message?.includes('金蘋果')) return;
       addSystemMessage(m);
     };
     const handleVideoUpdate = (v) => {
