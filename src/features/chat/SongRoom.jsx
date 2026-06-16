@@ -13,11 +13,14 @@ export default function SongRoom({ room, name, socket, currentSinger, myLevel })
   const [myPosition, setMyPosition] = useState(0);
   const [queue, setQueue] = useState([]);
   const [panelOpen, setPanelOpen] = useState(false);
+  useEffect(() => { singingRef.current = singing; }, [singing]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [addedSeconds, setAddedSeconds] = useState(0);
   const inQueue = queue.includes(name);
   const roomRef = useRef(null);
   const livekitTokenHandlerRef = useRef(null);
+  const singingRef = useRef(false);
+  const intentionalStopRef = useRef(false);
   const audioCtxRef = useRef(null);
   const destRef = useRef(null);
   const micTrackRef = useRef(null);
@@ -131,6 +134,12 @@ export default function SongRoom({ room, name, socket, currentSinger, myLevel })
       });
       lk.on("disconnected", (reason) => {
         console.warn(`[LiveKit] disconnected, reason: ${reason}`, { room, singer: name, ts: new Date().toISOString() });
+        // 非主動下麥：token 到期或網路斷線，自動向 server 補發 token
+        if (singingRef.current && !intentionalStopRef.current) {
+          console.warn(`[LiveKit] auto-reconnect: re-emitting grabMic for new token`);
+          socket.emit("grabMic", { room, singer: name });
+        }
+        intentionalStopRef.current = false;
       });
       lk.on("reconnecting", () => {
         console.warn(`[LiveKit] reconnecting…`, { room, singer: name, ts: new Date().toISOString() });
@@ -183,6 +192,7 @@ export default function SongRoom({ room, name, socket, currentSinger, myLevel })
   const stopSing = async () => {
     if (isProcessing) return;
     setIsProcessing(true);
+    intentionalStopRef.current = true;
     try {
       const lk = roomRef.current;
       await lk?.localParticipant.setMicrophoneEnabled(false);
