@@ -780,7 +780,7 @@ export default function ChatApp() {
                 onSelectTarget={(targetName) => {
                   if (!targetName) return;
                   setTarget(targetName);
-                  if (chatMode === "public") setChatMode("private");
+                  if (chatMode !== "publicTarget") setChatMode("private");
                   focusInput();
                 }}
                 userList={userList}
@@ -947,6 +947,7 @@ export default function ChatApp() {
               target={target}
               setTarget={setTarget}
               setChatMode={setChatMode}
+              chatMode={chatMode}
               userListCollapsed={userListCollapsed}
               setUserListCollapsed={setUserListCollapsed}
               kickUser={(targetName) => socket.emit("kickUser", { room, targetName })}
