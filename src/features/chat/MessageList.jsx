@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
-import { aiAvatars } from "../../shared/aiConfig";
+import { getAiAvatar } from "../../shared/aiConfig";
 import "./MessageList.css";
 import { safeText } from "../../shared/utils";
 import { roomConfig } from "../../shared/roomConfig";
@@ -177,7 +177,7 @@ export default function MessageList({
             <div key={i} className="message-row" style={{ display: "flex", justifyContent: isSelf ? "flex-end" : "flex-start", marginBottom: 6 }}>
               {!isSelf && !isSystem && !isTransaction && !isGift && (
                 <img
-                  src={m.user?.avatar || aiAvatars[userName] || "/avatars/g01.gif"}
+                  src={m.user?.avatar || getAiAvatar(userName) || "/avatars/g01.gif"}
                   alt={userName}
                   className="message-avatar"
                 />

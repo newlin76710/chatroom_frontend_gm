@@ -1,6 +1,6 @@
 // UserList.jsx
 import React from "react";
-import { aiAvatars } from "../../shared/aiConfig";
+import { getAiAvatar } from "../../shared/aiConfig";
 import "./UserList.css";
 import { roomConfig } from "../../shared/roomConfig";
 
@@ -62,7 +62,7 @@ export default function UserList({
 
       {!userListCollapsed &&
         visibleUsers.map((u, idx) => {
-          const avatarUrl = u.avatar || aiAvatars[u.name];
+          const avatarUrl = u.avatar || getAiAvatar(u.name);
           const isFiltered = filteredUsers.includes(u.name);
           const isSelf = u.name === myName;
           const isAI = u.type === "AI";

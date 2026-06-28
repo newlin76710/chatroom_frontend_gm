@@ -353,13 +353,12 @@ export default function Login() {
               <div style={{ marginBottom: 6, color: "#aaa" }}>選擇頭像：</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {(() => {
-                  const entries = Object.entries(aiAvatars);
-                  const currentAvatarEntry = entries.find(([name]) => name === username);
-                  const others = entries.filter(([name]) => name !== username).slice(0, 20);
-                  const finalList = currentAvatarEntry ? [currentAvatarEntry, ...others] : others;
-                  return finalList.map(([name, url]) => (
+                  const currentAvatarEntries = aiAvatars.filter(([name]) => name === username);
+                  const others = aiAvatars.filter(([name]) => name !== username).slice(0, 20);
+                  const finalList = [...currentAvatarEntries, ...others];
+                  return finalList.map(([name, url], i) => (
                     <img
-                      key={name}
+                      key={`${name}-${i}`}
                       src={url}
                       alt={name}
                       style={{

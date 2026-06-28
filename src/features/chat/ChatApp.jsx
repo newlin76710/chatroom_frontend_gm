@@ -26,7 +26,7 @@ import QuickPhrasePanel from "./QuickPhrasePanel";
 import AnnouncementPanel from "./AnnouncementPanel";
 import MyMessageLogPanel from "./MyMessageLogPanel";
 import AppErrorBoundary from "../../shared/AppErrorBoundary";
-import { aiAvatars } from "../../shared/aiConfig";
+import { getAiAvatar } from "../../shared/aiConfig";
 import { expForNextLevel, safeText } from "../../shared/utils";
 import { useMessages } from "../../shared/hooks/useMessages";
 import { useUserState } from "../../shared/hooks/useUserState";
@@ -265,7 +265,7 @@ export default function ChatApp() {
             avatar:
               u?.avatar && u.avatar !== ""
                 ? u.avatar
-                : aiAvatars[u?.name] || "/avatars/g01.gif",
+                : getAiAvatar(u?.name) || "/avatars/g01.gif",
           }))
           .sort((a, b) => {
             if (a.type === "account" && b.type !== "account") return -1;
