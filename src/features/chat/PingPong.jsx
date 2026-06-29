@@ -217,7 +217,9 @@ export default function PingPong({ socket, room, name, pendingTarget, onClearPen
                     <div className="pp-paddle pp-my-paddle"
                       style={{ ...display.paddleStyle, left: display.myL }} />
                     {gs?.gameState === "resetting" && (
-                      <div className="pp-score-flash">得分！</div>
+                      gs.serveCountdown > 0
+                        ? <div className="pp-serve-countdown">{gs.serveCountdown}</div>
+                        : <div className="pp-score-flash">得分！</div>
                     )}
                   </>
                 ) : (
