@@ -21,6 +21,7 @@ import SongRoom from "./SongRoom";
 import Listener from "./Listener";
 import UserList from "./UserList";
 import RPS from "./RPS";
+import PingPong from "./PingPong";
 import SurpriseHistoryPanel from "./SurpriseHistoryPanel";
 import QuickPhrasePanel from "./QuickPhrasePanel";
 import AnnouncementPanel from "./AnnouncementPanel";
@@ -154,6 +155,7 @@ export default function ChatApp() {
   const [scrollLocked, setScrollLocked] = useState(false);
   const scrollLockedRef = useRef(false); // 同步更新，避免 useLayoutEffect 讀到過期值
   const [rpsPending, setRpsPending] = useState(null); // 等待對方接受猜拳的目標名
+  const [pingpongPending, setPingpongPending] = useState(null);
   const [marqueeActive, setMarqueeActive] = useState(false);
 
   const [invalidTokenCountdown, setInvalidTokenCountdown] = useState(null);
@@ -957,6 +959,10 @@ export default function ChatApp() {
                 socket.emit("rpsChallenge", { room, challenger: name, target: targetName });
                 setRpsPending(targetName);
               }}
+              onPingpongChallenge={(targetName) => {
+                socket.emit("pingpongChallenge", { room, challenger: name, target: targetName });
+                setPingpongPending(targetName);
+              }}
               myLevel={level}
               myName={name}
               filteredUsers={filteredUsers}
@@ -975,6 +981,15 @@ export default function ChatApp() {
         name={name}
         pendingTarget={rpsPending}
         onClearPending={() => setRpsPending(null)}
+      />
+
+      {/* 乒乓球遊戲浮動元件 */}
+      <PingPong
+        socket={socket}
+        room={room}
+        name={name}
+        pendingTarget={pingpongPending}
+        onClearPending={() => setPingpongPending(null)}
       />
 
       {showAppleSetting && (

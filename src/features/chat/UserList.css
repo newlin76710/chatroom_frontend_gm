@@ -86,6 +86,16 @@
   background: #d9f7be;
 }
 
+/* 🏓 乒乓球（橙色） */
+.ul-admin-pingpong {
+  background: #fff7e6;
+  color: #d46b08;
+}
+
+.ul-admin-pingpong:hover {
+  background: #ffe7ba;
+}
+
 /* 🙈 過濾（藍灰） */
 .ul-admin-filter {
   background: #f0f5ff;

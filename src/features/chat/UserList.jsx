@@ -22,6 +22,7 @@ export default function UserList({
   focusInput,
   token,
   onRpsChallenge,
+  onPingpongChallenge,
 }) {
   const ANL = roomConfig.admin_min_level || 91;
   const AML = roomConfig.admin_max_level || 99;
@@ -137,6 +138,20 @@ export default function UserList({
                           }}
                         >
                           ✊ 猜拳
+                        </button>
+                      )}
+
+                      {/* 乒乓球 — 所有人可用 */}
+                      {onPingpongChallenge && (
+                        <button
+                          className="ul-admin-pingpong"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onPingpongChallenge(u.name);
+                            setOpenMenu(null);
+                          }}
+                        >
+                          🏓 乒乓球
                         </button>
                       )}
 
