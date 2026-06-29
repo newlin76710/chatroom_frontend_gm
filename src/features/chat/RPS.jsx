@@ -7,19 +7,31 @@ const CHOICES = [
   { key: "paper",    label: "🖐️", name: "布" },
 ];
 
-export default function RPS({ socket, room, name, pendingTarget, onClearPending }) {
+export default function RPS({ socket, room, name, pendingTarget, onClearPending, onActiveChange }) {
   // state: idle | incoming | outgoing | choosing | chosen
   const [phase, setPhase] = useState("idle");
   const [gameInfo, setGameInfo] = useState(null); // { challenger, target }
   const [myChoice, setMyChoice] = useState(null);
   const [timeLeft, setTimeLeft] = useState(10);
-  const [cancelled, setCancelled] = useState(null); // brief cancel message
+  const [cancelled, setCancelled] = useState(null); // terminal cancel message
+  const [errMsg, setErrMsg]       = useState(null); // independent right-side toast
   const countdownRef = useRef(null);
   const cancelMsgRef = useRef(null);
+  const errTimerRef  = useRef(null);
+
+  // Notify ChatApp whenever we enter or leave an active state
+  useEffect(() => {
+    onActiveChange?.(phase !== "idle");
+  }, [phase]);
 
   // When ChatApp signals an outgoing challenge
   useEffect(() => {
     if (!pendingTarget) return;
+    if (phase !== "idle") {
+      // Already in a game — reject and clear so ChatApp doesn't think it's pending
+      onClearPending?.();
+      return;
+    }
     setPhase("outgoing");
     setGameInfo({ challenger: name, target: pendingTarget });
   }, [pendingTarget]);
@@ -65,10 +77,23 @@ export default function RPS({ socket, room, name, pendingTarget, onClearPending 
       }
     };
 
+    const onError = ({ reason }) => {
+      setErrMsg(reason);
+      if (errTimerRef.current) clearTimeout(errTimerRef.current);
+      errTimerRef.current = setTimeout(() => setErrMsg(null), 4000);
+      // If we're stuck in outgoing (challenge was rejected before going through), reset
+      if (phase === "outgoing") {
+        onClearPending?.();
+        setPhase("idle");
+        setGameInfo(null);
+      }
+    };
+
     socket.on("rpsChallengeReceived",  onChallengeReceived);
     socket.on("rpsChallengeCancelled", onChallengeCancelled);
     socket.on("rpsStart",              onStart);
     socket.on("rpsCancelled",          onCancelled);
+    socket.on("rpsError",              onError);
     socket.on("rpsGameDone",           onGameDone);
 
     return () => {
@@ -76,6 +101,7 @@ export default function RPS({ socket, room, name, pendingTarget, onClearPending 
       socket.off("rpsChallengeCancelled", onChallengeCancelled);
       socket.off("rpsStart",             onStart);
       socket.off("rpsCancelled",         onCancelled);
+      socket.off("rpsError",             onError);
       socket.off("rpsGameDone",          onGameDone);
     };
   }, [socket, phase]);
@@ -142,6 +168,14 @@ export default function RPS({ socket, room, name, pendingTarget, onClearPending 
     <>
       {cancelled && (
         <div className="rps-toast">{cancelled}</div>
+      )}
+
+      {/* Independent right-side error toast — never affects game state */}
+      {errMsg && (
+        <div className="rps-error-toast">
+          <span>{errMsg}</span>
+          <button className="rps-close-btn" onClick={() => setErrMsg(null)}>✕</button>
+        </div>
       )}
 
       {phase !== "idle" && (

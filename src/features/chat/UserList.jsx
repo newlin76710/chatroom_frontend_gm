@@ -23,6 +23,7 @@ export default function UserList({
   token,
   onRpsChallenge,
   onPingpongChallenge,
+  gamesBusy,
 }) {
   const ANL = roomConfig.admin_min_level || 91;
   const AML = roomConfig.admin_max_level || 99;
@@ -131,6 +132,7 @@ export default function UserList({
                       {onRpsChallenge && (
                         <button
                           className="ul-admin-rps"
+                          disabled={gamesBusy}
                           onClick={(e) => {
                             e.stopPropagation();
                             onRpsChallenge(u.name);
@@ -145,6 +147,7 @@ export default function UserList({
                       {onPingpongChallenge && (
                         <button
                           className="ul-admin-pingpong"
+                          disabled={gamesBusy}
                           onClick={(e) => {
                             e.stopPropagation();
                             onPingpongChallenge(u.name);

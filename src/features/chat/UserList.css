@@ -96,6 +96,14 @@
   background: #ffe7ba;
 }
 
+/* 遊戲忙碌時鎖定兩個按鈕 */
+.ul-admin-rps:disabled,
+.ul-admin-pingpong:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 /* 🙈 過濾（藍灰） */
 .ul-admin-filter {
   background: #f0f5ff;

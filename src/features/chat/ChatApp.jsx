@@ -156,6 +156,9 @@ export default function ChatApp() {
   const scrollLockedRef = useRef(false); // 同步更新，避免 useLayoutEffect 讀到過期值
   const [rpsPending, setRpsPending] = useState(null); // 等待對方接受猜拳的目標名
   const [pingpongPending, setPingpongPending] = useState(null);
+  const [rpsActive, setRpsActive] = useState(false);
+  const [pingpongActive, setPingpongActive] = useState(false);
+  const gamesBusy = rpsActive || pingpongActive;
   const [marqueeActive, setMarqueeActive] = useState(false);
 
   const [invalidTokenCountdown, setInvalidTokenCountdown] = useState(null);
@@ -955,11 +958,14 @@ export default function ChatApp() {
               kickUser={(targetName) => socket.emit("kickUser", { room, targetName })}
               kickAndBlockUser={(targetName, reason) => socket.emit("kickAndBlockUser", { room, targetName, reason })}
               muteUser={(targetName) => socket.emit("muteUser", { room, targetName })}
+              gamesBusy={gamesBusy}
               onRpsChallenge={(targetName) => {
+                if (gamesBusy) return;
                 socket.emit("rpsChallenge", { room, challenger: name, target: targetName });
                 setRpsPending(targetName);
               }}
               onPingpongChallenge={(targetName) => {
+                if (gamesBusy) return;
                 socket.emit("pingpongChallenge", { room, challenger: name, target: targetName });
                 setPingpongPending(targetName);
               }}
@@ -981,6 +987,7 @@ export default function ChatApp() {
         name={name}
         pendingTarget={rpsPending}
         onClearPending={() => setRpsPending(null)}
+        onActiveChange={setRpsActive}
       />
 
       {/* 乒乓球遊戲浮動元件 */}
@@ -990,6 +997,7 @@ export default function ChatApp() {
         name={name}
         pendingTarget={pingpongPending}
         onClearPending={() => setPingpongPending(null)}
+        onActiveChange={setPingpongActive}
       />
 
       {showAppleSetting && (
