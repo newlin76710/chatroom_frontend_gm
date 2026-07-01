@@ -84,7 +84,7 @@ export default function AnnouncementPanel({ open, onClose, myLevel, token }) {
 
   /* ===== 新增公告 ===== */
   const addAnnouncement = () => {
-    if (!isAdmin || announcements.length >= 10) return;
+    if (!isAdmin) return;
     const newAnn = { title: "新公告", content: "", color: "#ffffff", updated_by: myLevel, updated_at: new Date() };
     setAnnouncements([...announcements, newAnn]);
     setCurrentIndex(announcements.length);
