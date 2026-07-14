@@ -608,7 +608,8 @@ export default function ChatApp() {
   // ─── 送金蘋果 ─────────────────────────────────────────────────────────────
   const transferApple = useCallback(async () => {
     if (!target) { alert("請選擇對象"); return; }
-    const maxAllowed = perTransferLimit > 0 ? Math.min(apples, perTransferLimit) : apples;
+    const isAdminSender = level >= ANL;
+    const maxAllowed = (!isAdminSender && perTransferLimit > 0) ? Math.min(apples, perTransferLimit) : apples;
     const safeAmount = Math.max(1, Math.min(Math.floor(appleAmount), maxAllowed));
     if (safeAmount > apples) { alert("金蘋果不足"); return; }
     setSendingApple(true);
@@ -631,7 +632,7 @@ export default function ChatApp() {
     } finally {
       setSendingApple(false);
     }
-  }, [target, appleAmount, token, apples, perTransferLimit]);
+  }, [target, appleAmount, token, apples, perTransferLimit, level, ANL]);
 
   const sendPeony = useCallback(async () => {
     if (!target) { alert("請選擇對象"); return; }
@@ -904,10 +905,10 @@ export default function ChatApp() {
                   <input
                     type="number"
                     min={1}
-                    max={perTransferLimit > 0 ? Math.min(apples, perTransferLimit) : apples}
+                    max={(level < ANL && perTransferLimit > 0) ? Math.min(apples, perTransferLimit) : apples}
                     value={appleAmount}
                     onChange={(e) => {
-                      const maxVal = perTransferLimit > 0 ? Math.min(apples, perTransferLimit) : apples;
+                      const maxVal = (level < ANL && perTransferLimit > 0) ? Math.min(apples, perTransferLimit) : apples;
                       setAppleAmount(Math.max(1, Math.min(maxVal, Math.floor(Number(e.target.value)))));
                     }}
                     className="apple-amount-input"
