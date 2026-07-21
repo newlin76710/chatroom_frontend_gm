@@ -164,7 +164,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
     };
 
     const handleGoldChange = async (username, newGold) => {
-        if (!window.confirm(`確定將 ${username} 的金蘋果設為 ${newGold} 顆嗎？`)) return;
+        if (!window.confirm(`確定將 ${username} 的${roomConfig.currency_name}設為 ${newGold} 顆嗎？`)) return;
         const reason = window.prompt("請輸入調整原因（必填）", "");
         if (!reason || !reason.trim()) { alert("調整原因為必填，操作已取消"); return; }
 
@@ -189,7 +189,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                 return;
             }
 
-            alert("金蘋果更新成功");
+            alert(`${roomConfig.currency_name}更新成功`);
             setUsers(prev =>
                 prev.map(u =>
                     u.username === username
@@ -246,7 +246,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
     return (
         <>
             <button className="admin-btn" onClick={() => { setOpen(true); loadUsers(1); }}>
-                🛡 管理使用者等級 {roomConfig.new_function && (roomConfig.open_peony ? "& 金蘋果 & 金牡丹" : "& 金蘋果")}
+                🛡 管理使用者等級 {roomConfig.new_function && (roomConfig.open_peony ? `& ${roomConfig.currency_name} & 金牡丹` : `& ${roomConfig.currency_name}`)}
             </button>
 
             {open && (
@@ -275,7 +275,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                         <th>帳號</th>
                                         <th>等級</th>
                                         <th>積分</th>
-                                        {roomConfig.new_function && <th>金蘋果</th>}
+                                        {roomConfig.new_function && <th>{roomConfig.currency_name}</th>}
                                         {roomConfig.new_function && roomConfig.open_peony && <th>金牡丹</th>}
                                         <th>建立時間</th>
                                         <th>最近登入</th>

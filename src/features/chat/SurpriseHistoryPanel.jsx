@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./SurpriseHistoryPanel.css";
 
-import { BACKEND, RN } from "../../shared/roomConfig";
+import { BACKEND, RN, roomConfig } from "../../shared/roomConfig";
 
 const fmt = (iso) => {
   if (!iso) return "—";
@@ -43,7 +43,7 @@ export default function SurpriseHistoryPanel({ token }) {
 
   if (!open) {
     return (
-      <button className="surprise-history-btn" onClick={handleOpen} title="金蘋果樂透紀錄">
+      <button className="surprise-history-btn" onClick={handleOpen} title={`${roomConfig.currency_name}樂透紀錄`}>
         🎊 樂透紀錄
       </button>
     );
@@ -52,7 +52,7 @@ export default function SurpriseHistoryPanel({ token }) {
   return (
     <div className="surprise-history-modal">
       <div className="surprise-history-content">
-        <h3 style={{ color: "#FFD700", marginBottom: 12 }}>🎊 金蘋果樂透紀錄（10日內）</h3>
+        <h3 style={{ color: "#FFD700", marginBottom: 12 }}>🎊 {roomConfig.currency_name}樂透紀錄（10日內）</h3>
 
         {loading ? (
           <div style={{ color: "#aaa" }}>讀取中...</div>
@@ -63,7 +63,7 @@ export default function SurpriseHistoryPanel({ token }) {
                 <th style={{ textAlign: "left", padding: "4px 8px" }}>排程時間</th>
                 <th style={{ textAlign: "left", padding: "4px 8px" }}>觸發時間</th>
                 <th style={{ textAlign: "left", padding: "4px 8px", width: 132, whiteSpace: "nowrap" }}>得獎者</th>
-                <th style={{ textAlign: "right", padding: "4px 8px", width: 108, whiteSpace: "nowrap" }}>金蘋果</th>
+                <th style={{ textAlign: "right", padding: "4px 8px", width: 108, whiteSpace: "nowrap" }}>{roomConfig.currency_name}</th>
               </tr>
             </thead>
             <tbody>
@@ -80,7 +80,7 @@ export default function SurpriseHistoryPanel({ token }) {
                     {r.winner ? (
                       <span className="surprise-history-reward">
                         +{r.amount}
-                        <img src="/gifts/gold_apple.gif" alt="金蘋果" className="surprise-history-apple" />
+                        <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} className="surprise-history-apple" />
                       </span>
                     ) : "—"}
                   </td>

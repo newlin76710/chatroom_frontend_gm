@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "./SlotMachine.css";
 
-import { BACKEND, RN } from "../../shared/roomConfig";
+import { BACKEND, RN, roomConfig } from "../../shared/roomConfig";
 
 const SYMBOLS = [
   "☀️", "⚔️", "🐍", "🦊", "🐢",
@@ -234,12 +234,12 @@ export default function SlotMachine({ token, apples, onApplesChange }) {
 
       <div className="slot-info">
         <div className="slot-balance">
-          <img src="/gifts/gold_apple.gif" alt="" />
+          <img src={`/gifts/${roomConfig.currency_icon}`} alt="" />
           <span>{apples ?? 0}</span>
         </div>
         <div className="slot-bet-controls">
           <button onClick={() => changeBet(-1)} disabled={spinning || bet <= 1}>-</button>
-          <span className="slot-bet-amount">{bet} <img src="/gifts/gold_apple.gif" alt="" className="slot-apple-icon" /></span>
+          <span className="slot-bet-amount">{bet} <img src={`/gifts/${roomConfig.currency_icon}`} alt="" className="slot-apple-icon" /></span>
           <button onClick={() => changeBet(1)} disabled={spinning || bet >= (settings?.max_bet || 200)}>+</button>
         </div>
       </div>
@@ -281,7 +281,7 @@ export default function SlotMachine({ token, apples, onApplesChange }) {
         <div className="slot-win-popup" onClick={() => setShowWinPopup(false)}>
           <div className="popup-content">
             <div className="popup-title">🎉 大獎！ 🎉</div>
-            <div className="popup-amount">+{lastWin} <img src="/gifts/gold_apple.gif" alt="" className="slot-apple-icon" /></div>
+            <div className="popup-amount">+{lastWin} <img src={`/gifts/${roomConfig.currency_icon}`} alt="" className="slot-apple-icon" /></div>
           </div>
         </div>
       )}

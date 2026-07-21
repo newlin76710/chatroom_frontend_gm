@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "./Leaderboard.css";
 
-import { BACKEND } from "../../shared/roomConfig";
+import { BACKEND, roomConfig } from "../../shared/roomConfig";
 
 export default function Leaderboard({ room, token, enabled }) {
   const [open, setOpen] = useState(false);
@@ -92,7 +92,7 @@ export default function Leaderboard({ room, token, enabled }) {
               <h3>{getTitle()}</h3>
               <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                 <select value={type} onChange={e => setType(e.target.value)}>
-                  <option value="gold_apples">金蘋果</option>
+                  <option value="gold_apples">{roomConfig.currency_name}</option>
                   <option value="charm">魅力(玫瑰+巧克力+蛋糕)</option>
                   <option value="firework">煙火</option>
                   <option value="exp">積分</option>
@@ -126,7 +126,7 @@ export default function Leaderboard({ room, token, enabled }) {
                       </>
                     ) : (
                       <th>
-                        {type === "gold_apples" ? "金蘋果數量" :
+                        {type === "gold_apples" ? `${roomConfig.currency_name}數量` :
                          type === "firework" ? "煙火數量" :
                          "等級(積分)"}
                       </th>
@@ -149,7 +149,7 @@ export default function Leaderboard({ room, token, enabled }) {
                         ) : (
                           <td>
                             {type === "exp" ? `等級 ${u.level} (${u.amount})` : u.amount}
-                            {type === "gold_apples" && <img src="/gifts/gold_apple.gif" alt="金蘋果" style={{ width: 20, height: 20, marginTop: -5 }} />}
+                            {type === "gold_apples" && <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} />}
                             {type === "firework" && "🎆"}
                           </td>
                         )}

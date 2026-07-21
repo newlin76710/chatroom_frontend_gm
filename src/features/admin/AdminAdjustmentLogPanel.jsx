@@ -11,7 +11,7 @@ const toUtc = (localDatetime) => {
   return new Date(normalized).toISOString();
 };
 
-const typeLabel = (t) => (t === "level" ? "等級" : t === "exp" ? "積分" : t === "gold_apples" ? "金蘋果" : t);
+const typeLabel = (t) => (t === "level" ? "等級" : t === "exp" ? "積分" : t === "gold_apples" ? roomConfig.currency_name : t);
 
 export default function AdminAdjustmentLogPanel({ token }) {
   const [open, setOpen] = useState(false);
@@ -150,7 +150,7 @@ export default function AdminAdjustmentLogPanel({ token }) {
                   style={{ fontSize: 12, padding: "2px 10px", background: logType === "adj" ? "#1565c0" : "#1976d2" }}
                   onClick={() => handleTabSwitch("adj")}
                 >
-                  等級 / 金蘋果
+                  等級 / {roomConfig.currency_name}
                 </button>
                 {roomConfig.open_peony && (
                   <button
@@ -184,7 +184,7 @@ export default function AdminAdjustmentLogPanel({ token }) {
                     <option value="">全部類型</option>
                     <option value="level">等級</option>
                     <option value="exp">積分</option>
-                    <option value="gold_apples">金蘋果</option>
+                    <option value="gold_apples">{roomConfig.currency_name}</option>
                   </select>
                   <label>
                     起：

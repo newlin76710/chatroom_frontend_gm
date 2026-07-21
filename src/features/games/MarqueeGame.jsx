@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import "./MarqueeGame.css";
+import { roomConfig } from "../../shared/roomConfig";
 
 const VISIBLE_SIDES = 3; // 中心左右各顯示幾個名字
 const VISIBLE = VISIBLE_SIDES * 2 + 1; // 共 7 個
@@ -134,7 +135,7 @@ export default function MarqueeGame({ socket, name, userList }) {
     <div className="mq-overlay" onClick={handleDismiss}>
       <div className="mq-panel" onClick={(e) => e.stopPropagation()}>
         <h2 className="mq-title">🎰 跑馬燈抽獎</h2>
-        <p className="mq-prize">獎品：{reward} 顆金蘋果 🍎</p>
+        <p className="mq-prize">獎品：{reward} 顆{roomConfig.currency_name} {roomConfig.currency_emoji}</p>
 
         {(phase === "running" || phase === "stopping") && n > 0 && (
           <div className="mq-strip-area">
@@ -160,7 +161,7 @@ export default function MarqueeGame({ socket, name, userList }) {
                 <div className={`mq-winner-name${winner === name ? " is-me" : ""}`}>
                   🎉 {winner} 🎉
                 </div>
-                <div className="mq-winner-reward">獲得 {reward} 顆金蘋果</div>
+                <div className="mq-winner-reward">獲得 {reward} 顆{roomConfig.currency_name}</div>
                 {winner === name && (
                   <div className="mq-congrats">恭喜你中獎了！</div>
                 )}

@@ -16,7 +16,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./WhackAppleGame.css";
 
-import { BACKEND, RN } from "../../shared/roomConfig";
+import { BACKEND, RN, roomConfig } from "../../shared/roomConfig";
 
 // 洞的總數（3x3 排列）
 const HOLE_COUNT = 9;
@@ -460,12 +460,12 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
         <div className="wag-warn-card" onClick={e => e.stopPropagation()}>
           <div className="wag-warn-countdown">{warnSeconds}</div>
           <div className="wag-warn-unit">秒後開始</div>
-          <h2 className="wag-warn-title">🔨 打金蘋果（打地鼠）</h2>
+          <h2 className="wag-warn-title">🔨 打{roomConfig.currency_name}（打地鼠）</h2>
           <ul className="wag-warn-rules">
-            <li>🍎 金蘋果會從 <strong>9 個洞</strong>隨機冒出</li>
-            <li>🔨 移動<strong>槌子</strong>到金蘋果上方，按下打擊！</li>
+            <li>{roomConfig.currency_emoji} {roomConfig.currency_name}會從 <strong>9 個洞</strong>隨機冒出</li>
+            <li>🔨 移動<strong>槌子</strong>到{roomConfig.currency_name}上方，按下打擊！</li>
             <li>⚡ 連續打中有<strong>Combo</strong>加成！</li>
-            <li>⏱ 遊戲進行中蘋果<strong>越來越快</strong>，撐住！</li>
+            <li>⏱ 遊戲進行中{roomConfig.currency_name}<strong>越來越快</strong>，撐住！</li>
           </ul>
           <button
             className="wag-warn-close"
@@ -489,13 +489,13 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
     return (
       <div className="wag-overlay" onClick={dismissResult}>
         <div className="wag-result" onClick={e => e.stopPropagation()}>
-          <h2>🍎 打金蘋果結束！</h2>
+          <h2>{roomConfig.currency_emoji} 打{roomConfig.currency_name}結束！</h2>
           {entries.length > 0 ? (
             <>
               {myRank > 0 && (
                 <p className="wag-my-rank">
                   你排第 <strong>{myRank}</strong> 名，打到{" "}
-                  <strong style={{ color: "gold" }}>{myCount}</strong> 顆🍎
+                  <strong style={{ color: "gold" }}>{myCount}</strong> 顆{roomConfig.currency_emoji}
                   {myCount > 0 && <span style={{ color: "#7fff7f" }}> 已入帳！</span>}
                 </p>
               )}
@@ -508,7 +508,7 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
               </ul>
             </>
           ) : (
-            <p>本次沒有人打到金蘋果…</p>
+            <p>本次沒有人打到{roomConfig.currency_name}…</p>
           )}
           <p className="wag-dismiss-hint">點擊任意處關閉</p>
         </div>
@@ -539,8 +539,8 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
       <div className="wag-hud">
         <span className={`wag-timer ${urgency}`}>{timeLeft}</span>
         <span className="wag-timer-unit">秒</span>
-        <span className="wag-score">🍎 ×{myScore}</span>
-        <span className="wag-hint">移動槌子打金蘋果！每顆得 {reward} 個🍎</span>
+        <span className="wag-score">{roomConfig.currency_emoji} ×{myScore}</span>
+        <span className="wag-hint">移動槌子打{roomConfig.currency_name}！每顆得 {reward} 個{roomConfig.currency_emoji}</span>
       </div>
 
       {/* Combo 計數器（連續 2 次以上顯示） */}
@@ -553,7 +553,7 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
       {/* 浮動 +1 特效 */}
       {hitEffects.map(fx => (
         <div key={fx.id} className="wag-hit-effect" style={{ left: fx.x, top: fx.y }}>
-          +1 🍎
+          +1 {roomConfig.currency_emoji}
         </div>
       ))}
 
@@ -571,9 +571,9 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
                   className={`wag-apple-slot${hole.up ? " up" : ""}${hole.whacked ? " whacked" : ""}`}
                 >
                   <img
-                    src="/gifts/gold_apple.gif"
+                    src={`/gifts/${roomConfig.currency_icon}`}
                     className="wag-apple-img"
-                    alt="金蘋果"
+                    alt={roomConfig.currency_name}
                     draggable={false}
                   />
                   {/* 打中後的打擊特效 */}

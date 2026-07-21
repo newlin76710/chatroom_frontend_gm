@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "./ShopPanel.css";
-import { BACKEND, RN } from "../../shared/roomConfig";
+import { BACKEND, RN, roomConfig } from "../../shared/roomConfig";
 
 const CAKE_VARIANTS = [
   { id: "original",       emoji: "🎂", name: "原味蛋糕",   image: "/gifts/cake.gif" },
@@ -71,7 +71,7 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
     <div className="shop-overlay">
       <div className="shop-panel">
         <div className="shop-header">
-          <h3><img src="/gifts/gold_apple.gif" alt="金蘋果" style={{ width: 20, height: 20, marginTop: -5 }} /> 商城</h3>
+          <h3><img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} /> 商城</h3>
           <button onClick={onClose}>✖</button>
         </div>
 
@@ -86,7 +86,7 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
                 <div className="shop-name">{item.name}</div>
 
                 <div className="shop-right">
-                  <span className="shop-price">{item.price} <img src="/gifts/gold_apple.gif" alt="金蘋果" style={{ width: 20, height: 20, marginTop: -5 }} /></span>
+                  <span className="shop-price">{item.price} <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} /></span>
 
                   <button
                     className="buy-btn"

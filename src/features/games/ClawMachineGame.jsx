@@ -22,13 +22,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./ClawMachineGame.css";
 
-import { BACKEND, RN } from "../../shared/roomConfig";
+import { BACKEND, RN, roomConfig } from "../../shared/roomConfig";
 
 // 動畫基準時間 (毫秒)，這些值會根據 dropSpeed 進行縮放
 const BASE_DROP_MS = 600;   // 爪子下降所需時間
 const BASE_HOLD_MS = 500;   // 爪子停在底部的時間
 const BASE_RISE_MS = 533;   // 爪子上升所需時間
-const APPLE_IMG = "/gifts/gold_apple.gif";
 
 // 蘋果池初始配置 (40顆蘋果)
 // 每個物件定義了蘋果的中心位置(x%)、底部距離(bot%)、水平搖擺動畫的時長(dur)與延遲(delay)
@@ -91,6 +90,8 @@ const FULL_APPLE_INIT = [
  * @param {function} setApples - 更新金蘋果數量的回調 (從父層傳入)
  */
 export default function ClawMachineGame({ socket, token, name, setApples }) {
+  const APPLE_IMG = `/gifts/${roomConfig.currency_icon}`;
+
   // ===== 遊戲狀態 =====
   const [phase,        setPhase]        = useState("idle");    // idle | playing | closing | result
   const [warnVisible,  setWarnVisible]  = useState(false);    // 30秒預告說明彈窗是否顯示
@@ -505,11 +506,11 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
         <div className="clw-warn-card" onClick={e => e.stopPropagation()}>
           <div className="clw-warn-countdown">{warnSeconds}</div>
           <div className="clw-warn-unit">秒後開始</div>
-          <h2 className="clw-warn-title">🎰 夾蘋果機</h2>
+          <h2 className="clw-warn-title">🎰 夾{roomConfig.currency_name}機</h2>
           <ul className="clw-warn-rules">
             <li>🔄 爪子會自動<strong>左右搖擺</strong></li>
             <li>👇 看準時機按「<strong>抓！</strong>」讓爪子下降</li>
-            <li>🍎 爪子夾中時蘋果<strong>消失</strong>，獲得金蘋果</li>
+            <li>{roomConfig.currency_emoji} 爪子夾中時{roomConfig.currency_name}<strong>消失</strong>，獲得{roomConfig.currency_name}</li>
             <li>⏱ 時間內盡可能多夾！</li>
           </ul>
           <button
@@ -542,7 +543,7 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
         <div className="clw-result">
           <h2>🎉 遊戲結束</h2>
           <p className="clw-my-rank">
-            你夾了 <strong>{myScore}</strong> 顆金蘋果
+            你夾了 <strong>{myScore}</strong> 顆{roomConfig.currency_name}
           </p>
           <ul>
             {sortedScores.map(([n, s], i) => (
@@ -578,7 +579,7 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
 
           {/* 機台上方標題 */}
           <div className="clw-top-bar">
-            <span className="clw-neon-text">🎰 夾蘋果機</span>
+            <span className="clw-neon-text">🎰 夾{roomConfig.currency_name}機</span>
           </div>
 
           {/* 機台視窗 (玩家看到蘋果與爪子的區域) */}
@@ -598,7 +599,7 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
                 {/* 若爪子夾到蘋果，顯示在爪子上 */}
                 {hasCatch && (
                   <div className="clw-held-apple">
-                    <img src={APPLE_IMG} alt="金蘋果" />
+                    <img src={APPLE_IMG} alt={roomConfig.currency_name} />
                   </div>
                 )}
               </div>
@@ -618,7 +619,7 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
                   className={`clw-pile-apple${a.isCaught ? " caught" : ""}`}
                   style={{ "--dur": `${a.dur}s`, "--delay": `${a.delay}s` }}
                 >
-                  <img src={APPLE_IMG} alt="金蘋果" />
+                  <img src={APPLE_IMG} alt={roomConfig.currency_name} />
                 </div>
               </div>
             ))}

@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from "react";
 import "./CasinoPanel.css";
+import { roomConfig } from "../../shared/roomConfig";
 
 const RouletteGame = lazy(() => import("./RouletteGame"));
 const BlackjackGame = lazy(() => import("./BlackjackGame"));
@@ -7,7 +8,7 @@ const SicBoGame = lazy(() => import("./SicBoGame"));
 const SlotMachine = lazy(() => import("./SlotMachine"));
 const BaccaratGame = lazy(() => import("./BaccaratGame"));
 
-const RULES = `🎰 金蘋果輪盤 遊戲規則
+const getRules = () => `🎰 ${roomConfig.currency_name}輪盤 遊戲規則
 
 【賠率】
 數字 0–36  ×36　大/小/紅/黑  ×2
@@ -56,7 +57,7 @@ export default function CasinoPanel({ token, apples, onApplesChange, open, onClo
               >？</button> */}
               {showRules && (
                 <div className="casino-rules-tooltip">
-                  <pre>{RULES}</pre>
+                  <pre>{getRules()}</pre>
                 </div>
               )}
             </div>
@@ -66,8 +67,8 @@ export default function CasinoPanel({ token, apples, onApplesChange, open, onClo
 
         {/* ── Apples display ── */}
         <div className="casino-apples">
-          <img src="/gifts/gold_apple.gif" alt="金蘋果" style={{ width: 18, height: 18, verticalAlign: "middle" }} />
-          {" "}{apples != null ? apples : "–"} 個金蘋果
+          <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 18, height: 18, verticalAlign: "middle" }} />
+          {" "}{apples != null ? apples : "–"} 個{roomConfig.currency_name}
         </div>
 
         {/* ── Tabs ── */}

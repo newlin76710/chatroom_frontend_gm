@@ -24,7 +24,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./GoldAppleGame.css";
 
-import { BACKEND, RN } from "../../shared/roomConfig";
+import { BACKEND, RN, roomConfig } from "../../shared/roomConfig";
 
 // ─── 常數 ─────────────────────────────────────────────────────────────────────
 const SIZE1 = 56;       // 遊戲一蘋果尺寸 (px)
@@ -498,19 +498,19 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
         <div className="gag-warn-card" onClick={e => e.stopPropagation()}>
           <div className="gag-warn-countdown">{warnSeconds}</div>
           <div className="gag-warn-unit">秒後開始</div>
-          <h2 className="gag-warn-title">{isGame1 ? '🍎 撈金蘋果' : '🍎 搶大金蘋果'}</h2>
+          <h2 className="gag-warn-title">{isGame1 ? `${roomConfig.currency_emoji} 撈${roomConfig.currency_name}` : `${roomConfig.currency_emoji} 搶大${roomConfig.currency_name}`}</h2>
           <ul className="gag-warn-rules">
             {isGame1 ? (
               <>
-                <li>🍎 多顆金蘋果在畫面中<strong>飛來飛去</strong></li>
-                <li>🕸 將網子<strong>移到金蘋果上方</strong>按下撈起</li>
-                <li>👤 每位玩家<strong>各自撈自己的金蘋果</strong></li>
+                <li>{roomConfig.currency_emoji} 多顆{roomConfig.currency_name}在畫面中<strong>飛來飛去</strong></li>
+                <li>🕸 將網子<strong>移到{roomConfig.currency_name}上方</strong>按下撈起</li>
+                <li>👤 每位玩家<strong>各自撈自己的{roomConfig.currency_name}</strong></li>
                 <li>⏱ 60 秒內<strong>撈越多越好</strong>，上限依當場設定顆數</li>
-                <li>🏆 每顆蘋果獲得固定金蘋果獎勵</li>
+                <li>🏆 每顆{roomConfig.currency_name}獲得固定{roomConfig.currency_name}獎勵</li>
               </>
             ) : (
               <>
-                <li>🍎 一顆<strong>大金蘋果</strong>在畫面中彈跳</li>
+                <li>{roomConfig.currency_emoji} 一顆<strong>大{roomConfig.currency_name}</strong>在畫面中彈跳</li>
                 <li>👆 <strong>第一個點到</strong>的人獲得全部獎勵</li>
                 <li>⚡ 手速決定勝負，全力搶！</li>
               </>
@@ -538,7 +538,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
     return (
       <div className="gag-overlay" onClick={dismissResult}>
         <div className="gag-result" onClick={e => e.stopPropagation()}>
-          <h2>🍎 遊戲結束！</h2>
+          <h2>{roomConfig.currency_emoji} 遊戲結束！</h2>
           {isSettling ? (
             <>
               <p>正在等待結算結果...</p>
@@ -546,7 +546,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
             </>
           ) : entries.length > 0 ? (
             <>
-              <p>本次撈金蘋果得獎名單(前百)：</p>
+              <p>本次撈{roomConfig.currency_name}得獎名單(前百)：</p>
               <ul>
                 {entries.map(([uname, count]) => (
                   <li key={uname} className={uname === name ? "me" : ""}>
@@ -556,7 +556,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
               </ul>
             </>
           ) : (
-            <p>本次沒有人撈到金蘋果…</p>
+            <p>本次沒有人撈到{roomConfig.currency_name}…</p>
           )}
           <p className="gag-dismiss-hint">點擊任意處關閉</p>
         </div>
@@ -572,17 +572,17 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
         <div className="gag-result" onClick={e => e.stopPropagation()}>
           {won ? (
             <>
-              <h2>🎉 有人撈到大金蘋果！</h2>
+              <h2>🎉 有人撈到大{roomConfig.currency_name}！</h2>
               <p>
                 <span className="gag-winner-name">{won}</span>
-                {" "}獲得 <strong style={{ color: "gold" }}>{g2Result.reward ?? g2Reward}</strong> 顆金蘋果！
+                {" "}獲得 <strong style={{ color: "gold" }}>{g2Result.reward ?? g2Reward}</strong> 顆{roomConfig.currency_name}！
                 {won === name && <span style={{ display: "block", marginTop: 8, color: "#7fff7f" }}>恭喜你！</span>}
               </p>
             </>
           ) : (
             <>
-              <h2>😢 無人撈到大金蘋果</h2>
-              <p>金蘋果趁亂逃走了…</p>
+              <h2>😢 無人撈到大{roomConfig.currency_name}</h2>
+              <p>{roomConfig.currency_name}趁亂逃走了…</p>
             </>
           )}
           <p className="gag-dismiss-hint">點擊任意處關閉</p>
@@ -607,11 +607,11 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
             <span className="gag-timer">{timeLeft}</span>
             <span className="gag-timer-unit">秒</span>
             <span className="gag-hint">已撈 {g1CaughtCount} / {g1CatchLimit || g1AppleIds.length} 顆</span>
-            <span className="gag-hint">移動網子靠近金蘋果來撈！每顆 {g1Reward} 個🍎</span>
+            <span className="gag-hint">移動網子靠近{roomConfig.currency_name}來撈！每顆 {g1Reward} 個{roomConfig.currency_emoji}</span>
           </>
         )}
         {phase === "game2" && (
-          <span className="gag-hint">🔥 搶金蘋果！第一個點到得 {g2Reward} 個🍎！</span>
+          <span className="gag-hint">🔥 搶{roomConfig.currency_name}！第一個點到得 {g2Reward} 個{roomConfig.currency_emoji}！</span>
         )}
       </div>
 
@@ -634,9 +634,9 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
           }}
         >
           <img
-            src="/gifts/gold_apple.gif"
+            src={`/gifts/${roomConfig.currency_icon}`}
             className="gag-apple-img"
-            alt="金蘋果"
+            alt={roomConfig.currency_name}
             draggable={false}
           />
         </div>
@@ -684,9 +684,9 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
             style={p ? { transform: `translate(${p.x}px, ${p.y}px)` } : undefined}
           >
             <img
-              src="/gifts/gold_apple.gif"
+              src={`/gifts/${roomConfig.currency_icon}`}
               className="gag-apple-img big"
-              alt="大金蘋果"
+              alt={`大${roomConfig.currency_name}`}
               draggable={false}
             />
           </div>

@@ -88,6 +88,8 @@ const DEFAULT = {
   baccarat_close_minute:     0,
   baccarat_max_bet:          200,
   baccarat_house_edge:       100,
+  currency_name:             "金蘋果",
+  currency_emoji:            "🍎",
 };
 
 export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
@@ -151,11 +153,13 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
 
   const pad2 = n => String(n).padStart(2, "0");
   const fmtTime = (h, m) => `${pad2(h)}:${pad2(m)}`;
+  const currencyName = settings.currency_name || "金蘋果";
+  const currencyEmoji = settings.currency_emoji || "🍎";
 
   return (
     <div className="apple-modal">
       <div className="apple-modal-content" style={{ width: 460, maxHeight: "90vh", overflowY: "auto" }}>
-        <h3>⚙️ 金蘋果設定</h3>
+        <h3>⚙️ {currencyName}設定</h3>
 
         {loading ? <div>讀取中…</div> : (
           <>
@@ -186,7 +190,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <label className="toggle-label">
                   <input type="checkbox" checked={!!settings.singing_double_enabled}
                     onChange={e => setBool("singing_double_enabled", e.target.checked)} />
-                  {" "}啟用每日指定時段加倍金蘋果
+                  {" "}啟用每日指定時段加倍{currencyName}
                 </label>
               </Row>
               {settings.singing_double_enabled && (
@@ -252,7 +256,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             {/* ─── 遊戲一：多顆金蘋果 ────────────────────────────── */}
             <section className="settings-section">
               <h4>
-                🍎 遊戲一：撈金蘋果（多顆模式）
+                {currencyEmoji} 遊戲一：撈{currencyName}（多顆模式）
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={!!settings.game1_enabled}
                     onChange={e => setBool("game1_enabled", e.target.checked)} />
@@ -275,7 +279,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   </span>
                 </div>
               </Row>
-              <Row label="金蘋果數量">
+              <Row label={`${currencyName}數量`}>
                 <input type="number" min={1} max={50} value={settings.game1_apple_count}
                   onChange={e => setInt("game1_apple_count", e.target.value)} />
                 <span className="field-note">顆（同時顯示在螢幕）</span>
@@ -283,9 +287,9 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
               <Row label="每顆獎勵">
                 <input type="number" min={1} value={settings.game1_reward}
                   onChange={e => setInt("game1_reward", e.target.value)} />
-                <span className="field-note">個金蘋果</span>
+                <span className="field-note">個{currencyName}</span>
               </Row>
-              <Row label="蘋果速度（px/幀）">
+              <Row label={`${currencyName}速度（px/幀）`}>
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                   <span>最慢</span>
                   <input type="number" min={1} max={30} style={{ width: 64 }}
@@ -302,7 +306,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             {/* ─── 遊戲二：一顆大金蘋果 ──────────────────────────── */}
             <section className="settings-section">
               <h4>
-                🔥 遊戲二：搶金蘋果（第一個點到即結束）
+                🔥 遊戲二：搶{currencyName}（第一個點到即結束）
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={!!settings.game2_enabled}
                     onChange={e => setBool("game2_enabled", e.target.checked)} />
@@ -328,9 +332,9 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
               <Row label="搶到獎勵">
                 <input type="number" min={1} value={settings.game2_reward}
                   onChange={e => setInt("game2_reward", e.target.value)} />
-                <span className="field-note">個金蘋果（第一個搶到即得，無時間限制）</span>
+                <span className="field-note">個{currencyName}（第一個搶到即得，無時間限制）</span>
               </Row>
-              <Row label="蘋果速度（px/幀）">
+              <Row label={`${currencyName}速度（px/幀）`}>
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                   <span>最慢</span>
                   <input type="number" min={1} max={20} style={{ width: 64 }}
@@ -347,7 +351,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             {/* ─── 遊戲三：打金蘋果（打地鼠） ────────────────────── */}
             <section className="settings-section">
               <h4>
-                🔨 遊戲三：打金蘋果（打地鼠風格）
+                🔨 遊戲三：打{currencyName}（打地鼠風格）
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={!!settings.whack_enabled}
                     onChange={e => setBool("whack_enabled", e.target.checked)} />
@@ -379,9 +383,9 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
               <Row label="每顆獎勵">
                 <input type="number" min={1} value={settings.whack_reward}
                   onChange={e => setInt("whack_reward", e.target.value)} />
-                <span className="field-note">個金蘋果（打一顆算一次）</span>
+                <span className="field-note">個{currencyName}（打一顆算一次）</span>
               </Row>
-              <Row label="蘋果可見時間（ms）">
+              <Row label={`${currencyName}可見時間（ms）`}>
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                   <span>最短</span>
                   <input type="number" min={100} max={2000} step={50} style={{ width: 72 }}
@@ -393,7 +397,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                     onChange={e => setInt("whack_ms_hi", e.target.value)} />
                 </div>
               </Row>
-              <Row label="同時蘋果顆數">
+              <Row label={`同時${currencyName}顆數`}>
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                   <span>開始</span>
                   <input type="number" min={1} max={9} style={{ width: 56 }}
@@ -411,7 +415,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             {/* ─── 遊戲四：夾蘋果機 ───────────────────────────────── */}
             <section className="settings-section">
               <h4>
-                🎰 遊戲四：夾蘋果機（夾娃娃機風格）
+                🎰 遊戲四：夾{currencyName}機（夾娃娃機風格）
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={!!settings.claw_enabled}
                     onChange={e => setBool("claw_enabled", e.target.checked)} />
@@ -444,7 +448,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <input type="number" min={1} style={{ width: 80 }}
                   value={settings.claw_reward}
                   onChange={e => setInt("claw_reward", e.target.value)} />
-                <span className="field-note">個金蘋果</span>
+                <span className="field-note">個{currencyName}</span>
               </Row>
               <Row label="夾取成功率">
                 <input type="number" min={0} max={100} style={{ width: 80 }}
@@ -464,7 +468,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   onChange={e => setInt("claw_drop_speed", e.target.value)} />
                 <span className="field-note">50=慢，100=預設，200=快，300=極快</span>
               </Row>
-              <Row label="場內蘋果數量">
+              <Row label={`場內${currencyName}數量`}>
                 <input type="number" min={1} max={40} style={{ width: 80 }}
                   value={settings.claw_apple_count}
                   onChange={e => setInt("claw_apple_count", e.target.value)} />
@@ -475,7 +479,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             {/* ─── 娛樂城：金蘋果輪盤 ──────────────────────────── */}
             <section className="settings-section">
               <h4>
-                🎰 娛樂城：金蘋果輪盤
+                🎰 娛樂城：{currencyName}輪盤
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={!!settings.roulette_enabled}
                     onChange={e => setBool("roulette_enabled", e.target.checked)} />
@@ -508,7 +512,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <input type="number" min={1} max={1000} style={{ width: 80 }}
                   value={settings.roulette_max_bet}
                   onChange={e => setInt("roulette_max_bet", e.target.value)} />
-                <span className="field-note">個金蘋果（最多可下注）</span>
+                <span className="field-note">個{currencyName}（最多可下注）</span>
               </Row>
               <Row label="勝率偏向設定">
                 <input type="number" min={1} max={200} style={{ width: 80 }}
@@ -554,7 +558,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <input type="number" min={200} max={9999} style={{ width: 80 }}
                   value={settings.blackjack_max_bet}
                   onChange={e => setInt("blackjack_max_bet", e.target.value)} />
-                <span className="field-note">個金蘋果（最少 200）</span>
+                <span className="field-note">個{currencyName}（最少 200）</span>
               </Row>
               <Row label="勝率偏向設定">
                 <input type="number" min={1} max={200} style={{ width: 80 }}
@@ -600,7 +604,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <input type="number" min={1} max={9999} style={{ width: 80 }}
                   value={settings.sicbo_max_bet}
                   onChange={e => setInt("sicbo_max_bet", e.target.value)} />
-                <span className="field-note">個金蘋果（每種投注類型最多可下注）</span>
+                <span className="field-note">個{currencyName}（每種投注類型最多可下注）</span>
               </Row>
               <Row label="勝率偏向設定">
                 <input type="number" min={1} max={200} style={{ width: 80 }}
@@ -646,7 +650,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <input type="number" min={1} max={9999} style={{ width: 80 }}
                   value={settings.slot_max_bet}
                   onChange={e => setInt("slot_max_bet", e.target.value)} />
-                <span className="field-note">個金蘋果</span>
+                <span className="field-note">個{currencyName}</span>
               </Row>
               <Row label="勝率偏向設定">
                 <input type="number" min={1} max={200} style={{ width: 80 }}
@@ -691,7 +695,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <input type="number" min={1} max={9999} style={{ width: 80 }}
                   value={settings.baccarat_max_bet}
                   onChange={e => setInt("baccarat_max_bet", e.target.value)} />
-                <span className="field-note">個金蘋果</span>
+                <span className="field-note">個{currencyName}</span>
               </Row>
               <Row label="勝率偏向設定">
                 <input type="number" min={1} max={200} style={{ width: 80 }}

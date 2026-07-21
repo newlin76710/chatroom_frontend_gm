@@ -9,6 +9,10 @@ const _cfg = {
   livekit_url:         "",
   room_setting:        "prod",
   leaderboard_enabled: false,
+  currency_name:       "金蘋果",
+  currency_icon:       "gold_apple.gif",
+  currency_emoji:      "🍎",
+  nickname_max_length: 10,
 };
 
 export const roomConfig = _cfg;

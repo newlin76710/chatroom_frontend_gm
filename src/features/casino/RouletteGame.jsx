@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import "./RouletteGame.css";
 
-import { BACKEND, RN } from "../../shared/roomConfig";
+import { BACKEND, RN, roomConfig } from "../../shared/roomConfig";
 
 const WHEEL_ORDER = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
 const RED_SET = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
@@ -607,7 +607,7 @@ export default function RouletteGame({ token, onApplesChange }) {
           <div className="rlt-amount-ctrl">
             <button className="rlt-amt-btn" onClick={() => setBetAmount(a => Math.max(1, a - 1))} disabled={phase !== "idle"}>－</button>
             <span className="rlt-amt-val">
-              {betAmount}&nbsp;<img src="/gifts/gold_apple.gif" alt="" style={{ width: 16, height: 16, verticalAlign: "middle" }} />
+              {betAmount}&nbsp;<img src={`/gifts/${roomConfig.currency_icon}`} alt="" style={{ width: 16, height: 16, verticalAlign: "middle" }} />
             </span>
             <button className="rlt-amt-btn" onClick={() => setBetAmount(a => Math.min(maxBet, a + 1))} disabled={phase !== "idle"}>＋</button>
           </div>
@@ -637,14 +637,14 @@ export default function RouletteGame({ token, onApplesChange }) {
               <span className="rlt-result-desc">{resultDesc(result.result)}</span>
             </div>
             {result.totalWin > 0
-              ? <div className="rlt-win">🎉 獲得 <strong>{result.totalWin}</strong> 個金蘋果！</div>
+              ? <div className="rlt-win">🎉 獲得 <strong>{result.totalWin}</strong> 個{roomConfig.currency_name}！</div>
               : <div className="rlt-lose">😢 未中獎，再接再厲！</div>
             }
             <div className="rlt-bet-breakdown">
               {result.betResults.map((br, i) => (
                 <div key={i} className={`rlt-br-row ${br.won ? "won" : "lost"}`}>
                   <span>{getBetLabel(br)}</span>
-                  <span>{br.won ? `+${br.winAmount} 🍎` : `－${result.amount} 🍎`}</span>
+                  <span>{br.won ? `+${br.winAmount} ${roomConfig.currency_emoji}` : `－${result.amount} ${roomConfig.currency_emoji}`}</span>
                 </div>
               ))}
             </div>

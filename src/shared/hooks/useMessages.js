@@ -5,6 +5,7 @@
 import { useState, useRef, useCallback } from "react";
 import { MAX_MESSAGES, PENDING_LEAVE_DELAY, SYSTEM_AVATAR } from "../constants";
 import { safeText } from "../utils";
+import { roomConfig } from "../roomConfig";
 
 // 底層 append，超過 MAX_MESSAGES 就截斷最舊的
 function appendMsg(prev, msg) {
@@ -92,8 +93,8 @@ export function useMessages() {
           type: "system",
         },
         target: msg.target,
-        message: `${msg.amount} 顆${msg.item || "金蘋果"} 以示獎勵`,
-        item: msg.item || "金蘋果",
+        message: `${msg.amount} 顆${msg.item || roomConfig.currency_name} 以示獎勵`,
+        item: msg.item || roomConfig.currency_name,
         timestamp: new Date(msg.created_at).toLocaleTimeString(),
         mode: "reward",
         type: "transaction",
@@ -122,8 +123,8 @@ export function useMessages() {
     if (!data) return;
     const { winner, amount } = data;
     const text = winner
-      ? `🎊 金蘋果樂透！${winner} 正在上麥，獲得 ${amount} 顆金蘋果！`
-      : `🎊 金蘋果樂透時刻到！可惜無人上麥，本次樂透未能送出。`;
+      ? `🎊 ${roomConfig.currency_name}樂透！${winner} 正在上麥，獲得 ${amount} 顆${roomConfig.currency_name}！`
+      : `🎊 ${roomConfig.currency_name}樂透時刻到！可惜無人上麥，本次樂透未能送出。`;
     setMessages((prev) =>
       appendMsg(prev, {
         user: { name: "系統", avatar: SYSTEM_AVATAR, type: "system" },

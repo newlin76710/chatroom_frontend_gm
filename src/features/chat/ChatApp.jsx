@@ -354,7 +354,7 @@ export default function ChatApp() {
       addMessage(m, userListRef.current);
     };
     const handleSystemMessage = (m) => {
-      if (!roomConfig.new_function && m?.message?.includes('唱歌獲得') && m?.message?.includes('金蘋果')) return;
+      if (!roomConfig.new_function && m?.message?.includes('唱歌獲得') && m?.message?.includes(roomConfig.currency_name)) return;
       addSystemMessage(m);
     };
     const handleVideoUpdate = (v) => {
@@ -427,12 +427,12 @@ export default function ChatApp() {
   useEffect(() => {
     const sourceLabel = (source) => {
       switch (source) {
-        case "system_game1": return "撈金蘋果";
-        case "system_game2": return "大金蘋果";
-        case "system_whack": return "打金蘋果";
-        case "system_claw": return "夾蘋果機";
+        case "system_game1": return `撈${roomConfig.currency_name}`;
+        case "system_game2": return `大${roomConfig.currency_name}`;
+        case "system_whack": return `打${roomConfig.currency_name}`;
+        case "system_claw": return `夾${roomConfig.currency_name}機`;
         case "system_surprise": return "每日樂透";
-        default: return "金蘋果";
+        default: return roomConfig.currency_name;
       }
     };
 
@@ -448,7 +448,7 @@ export default function ChatApp() {
           : typeof balance === "number"
             ? balance - credited
             : "?";
-        addSystemMessage(`🍎 ${sourceLabel(source)} 獲得 ${credited} 顆，原本 ${before} 顆，入帳後 ${balance ?? "?"} 顆`);
+        addSystemMessage(`${roomConfig.currency_emoji} ${sourceLabel(source)} 獲得 ${credited} 顆，原本 ${before} 顆，入帳後 ${balance ?? "?"} 顆`);
       }
     };
 
@@ -611,7 +611,7 @@ export default function ChatApp() {
     const isAdminSender = level >= ANL;
     const maxAllowed = (!isAdminSender && perTransferLimit > 0) ? Math.min(apples, perTransferLimit) : apples;
     const safeAmount = Math.max(1, Math.min(Math.floor(appleAmount), maxAllowed));
-    if (safeAmount > apples) { alert("金蘋果不足"); return; }
+    if (safeAmount > apples) { alert(`${roomConfig.currency_name}不足`); return; }
     setSendingApple(true);
     try {
       const res = await fetch(`${BACKEND}/api/transfer-gold`, {
@@ -685,7 +685,7 @@ export default function ChatApp() {
               </DeferredPanel>
               {NF && isMember && (
                 <button className="announce-btn" title="商城" onClick={() => setShowShop(true)}>
-                  <img src="/gifts/gold_apple.gif" alt="金蘋果" style={{ width: 20, height: 20, marginTop: -5 }} /> 商城
+                  <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} /> 商城
                 </button>
               )}
               {NF && isMember && (
@@ -890,9 +890,9 @@ export default function ChatApp() {
                       </button>
                     )}
                     <SurpriseHistoryPanel token={token} />
-                    金蘋果樂園{" "}
-                    <img src="/gifts/gold_apple.gif" alt="金蘋果" style={{ width: 20, height: 20, marginTop: -5 }} />{" "}
-                    當前金蘋果數量：{apples}
+                    {roomConfig.currency_name}樂園{" "}
+                    <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} />{" "}
+                    當前{roomConfig.currency_name}數量：{apples}
                   </div>
 
                   <select value={target} onChange={(e) => setTarget(e.target.value)}>
@@ -915,11 +915,11 @@ export default function ChatApp() {
                   />
 
                   <button disabled={sendingApple} onClick={transferApple} className="apple-send-btn">
-                    送金蘋果{" "}
-                    <img src="/gifts/gold_apple.gif" alt="金蘋果" style={{ width: 20, height: 20, marginTop: -5 }} />
+                    送{roomConfig.currency_name}{" "}
+                    <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} />
                   </button>
 
-                  {level >= AML && (
+                  {level >= AML && roomConfig.open_peony && (
                     <button disabled={sendingPeony} onClick={sendPeony} className="apple-send-btn" style={{ backgroundColor: "#87CEEB" }}>
                       送金牡丹{" "}
                       <img src="/gifts/peony.gif" alt="金牡丹" style={{ width: 20, height: 20, marginTop: -5 }} />

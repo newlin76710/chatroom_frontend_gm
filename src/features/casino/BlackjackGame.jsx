@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import "./BlackjackGame.css";
 import { getFaceCardComponent } from "./CardFaces";
 
-import { BACKEND, RN } from "../../shared/roomConfig";
+import { BACKEND, RN, roomConfig } from "../../shared/roomConfig";
 
 // ── Card helpers ────────────────────────────────────────────────
 const RED_SUITS = new Set(["♥", "♦"]);
@@ -147,7 +147,7 @@ function Hand({ cards, value, label, result, isActive, bet, small }) {
       )}
       {bet != null && (
         <div className="bj-hand-bet">
-          <img src="/gifts/gold_apple.gif" alt="" style={{ width:13, height:13, verticalAlign:"middle" }} />
+          <img src={`/gifts/${roomConfig.currency_icon}`} alt="" style={{ width:13, height:13, verticalAlign:"middle" }} />
           {" "}{bet}
         </div>
       )}
@@ -185,7 +185,7 @@ function ChipSelector({ bet, setBet, min, max, disabled, apples }) {
         <button className="bj-amt-btn" onClick={() => setBet(b => Math.max(0, b - step))} disabled={disabled || !step}>－</button>
         <span className="bj-amt-val">
           {bet}
-          <img src="/gifts/gold_apple.gif" alt="" style={{ width:14, height:14, verticalAlign:"middle", marginLeft:3 }} />
+          <img src={`/gifts/${roomConfig.currency_icon}`} alt="" style={{ width:14, height:14, verticalAlign:"middle", marginLeft:3 }} />
         </span>
         <button className="bj-amt-btn" onClick={() => setBet(b => Math.min(max, b + step))} disabled={disabled || !step}>＋</button>
         <button className="bj-amt-btn bj-amt-clear" onClick={() => { setBet(0); setStep(null); }} disabled={disabled} title="清除">✕</button>
@@ -209,20 +209,20 @@ function ActionButtons({ game, onAction, loading, apples }) {
         <div className="bj-insurance-prompt">
           莊家亮出 A，是否投保？
           <strong className="bj-insurance-cost">
-            （花費 {insuranceCost} 顆金蘋果，若莊家 BlackJack 賠付 {insuranceCost * 2} 顆）
+            （花費 {insuranceCost} 顆{roomConfig.currency_name}，若莊家 BlackJack 賠付 {insuranceCost * 2} 顆）
           </strong>
           {!canAffordInsurance && insuranceCost > 0 && (
-            <span className="bj-insurance-warning"> ⚠️ 金蘋果不足</span>
+            <span className="bj-insurance-warning"> ⚠️ {roomConfig.currency_name}不足</span>
           )}
         </div>
         <div className="bj-actions-row">
-          <button 
-            className="bj-btn bj-btn-insurance" 
-            onClick={() => onAction("insurance")} 
+          <button
+            className="bj-btn bj-btn-insurance"
+            onClick={() => onAction("insurance")}
             disabled={loading || !canInsurance || insuranceCost === 0 || !canAffordInsurance}
-            title={!canAffordInsurance ? "金蘋果不足" : "投保可獲得 2:1 賠付"}
+            title={!canAffordInsurance ? `${roomConfig.currency_name}不足` : "投保可獲得 2:1 賠付"}
           >
-            🛡️ 投保 (2:1) - {insuranceCost} 🍎
+            🛡️ 投保 (2:1) - {insuranceCost} {roomConfig.currency_emoji}
           </button>
           <button 
             className="bj-btn bj-btn-no-insurance" 
@@ -292,28 +292,28 @@ function ResultSummary({ game, onReset }) {
           </span>
           <span className="bj-result-payout">
             {hr.payout > 0 ? `+${hr.payout}` : `-${hr.bet}`}
-            <img src="/gifts/gold_apple.gif" alt="" style={{ width:13, height:13, verticalAlign:"middle", marginLeft:3 }} />
+            <img src={`/gifts/${roomConfig.currency_icon}`} alt="" style={{ width:13, height:13, verticalAlign:"middle", marginLeft:3 }} />
           </span>
         </div>
       ))}
       {insurancePayout > 0 && (
         <div className="bj-result-row bj-result-row-win">
           <span className="bj-result-label">🛡️ 保險賠付</span>
-          <span className="bj-result-payout">+{insurancePayout} 🍎</span>
+          <span className="bj-result-payout">+{insurancePayout} {roomConfig.currency_emoji}</span>
         </div>
       )}
       {insurancePayout === 0 && (game.insuranceBet || 0) > 0 && (
         <div className="bj-result-row bj-result-row-lose">
           <span className="bj-result-label">🛡️ 保險落敗</span>
-          <span className="bj-result-payout">-{game.insuranceBet} 🍎</span>
+          <span className="bj-result-payout">-{game.insuranceBet} {roomConfig.currency_emoji}</span>
         </div>
       )}
       <div className={`bj-result-total ${net >= 0 ? "pos" : "neg"}`}>
         {net > 0
-          ? <span>🎉 淨贏 <strong>{net}</strong> 顆金蘋果！</span>
+          ? <span>🎉 淨贏 <strong>{net}</strong> 顆{roomConfig.currency_name}！</span>
           : net === 0
           ? <span>持平，下次再試！</span>
-          : <span>😢 淨輸 <strong>{Math.abs(net)}</strong> 顆金蘋果</span>
+          : <span>😢 淨輸 <strong>{Math.abs(net)}</strong> 顆{roomConfig.currency_name}</span>
         }
         {dealerHasBJ && <div className="bj-dealer-bj-note">莊家天牌 BlackJack！</div>}
       </div>
@@ -379,7 +379,7 @@ function HelpPanel({ onClose }) {
         <p className="bj-help-note">
           ⚠️ 莊家抽牌規則：點數 &lt;17 或軟17時補牌，其餘停牌。<br />
           ⚠️ 分牌後的A只各取一張，不可再補牌。<br />
-          ⚠️ 投保需下注至少 2 顆金蘋果。
+          ⚠️ 投保需下注至少 2 顆{roomConfig.currency_name}。
         </p>
       </div>
     </div>
@@ -621,7 +621,7 @@ export default function BlackjackGame({ token, apples, onApplesChange }) {
           <div className="bj-current-bet">
             已下注：{(game.betAmounts || []).reduce((s,b)=>s+b,0)}
             {(game.insuranceBet || 0) > 0 && ` + 保險 ${game.insuranceBet}`}
-            &nbsp;顆金蘋果
+            &nbsp;顆{roomConfig.currency_name}
           </div>
         )}
 

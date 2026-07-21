@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import "./SicBoGame.css";
 
-import { BACKEND, RN } from "../../shared/roomConfig";
+import { BACKEND, RN, roomConfig } from "../../shared/roomConfig";
 
 const DOT_MAPS = {
   1: [[0,0,0],[0,1,0],[0,0,0]],
@@ -122,7 +122,7 @@ function ResultPopup({ result, onClose }) {
         <div className="sic-result-title">{title}</div>
         <div className="sic-result-amount">
           {result.net >= 0 ? `+${result.net}` : `-${Math.abs(result.net)}`}
-          <img src="/gifts/gold_apple.gif" alt="" className="sic-result-apple" />
+          <img src={`/gifts/${roomConfig.currency_icon}`} alt="" className="sic-result-apple" />
         </div>
         {hasWin && (
           <div className="sic-result-wintypes">
@@ -272,7 +272,7 @@ export default function SicBoGame({ token, apples, onApplesChange }) {
           </div>
           <div className="sic-status-row">
             <span className="sic-bal">
-              <img src="/gifts/gold_apple.gif" alt="" />
+              <img src={`/gifts/${roomConfig.currency_icon}`} alt="" />
               {apples ?? 0}
             </span>
             <span className="sic-bet-label">下注 <strong>{totalBet}</strong></span>
@@ -359,7 +359,7 @@ function BetButton({ type, amount, onClick, disabled, label }) {
       {amount > 0 && (
         <span className="sic-bet-amount">
           {amount}
-          <img src="/gifts/gold_apple.gif" alt="" style={{width:10,height:10,verticalAlign:"middle",marginLeft:1}} />
+          <img src={`/gifts/${roomConfig.currency_icon}`} alt="" style={{width:10,height:10,verticalAlign:"middle",marginLeft:1}} />
         </span>
       )}
     </button>

@@ -3,7 +3,7 @@ import "./BlackjackGame.css";
 import "./BaccaratGame.css";
 import { getFaceCardComponent } from "./CardFaces";
 
-import { BACKEND, RN } from "../../shared/roomConfig";
+import { BACKEND, RN, roomConfig } from "../../shared/roomConfig";
 const RED_SUITS = new Set(["♥", "♦"]);
 const CHIPS = [1, 5, 10, 25, 50, 100];
 const BET_AREAS = [
@@ -314,9 +314,9 @@ export default function BaccaratGame({ token, apples, onApplesChange }) {
           <div className="bac-table-felt">
             <div className="bac-layout-top">
               <div className="bac-chip-bank">
-                <div className="bac-bank-label">可用金蘋果</div>
+                <div className="bac-bank-label">可用{roomConfig.currency_name}</div>
                 <div className="bac-bank-value">
-                  <img src="/gifts/gold_apple.gif" alt="" />
+                  <img src={`/gifts/${roomConfig.currency_icon}`} alt="" />
                   <span>{apples ?? 0}</span>
                 </div>
               </div>
@@ -404,7 +404,7 @@ export default function BaccaratGame({ token, apples, onApplesChange }) {
             <button onClick={() => changeBet(-1)} disabled={loading || settling || betAmount <= 1}>－</button>
             <span className="bac-stepper-value">
               {betAmount}
-              <img src="/gifts/gold_apple.gif" alt="" />
+              <img src={`/gifts/${roomConfig.currency_icon}`} alt="" />
             </span>
             <button onClick={() => changeBet(1)} disabled={loading || settling || betAmount >= (settings.max_bet || 200)}>＋</button>
           </div>

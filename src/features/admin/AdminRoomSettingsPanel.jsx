@@ -81,16 +81,32 @@ export default function AdminRoomSettingsPanel({ token }) {
         </label>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>開啟金牡丹</span>
-        <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13 }}>
-          <input
-            type="checkbox"
-            checked={!!settings.open_peony}
-            onChange={e => setSettings(s => ({ ...s, open_peony: e.target.checked }))}
-          />
-          啟用
-        </label>
+        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>暱稱長度上限</span>
+        <input
+          type="number"
+          min={1}
+          max={50}
+          value={settings.nickname_max_length ?? 10}
+          onChange={e => setSettings(s => ({ ...s, nickname_max_length: Number(e.target.value) }))}
+          style={{ width: 70, padding: "5px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }}
+        />
+        <span style={{ fontSize: 12, color: "#888" }}>
+          （中文長度，中文最多 {Number(settings.nickname_max_length) || 10} 個字，英數字最多 {(Number(settings.nickname_max_length) || 10) * 2} 個字）
+        </span>
       </div>
+      {roomConfig.new_function && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>開啟金牡丹</span>
+          <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13 }}>
+            <input
+              type="checkbox"
+              checked={!!settings.open_peony}
+              onChange={e => setSettings(s => ({ ...s, open_peony: e.target.checked }))}
+            />
+            啟用
+          </label>
+        </div>
+      )}
 
       {roomConfig.new_function && (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -101,7 +117,7 @@ export default function AdminRoomSettingsPanel({ token }) {
               checked={!!settings.same_ip_gift}
               onChange={e => setSettings(s => ({ ...s, same_ip_gift: e.target.checked }))}
             />
-            相同IP可互送金蘋果與禮物
+            相同IP可互送{roomConfig.currency_name}與禮物
           </label>
         </div>
       )}
