@@ -754,6 +754,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             )}
 
             {/* ─── 遊樂場：推幣機 ──────────────────────────────── */}
+            {settings.new_section && (
             <section className="settings-section">
               <h4>
                 🎰 遊樂場：推幣機
@@ -818,8 +819,10 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 </select>
               </Row>
             </section>
+            )}
 
             {/* ─── 遊樂場：賽車 ──────────────────────────────── */}
+            {settings.new_section && (
             <section className="settings-section">
               <h4>
                 🏎️ 遊樂場：賽車
@@ -864,8 +867,10 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
               </Row>
             </section>
+            )}
 
             {/* ─── 遊樂場：殭屍生存戰 ──────────────────────────── */}
+            {settings.new_section && (
             <section className="settings-section">
               <h4>
                 🧟 遊樂場：殭屍生存戰
@@ -895,6 +900,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <span className="field-note">次（不論成功或失敗都算一次）</span>
               </Row>
             </section>
+            )}
 
             <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
               <button onClick={handleSave} disabled={saving} style={{ flex: 1 }}>

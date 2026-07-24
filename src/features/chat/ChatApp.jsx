@@ -737,7 +737,7 @@ export default function ChatApp() {
               <CasinoPanel
                 token={token} apples={apples} onApplesChange={setApples}
                 open={showCasino} onClose={() => setShowCasino(false)}
-                variant="casino" includePusher={!roomConfig.new_section}
+                variant="casino" includePusher={false}
               />
             </DeferredPanel>
           )}
