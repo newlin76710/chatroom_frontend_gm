@@ -142,7 +142,9 @@ export default function ChatApp() {
   const [showAnnouncement, setShowAnnouncement] = useState(false);
   const [showMessageBoard, setShowMessageBoard] = useState(false);
   const [showShop, setShowShop] = useState(false);
+  const [shopTitle, setShopTitle] = useState("商城");
   const [showCasino, setShowCasino] = useState(false);
+  const [showPlayground, setShowPlayground] = useState(false);
   const [showAdminTools, setShowAdminTools] = useState(false);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [currentSinger, setCurrentSinger] = useState(null);
@@ -684,7 +686,7 @@ export default function ChatApp() {
                 {NF && <Leaderboard room={room} token={token} enabled={!!LB} />}
               </DeferredPanel>
               {NF && isMember && (
-                <button className="announce-btn" title="商城" onClick={() => setShowShop(true)}>
+                <button className="announce-btn" title="商城" onClick={() => { setShopTitle("商城"); setShowShop(true); }}>
                   <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} /> 商城
                 </button>
               )}
@@ -692,6 +694,17 @@ export default function ChatApp() {
                 <button className="announce-btn" title="娛樂城" onClick={() => setShowCasino(true)}
                   style={{ background: "linear-gradient(135deg,#2a1500,#4a2800)", border: "1px solid #d4af37", color: "#ffd700" }}>
                   🎰 娛樂城
+                </button>
+              )}
+              {isMember && roomConfig.new_section && (
+                <button className="announce-btn" title="賣場" onClick={() => { setShopTitle("賣場"); setShowShop(true); }}>
+                  <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} /> 賣場
+                </button>
+              )}
+              {isMember && roomConfig.new_section && (
+                <button className="announce-btn" title="遊樂場" onClick={() => setShowPlayground(true)}
+                  style={{ background: "linear-gradient(135deg,#003a2a,#005a45)", border: "1px solid #4fd0c8", color: "#7fffe8" }}>
+                  🎡 遊樂場
                 </button>
               )}
               {offline && !invalidTokenCountdown && <div className="offline-banner">⚠️ 網路不穩，重新連線中...</div>}
@@ -716,12 +729,25 @@ export default function ChatApp() {
           )}
           {showShop && (
             <DeferredPanel>
-              <ShopPanel token={token} myName={name} myLevel={level} targetName={target} open={showShop} onClose={() => setShowShop(false)} />
+              <ShopPanel token={token} myName={name} myLevel={level} targetName={target} open={showShop} onClose={() => setShowShop(false)} title={shopTitle} />
             </DeferredPanel>
           )}
           {NF && showCasino && (
             <DeferredPanel>
-              <CasinoPanel token={token} apples={apples} onApplesChange={setApples} open={showCasino} onClose={() => setShowCasino(false)} />
+              <CasinoPanel
+                token={token} apples={apples} onApplesChange={setApples}
+                open={showCasino} onClose={() => setShowCasino(false)}
+                variant="casino" includePusher={!roomConfig.new_section}
+              />
+            </DeferredPanel>
+          )}
+          {roomConfig.new_section && showPlayground && (
+            <DeferredPanel>
+              <CasinoPanel
+                token={token} apples={apples} onApplesChange={setApples}
+                open={showPlayground} onClose={() => setShowPlayground(false)}
+                variant="playground"
+              />
             </DeferredPanel>
           )}
 

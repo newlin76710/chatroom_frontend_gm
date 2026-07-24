@@ -7,6 +7,7 @@ const BlackjackGame = lazy(() => import("./BlackjackGame"));
 const SicBoGame = lazy(() => import("./SicBoGame"));
 const SlotMachine = lazy(() => import("./SlotMachine"));
 const BaccaratGame = lazy(() => import("./BaccaratGame"));
+const PusherMachine = lazy(() => import("./PusherMachine"));
 
 const getRules = () => `🎰 ${roomConfig.currency_name}輪盤 遊戲規則
 
@@ -26,8 +27,9 @@ const getRules = () => `🎰 ${roomConfig.currency_name}輪盤 遊戲規則
 3. 旋轉 10 秒後公佈結果
 4. 中獎自動入帳`;
 
-export default function CasinoPanel({ token, apples, onApplesChange, open, onClose }) {
-  const [tab, setTab] = useState("blackjack");
+export default function CasinoPanel({ token, apples, onApplesChange, open, onClose, variant = "casino", includePusher = true }) {
+  const isPlayground = variant === "playground";
+  const [tab, setTab] = useState(isPlayground ? "pusher" : "blackjack");
   const [showRules, setShowRules] = useState(false);
 
   if (!open) return null;
@@ -45,7 +47,7 @@ export default function CasinoPanel({ token, apples, onApplesChange, open, onClo
 
         {/* ── Header ── */}
         <div className="casino-header">
-          <span className="casino-title">🎰 娛樂城</span>
+          <span className="casino-title">{isPlayground ? "🎡 遊樂場" : "🎰 娛樂城"}</span>
           <div className="casino-header-right">
             {/* Rules button */}
             <div className="casino-rules-wrap">
@@ -72,66 +74,91 @@ export default function CasinoPanel({ token, apples, onApplesChange, open, onClo
         </div>
 
         {/* ── Tabs ── */}
-        <div className="casino-tabs">
-          <button
-            className={`casino-tab ${tab === "blackjack" ? "active" : ""}`}
-            onClick={() => setTab("blackjack")}
-          >🃏 21點</button>
-          <button
-            className={`casino-tab ${tab === "roulette" ? "active" : ""}`}
-            onClick={() => setTab("roulette")}
-          >🎡 輪盤</button>
-          <button
-            className={`casino-tab ${tab === "sicbo" ? "active" : ""}`}
-            onClick={() => setTab("sicbo")}
-          >🎲 骰寶</button>
-          <button
-            className={`casino-tab ${tab === "slot" ? "active" : ""}`}
-            onClick={() => setTab("slot")}
-          >🎰 老虎機</button>
-          <button
-            className={`casino-tab ${tab === "baccarat" ? "active" : ""}`}
-            onClick={() => setTab("baccarat")}
-          >🀄 百家樂</button>
-        </div>
+        {!isPlayground && (
+          <div className="casino-tabs">
+            <button
+              className={`casino-tab ${tab === "blackjack" ? "active" : ""}`}
+              onClick={() => setTab("blackjack")}
+            >🃏 21點</button>
+            <button
+              className={`casino-tab ${tab === "roulette" ? "active" : ""}`}
+              onClick={() => setTab("roulette")}
+            >🎡 輪盤</button>
+            <button
+              className={`casino-tab ${tab === "sicbo" ? "active" : ""}`}
+              onClick={() => setTab("sicbo")}
+            >🎲 骰寶</button>
+            <button
+              className={`casino-tab ${tab === "slot" ? "active" : ""}`}
+              onClick={() => setTab("slot")}
+            >🎰 老虎機</button>
+            <button
+              className={`casino-tab ${tab === "baccarat" ? "active" : ""}`}
+              onClick={() => setTab("baccarat")}
+            >🀄 百家樂</button>
+            {includePusher && (
+              <button
+                className={`casino-tab ${tab === "pusher" ? "active" : ""}`}
+                onClick={() => setTab("pusher")}
+              >🪙 推幣機</button>
+            )}
+          </div>
+        )}
 
         {/* ── Game area ── */}
         <div className="casino-body">
           <Suspense fallback={null}>
-            {tab === "blackjack" && (
-              <BlackjackGame
+            {isPlayground ? (
+              <PusherMachine
                 token={token}
                 apples={apples}
                 onApplesChange={onApplesChange}
               />
-            )}
-            {tab === "roulette" && (
-              <RouletteGame
-                token={token}
-                apples={apples}
-                onApplesChange={onApplesChange}
-              />
-            )}
-            {tab === "sicbo" && (
-              <SicBoGame
-                token={token}
-                apples={apples}
-                onApplesChange={onApplesChange}
-              />
-            )}
-            {tab === "slot" && (
-              <SlotMachine
-                token={token}
-                apples={apples}
-                onApplesChange={onApplesChange}
-              />
-            )}
-            {tab === "baccarat" && (
-              <BaccaratGame
-                token={token}
-                apples={apples}
-                onApplesChange={onApplesChange}
-              />
+            ) : (
+              <>
+                {tab === "blackjack" && (
+                  <BlackjackGame
+                    token={token}
+                    apples={apples}
+                    onApplesChange={onApplesChange}
+                  />
+                )}
+                {tab === "roulette" && (
+                  <RouletteGame
+                    token={token}
+                    apples={apples}
+                    onApplesChange={onApplesChange}
+                  />
+                )}
+                {tab === "sicbo" && (
+                  <SicBoGame
+                    token={token}
+                    apples={apples}
+                    onApplesChange={onApplesChange}
+                  />
+                )}
+                {tab === "slot" && (
+                  <SlotMachine
+                    token={token}
+                    apples={apples}
+                    onApplesChange={onApplesChange}
+                  />
+                )}
+                {tab === "baccarat" && (
+                  <BaccaratGame
+                    token={token}
+                    apples={apples}
+                    onApplesChange={onApplesChange}
+                  />
+                )}
+                {tab === "pusher" && includePusher && (
+                  <PusherMachine
+                    token={token}
+                    apples={apples}
+                    onApplesChange={onApplesChange}
+                  />
+                )}
+              </>
             )}
           </Suspense>
         </div>

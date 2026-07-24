@@ -1,0 +1,429 @@
+/* ── 全局基底 ──────────────────────────────────────────── */
+.pusher-machine {
+  background: radial-gradient(ellipse at center, #0d1a1a 0%, #050d0d 80%);
+  border: 4px solid #4fd0c8;
+  border-radius: 20px;
+  padding: 20px;
+  max-width: 800px;
+  margin: 20px auto;
+  color: #eafffb;
+  font-family: 'Noto Serif JP', 'MS Mincho', serif;
+  box-shadow: 0 0 30px rgba(79, 208, 200, 0.45), inset 0 0 15px rgba(0,0,0,0.8);
+  position: relative;
+}
+
+/* ── 标题区 ──────────────────────────────────────────── */
+.pusher-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.pusher-title {
+  font-size: 2rem;
+  text-shadow: 0 0 10px #00e0d0, 0 0 20px #00b3a6;
+  margin: 0;
+}
+
+/* ── 信息列 ──────────────────────────────────────────── */
+.pusher-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid #4fd0c8;
+  border-radius: 12px;
+  padding: 8px 16px;
+}
+.pusher-balance {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.2rem;
+}
+.pusher-balance img { width: 24px; height: 24px; }
+.pusher-bet-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pusher-bet-controls button {
+  background: #2a8f87;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #fff;
+  cursor: pointer;
+}
+.pusher-bet-controls button:disabled { opacity: 0.4; cursor: default; }
+.pusher-bet-amount {
+  font-size: 1.1rem;
+  min-width: 68px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.pusher-apple-icon {
+  width: 22px;
+  height: 22px;
+  vertical-align: middle;
+  display: inline-block;
+}
+
+/* ── 开放时间 badge ───────────────────────────────────── */
+.pusher-hours-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  border-radius: 20px;
+  padding: 4px 14px;
+  margin: 0 auto 12px;
+  width: fit-content;
+  border: 1px solid;
+}
+.pusher-hours-badge.open   { background: rgba(0,180,80,0.15); border-color: #00b450; color: #7fffa0; }
+.pusher-hours-badge.closed { background: rgba(180,0,0,0.15); border-color: #b40000; color: #ff8888; }
+.pusher-hours-text { color: #ccc; }
+
+/* ── 错误消息 ────────────────────────────────────────── */
+.pusher-error-msg {
+  text-align: center;
+  color: #ff6666;
+  font-size: 0.95rem;
+  margin: 4px 0 8px;
+}
+
+/* ── 幣槽獎池進度條 ─────────────────────────────────────── */
+.pusher-jackpot-bar-wrap {
+  margin: 0 0 14px;
+}
+.pusher-jackpot-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #ffe27a;
+  margin-bottom: 4px;
+}
+.pusher-jackpot-bar {
+  height: 14px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.55);
+  border: 1px solid #4fd0c8;
+  overflow: hidden;
+}
+.pusher-jackpot-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffd700, #ff9d00, #ffd700);
+  background-size: 200% 100%;
+  animation: jackpotShimmer 2s linear infinite;
+  transition: width 0.6s ease;
+}
+@keyframes jackpotShimmer {
+  0%   { background-position: 0% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ── 硬幣（純 CSS 繪製，不依賴外部圖檔）───────────────────── */
+.coin {
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 26%, #fff8d6 0%, #ffe27a 20%, #ffc93c 48%, #d99a00 75%, #8a5b00 100%);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255,255,255,0.55),
+    inset 0 -2px 3px rgba(0,0,0,0.35),
+    0 1px 2px rgba(0,0,0,0.45);
+}
+.coin::after {
+  content: "";
+  position: absolute;
+  inset: 18%;
+  border-radius: 50%;
+  border: 1px dashed rgba(255,255,255,0.4);
+}
+.pusher-placed-coin {
+  position: absolute;
+}
+
+/* ── 機台外框 ────────────────────────────────────────── */
+.pusher-cabinet {
+  background: linear-gradient(180deg, #6e0d0d, #3a0505);
+  border: 4px solid #ffd700;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.7), 0 4px 14px rgba(0,0,0,0.6);
+  margin-bottom: 14px;
+}
+
+/* ── 頂部跑馬燈燈泡 ──────────────────────────────────── */
+.pusher-marquee {
+  display: flex;
+  justify-content: space-evenly;
+  padding: 2px 4px 8px;
+}
+.pusher-bulb {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fff2a8;
+  box-shadow: 0 0 6px 2px #ffd700;
+  animation: bulbBlink 1.4s ease-in-out infinite alternate;
+}
+@keyframes bulbBlink {
+  from { opacity: 0.35; }
+  to   { opacity: 1; }
+}
+
+/* ── 投幣口 ──────────────────────────────────────────── */
+.pusher-chute-row {
+  position: relative;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+}
+.pusher-chute-slot {
+  width: 70px;
+  height: 10px;
+  margin-top: 4px;
+  background: #111;
+  border-radius: 6px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.08);
+}
+.pusher-drop-coin {
+  position: absolute;
+  top: -26px;
+  opacity: 0;
+}
+.pusher-drop-coin.dropping {
+  animation: coinDropFall 0.55s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+}
+@keyframes coinDropFall {
+  0%   { top: -26px; opacity: 1; }
+  80%  { top: 26px;  opacity: 1; }
+  100% { top: 30px;  opacity: 0; }
+}
+
+/* ── 推幣台（帶透視傾斜，模擬俯視角）───────────────────── */
+.pusher-playfield {
+  position: relative;
+  perspective: 700px;
+  padding: 4px 6px 10px;
+}
+.pusher-shelf-wrap {
+  position: relative;
+  height: 96px;
+  overflow: hidden;
+  border-radius: 6px 6px 0 0;
+  background: repeating-linear-gradient(45deg, #143a34, #143a34 10px, #123029 10px, #123029 20px);
+  border: 2px solid #1e5a50;
+  border-bottom: none;
+  transform: perspective(700px) rotateX(8deg);
+  transform-origin: bottom;
+}
+.pusher-shelf {
+  position: absolute;
+  left: 3%;
+  right: 3%;
+  top: -6px;
+  bottom: -6px;
+  background: linear-gradient(180deg, #d8d8d8, #9a9a9a);
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+  animation: shelfIdle 2.6s ease-in-out infinite alternate;
+}
+.pusher-shelf.pushing {
+  animation: shelfStroke 0.55s ease-in-out;
+}
+@keyframes shelfIdle {
+  from { transform: translateY(-4px); }
+  to   { transform: translateY(4px); }
+}
+@keyframes shelfStroke {
+  0%   { transform: translateY(-4px); }
+  45%  { transform: translateY(11px); }
+  100% { transform: translateY(-2px); }
+}
+
+.pusher-base {
+  position: relative;
+  height: 118px;
+  border-radius: 0 0 6px 6px;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.2) 0%, transparent 20%),
+    repeating-linear-gradient(45deg, #0e3d33, #0e3d33 10px, #0c342c 10px, #0c342c 20px);
+  border: 2px solid #1e5a50;
+  overflow: hidden;
+}
+.pusher-base.jolt {
+  animation: baseJolt 0.5s ease-in-out 0.22s;
+}
+@keyframes baseJolt {
+  0%   { transform: translateY(0); }
+  45%  { transform: translateY(3px); }
+  100% { transform: translateY(0); }
+}
+.pusher-edge-lip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #ffd700, #fff3b0, #ffd700);
+  box-shadow: 0 0 10px rgba(255,215,0,0.7);
+}
+
+/* ── 中獎落幣動畫（從邊緣掉落）───────────────────────────── */
+.pusher-fall-zone {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 70px;
+  overflow: visible;
+  pointer-events: none;
+}
+.pusher-falling-coin {
+  position: absolute;
+  top: -12px;
+  animation: coinFall 1.15s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+}
+@keyframes coinFall {
+  0%   { top: -12px; opacity: 1; transform: translateX(0) rotate(0deg); }
+  100% { top: 78px;  opacity: 0; transform: translateX(var(--drift, 0px)) rotate(340deg); }
+}
+
+/* ── 按钮 ────────────────────────────────────────────── */
+.pusher-push-btn {
+  display: block;
+  margin: 10px auto 0;
+  padding: 10px 30px;
+  background: linear-gradient(180deg, #2a8f87, #1c635d);
+  border: none;
+  border-radius: 30px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 1px 1px 2px black;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+.pusher-push-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ── 赢分弹窗 ────────────────────────────────────────── */
+.pusher-win-popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+.pusher-win-popup .popup-content {
+  background: radial-gradient(circle, #2a8f87, #0c342c);
+  border: 3px solid #4fd0c8;
+  border-radius: 20px;
+  padding: 30px;
+  text-align: center;
+  animation: popIn 0.5s ease;
+}
+.pusher-win-popup .popup-title {
+  font-size: 1.6rem;
+  color: #ffe27a;
+  margin-bottom: 15px;
+}
+.pusher-win-popup .popup-amount {
+  font-size: 2.2rem;
+  color: #fff;
+  text-shadow: 0 0 10px #4fd0c8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+@keyframes popIn {
+  0%   { transform: scale(0); opacity: 0; }
+  80%  { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ── 大獎（幣槽爆滿）彈窗 ────────────────────────────── */
+.pusher-jackpot-popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.jackpot-popup-content {
+  background: radial-gradient(circle, #ffb300, #7a3d00);
+  border: 4px solid #ffd700;
+  border-radius: 24px;
+  padding: 36px 44px;
+  text-align: center;
+  animation: jackpotPopIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 60px rgba(255,215,0,0.7);
+}
+.jackpot-popup-title {
+  font-size: 1.8rem;
+  color: #fff;
+  text-shadow: 0 0 10px #ff8c00;
+  margin-bottom: 18px;
+}
+.jackpot-popup-amount {
+  font-size: 2.8rem;
+  color: #fff9e0;
+  text-shadow: 0 0 14px gold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+@keyframes jackpotPopIn {
+  0%   { transform: scale(0) rotate(-8deg); opacity: 0; }
+  70%  { transform: scale(1.15) rotate(3deg); }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+/* ── 其他玩家中獎提示 ──────────────────────────────────── */
+.pusher-toast {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20, 20, 20, 0.9);
+  border: 1px solid #ffd700;
+  color: #ffe27a;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  z-index: 50;
+  white-space: nowrap;
+  animation: popIn 0.3s ease;
+}
+
+/* ── 加载 / 关闭状态 ─────────────────────────────────── */
+.pusher-loading {
+  text-align: center;
+  padding: 40px;
+  color: #eafffb;
+  font-size: 1.1rem;
+}
+.pusher-closed {
+  text-align: center;
+  padding: 40px 20px;
+  color: #eafffb;
+}
+.pusher-closed-icon { font-size: 3rem; margin-bottom: 10px; }
+.pusher-closed-text { font-size: 1.2rem; color: #ffcc66; }

@@ -4,6 +4,7 @@ import { RN } from "../../shared/roomConfig";
 
 const DEFAULT = {
   leaderboard_enabled:  false,
+  new_section:          false,
   show_ip:              true,
   daily_login_reward:   1,
   singing_reward:       2,
@@ -88,6 +89,17 @@ const DEFAULT = {
   baccarat_close_minute:     0,
   baccarat_max_bet:          200,
   baccarat_house_edge:       100,
+  pusher_enabled:            true,
+  pusher_open_hour:          0,
+  pusher_open_minute:        0,
+  pusher_close_hour:         24,
+  pusher_close_minute:       0,
+  pusher_max_bet:            50,
+  pusher_house_edge:         100,
+  pusher_fill_per_bet:       5,
+  pusher_capacity:           1000,
+  pusher_jackpot_rate:       30,
+  pusher_jackpot_payout_pct: 60,
   currency_name:             "金蘋果",
   currency_emoji:            "🍎",
 };
@@ -171,6 +183,13 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   <input type="checkbox" checked={!!settings.leaderboard_enabled}
                     onChange={e => setBool("leaderboard_enabled", e.target.checked)} />
                   {" "}啟用排行榜
+                </label>
+              </Row>
+              <Row label="賣場／遊樂場分頁">
+                <label className="toggle-label">
+                  <input type="checkbox" checked={!!settings.new_section}
+                    onChange={e => setBool("new_section", e.target.checked)} />
+                  {" "}啟用後新增獨立的「賣場」「遊樂場」按鈕（遊樂場僅推幣機，娛樂城移除推幣機）
                 </label>
               </Row>
             </section>
@@ -702,6 +721,76 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   value={settings.baccarat_house_edge}
                   onChange={e => setInt("baccarat_house_edge", e.target.value)} />
                 <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
+              </Row>
+            </section>
+
+            {/* ─── 娛樂城：推幣機 ──────────────────────────────── */}
+            <section className="settings-section">
+              <h4>
+                🪙 娛樂城：推幣機
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.pusher_enabled}
+                    onChange={e => setBool("pusher_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+
+              <Row label="開放時間（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                  <input type="number" min={0} max={23} style={{ width: 56 }}
+                    value={settings.pusher_open_hour}
+                    onChange={e => setInt("pusher_open_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.pusher_open_minute}
+                    onChange={e => setInt("pusher_open_minute", e.target.value)} />
+                  <span>分 ～</span>
+                  <input type="number" min={0} max={24} style={{ width: 56 }}
+                    value={settings.pusher_close_hour}
+                    onChange={e => setInt("pusher_close_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.pusher_close_minute}
+                    onChange={e => setInt("pusher_close_minute", e.target.value)} />
+                  <span>分</span>
+                  <span style={{ color: "#aaa", fontSize: "0.8rem" }}>（24時 = 午夜）</span>
+                </div>
+              </Row>
+              <Row label="單次投幣上限">
+                <input type="number" min={1} max={9999} style={{ width: 80 }}
+                  value={settings.pusher_max_bet}
+                  onChange={e => setInt("pusher_max_bet", e.target.value)} />
+                <span className="field-note">個{currencyName}</span>
+              </Row>
+              <Row label="勝率偏向設定">
+                <input type="number" min={1} max={200} style={{ width: 80 }}
+                  value={settings.pusher_house_edge}
+                  onChange={e => setInt("pusher_house_edge", e.target.value)} />
+                <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家（影響立即小獎）</span>
+              </Row>
+              <Row label="幣槽容量">
+                <input type="number" min={10} max={100000} style={{ width: 90 }}
+                  value={settings.pusher_capacity}
+                  onChange={e => setInt("pusher_capacity", e.target.value)} />
+                <span className="field-note">累積達此值即觸發大量落幣</span>
+              </Row>
+              <Row label="每投 1 顆增加幣槽">
+                <input type="number" min={1} max={1000} style={{ width: 80 }}
+                  value={settings.pusher_fill_per_bet}
+                  onChange={e => setInt("pusher_fill_per_bet", e.target.value)} />
+                <span className="field-note">單位（決定幣槽填滿速度）</span>
+              </Row>
+              <Row label="獎池提撥比例">
+                <input type="number" min={0} max={100} style={{ width: 80 }}
+                  value={settings.pusher_jackpot_rate}
+                  onChange={e => setInt("pusher_jackpot_rate", e.target.value)} />
+                <span className="field-note">% 的下注金額會存入大獎池</span>
+              </Row>
+              <Row label="大獎池發放比例">
+                <input type="number" min={1} max={100} style={{ width: 80 }}
+                  value={settings.pusher_jackpot_payout_pct}
+                  onChange={e => setInt("pusher_jackpot_payout_pct", e.target.value)} />
+                <span className="field-note">% 觸發時發放，其餘留在池中滾存</span>
               </Row>
             </section>
 
