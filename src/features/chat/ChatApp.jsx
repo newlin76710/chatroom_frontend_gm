@@ -921,35 +921,39 @@ export default function ChatApp() {
                     當前{roomConfig.currency_name}數量：{apples}
                   </div>
 
-                  <select value={target} onChange={(e) => setTarget(e.target.value)}>
-                    <option value="">選擇對象</option>
-                    {userList
-                      .filter((u) => u.name !== name && u.type === "account")
-                      .map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
-                  </select>
+                  {!roomConfig.new_section && (
+                    <>
+                      <select value={target} onChange={(e) => setTarget(e.target.value)}>
+                        <option value="">選擇對象</option>
+                        {userList
+                          .filter((u) => u.name !== name && u.type === "account")
+                          .map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
+                      </select>
 
-                  <input
-                    type="number"
-                    min={1}
-                    max={(level < ANL && perTransferLimit > 0) ? Math.min(apples, perTransferLimit) : apples}
-                    value={appleAmount}
-                    onChange={(e) => {
-                      const maxVal = (level < ANL && perTransferLimit > 0) ? Math.min(apples, perTransferLimit) : apples;
-                      setAppleAmount(Math.max(1, Math.min(maxVal, Math.floor(Number(e.target.value)))));
-                    }}
-                    className="apple-amount-input"
-                  />
+                      <input
+                        type="number"
+                        min={1}
+                        max={(level < ANL && perTransferLimit > 0) ? Math.min(apples, perTransferLimit) : apples}
+                        value={appleAmount}
+                        onChange={(e) => {
+                          const maxVal = (level < ANL && perTransferLimit > 0) ? Math.min(apples, perTransferLimit) : apples;
+                          setAppleAmount(Math.max(1, Math.min(maxVal, Math.floor(Number(e.target.value)))));
+                        }}
+                        className="apple-amount-input"
+                      />
 
-                  <button disabled={sendingApple} onClick={transferApple} className="apple-send-btn">
-                    送{roomConfig.currency_name}{" "}
-                    <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} />
-                  </button>
+                      <button disabled={sendingApple} onClick={transferApple} className="apple-send-btn">
+                        送{roomConfig.currency_name}{" "}
+                        <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} />
+                      </button>
 
-                  {level >= AML && roomConfig.open_peony && (
-                    <button disabled={sendingPeony} onClick={sendPeony} className="apple-send-btn" style={{ backgroundColor: "#87CEEB" }}>
-                      送金牡丹{" "}
-                      <img src="/gifts/peony.gif" alt="金牡丹" style={{ width: 20, height: 20, marginTop: -5 }} />
-                    </button>
+                      {level >= AML && roomConfig.open_peony && (
+                        <button disabled={sendingPeony} onClick={sendPeony} className="apple-send-btn" style={{ backgroundColor: "#87CEEB" }}>
+                          送金牡丹{" "}
+                          <img src="/gifts/peony.gif" alt="金牡丹" style={{ width: 20, height: 20, marginTop: -5 }} />
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               )}
@@ -1040,7 +1044,7 @@ export default function ChatApp() {
 
       {/* 撈金蘋果遊戲覆蓋層（全螢幕，有遊戲時才渲染） */}
       <DeferredPanel>
-        {NF && (
+        {NF && !roomConfig.new_section && (
           <GoldAppleGame
             socket={socket}
             token={token}
@@ -1052,7 +1056,7 @@ export default function ChatApp() {
 
       {/* 打金蘋果遊戲（打地鼠風格，有遊戲時才渲染） */}
       <DeferredPanel>
-        {NF && (
+        {NF && !roomConfig.new_section && (
           <WhackAppleGame
             socket={socket}
             token={token}
@@ -1064,7 +1068,7 @@ export default function ChatApp() {
 
       {/* 夾蘋果機遊戲（夾娃娃機風格，有遊戲時才渲染） */}
       <DeferredPanel>
-        {NF && (
+        {NF && !roomConfig.new_section && (
           <ClawMachineGame
             socket={socket}
             token={token}

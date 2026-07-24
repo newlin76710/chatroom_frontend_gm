@@ -1,429 +1,319 @@
-/* ── 全局基底 ──────────────────────────────────────────── */
-.pusher-machine {
-  background: radial-gradient(ellipse at center, #0d1a1a 0%, #050d0d 80%);
-  border: 4px solid #4fd0c8;
-  border-radius: 20px;
-  padding: 20px;
-  max-width: 800px;
-  margin: 20px auto;
-  color: #eafffb;
-  font-family: 'Noto Serif JP', 'MS Mincho', serif;
-  box-shadow: 0 0 30px rgba(79, 208, 200, 0.45), inset 0 0 15px rgba(0,0,0,0.8);
+.pusher-shell {
   position: relative;
+  max-width: 1040px;
+  margin: 0 auto;
+  color: #f8f4e3;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-/* ── 标题区 ──────────────────────────────────────────── */
-.pusher-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-}
-.pusher-title {
-  font-size: 2rem;
-  text-shadow: 0 0 10px #00e0d0, 0 0 20px #00b3a6;
-  margin: 0;
+.pusher-empty {
+  min-height: 320px;
+  display: grid;
+  place-items: center;
+  text-align: center;
 }
 
-/* ── 信息列 ──────────────────────────────────────────── */
-.pusher-info {
+.pusher-topbar {
   display: flex;
+  align-items: flex-end;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  background: rgba(0,0,0,0.5);
-  border: 1px solid #4fd0c8;
-  border-radius: 12px;
-  padding: 8px 16px;
+  gap: 16px;
+  padding: 10px 2px 14px;
 }
+
+.pusher-topbar h1 {
+  margin: 0 0 6px;
+  font-size: clamp(1.25rem, 2.7vw, 2rem);
+  letter-spacing: 0;
+  color: #fff0b8;
+  text-shadow: 0 0 18px rgba(255, 206, 93, 0.55);
+}
+
+.pusher-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  font-size: 0.78rem;
+}
+
+.pusher-status.is-open {
+  color: #8dffc7;
+  background: rgba(15, 137, 79, 0.18);
+}
+
+.pusher-status.is-closed {
+  color: #ffadad;
+  background: rgba(160, 45, 45, 0.18);
+}
+
+.pusher-bank {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  color: #ffd86b;
+  font-weight: 800;
+  font-size: 0.88rem;
+}
+
+.pusher-bank span {
+  padding: 7px 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 216, 107, 0.32);
+  border-radius: 8px;
+}
+
+.pusher-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) 250px;
+  gap: 16px;
+  align-items: start;
+}
+
+.pusher-stage {
+  position: relative;
+  min-height: 520px;
+  background: linear-gradient(180deg, #521111, #240707);
+  border: 3px solid #dfbd57;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: inset 0 0 36px rgba(0, 0, 0, 0.65), 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+.pusher-phaser-host {
+  width: 100%;
+  min-height: 520px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #111817;
+  touch-action: none;
+}
+
+.pusher-phaser-host canvas {
+  max-width: 100%;
+  max-height: min(72vh, 760px);
+  border-radius: 4px;
+  touch-action: none;
+}
+
+.pusher-stage-lock {
+  position: absolute;
+  inset: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.58);
+  color: #ffdf91;
+  font-size: 1.25rem;
+  font-weight: 900;
+  border-radius: 6px;
+}
+
+.pusher-controls {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  background: rgba(5, 10, 12, 0.78);
+  border: 1px solid rgba(255, 216, 107, 0.35);
+  border-radius: 8px;
+  box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.45);
+}
+
 .pusher-balance {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 1.2rem;
+  gap: 8px;
+  padding: 9px 10px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
 }
-.pusher-balance img { width: 24px; height: 24px; }
-.pusher-bet-controls {
-  display: flex;
+
+.pusher-balance img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.pusher-balance span {
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.pusher-balance small {
+  color: #cabf9b;
+}
+
+.pusher-control-group {
+  display: grid;
+  gap: 8px;
+}
+
+.pusher-control-group label {
+  color: #e9dca9;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.pusher-stepper {
+  display: grid;
+  grid-template-columns: 42px 1fr 42px;
   align-items: center;
   gap: 8px;
 }
-.pusher-bet-controls button {
-  background: #2a8f87;
-  border: none;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  font-weight: bold;
-  font-size: 1.2rem;
-  color: #fff;
-  cursor: pointer;
-}
-.pusher-bet-controls button:disabled { opacity: 0.4; cursor: default; }
-.pusher-bet-amount {
-  font-size: 1.1rem;
-  min-width: 68px;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-.pusher-apple-icon {
-  width: 22px;
-  height: 22px;
-  vertical-align: middle;
-  display: inline-block;
-}
 
-/* ── 开放时间 badge ───────────────────────────────────── */
-.pusher-hours-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  font-size: 0.85rem;
-  border-radius: 20px;
-  padding: 4px 14px;
-  margin: 0 auto 12px;
-  width: fit-content;
-  border: 1px solid;
-}
-.pusher-hours-badge.open   { background: rgba(0,180,80,0.15); border-color: #00b450; color: #7fffa0; }
-.pusher-hours-badge.closed { background: rgba(180,0,0,0.15); border-color: #b40000; color: #ff8888; }
-.pusher-hours-text { color: #ccc; }
-
-/* ── 错误消息 ────────────────────────────────────────── */
-.pusher-error-msg {
-  text-align: center;
-  color: #ff6666;
-  font-size: 0.95rem;
-  margin: 4px 0 8px;
-}
-
-/* ── 幣槽獎池進度條 ─────────────────────────────────────── */
-.pusher-jackpot-bar-wrap {
-  margin: 0 0 14px;
-}
-.pusher-jackpot-label {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.85rem;
-  color: #ffe27a;
-  margin-bottom: 4px;
-}
-.pusher-jackpot-bar {
-  height: 14px;
+.pusher-stepper button,
+.pusher-launch {
+  min-height: 42px;
+  border: 1px solid rgba(255, 224, 135, 0.5);
   border-radius: 8px;
-  background: rgba(0,0,0,0.55);
-  border: 1px solid #4fd0c8;
-  overflow: hidden;
-}
-.pusher-jackpot-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #ffd700, #ff9d00, #ffd700);
-  background-size: 200% 100%;
-  animation: jackpotShimmer 2s linear infinite;
-  transition: width 0.6s ease;
-}
-@keyframes jackpotShimmer {
-  0%   { background-position: 0% 0; }
-  100% { background-position: 200% 0; }
-}
-
-/* ── 硬幣（純 CSS 繪製，不依賴外部圖檔）───────────────────── */
-.coin {
-  border-radius: 50%;
-  background: radial-gradient(circle at 32% 26%, #fff8d6 0%, #ffe27a 20%, #ffc93c 48%, #d99a00 75%, #8a5b00 100%);
-  box-shadow:
-    inset 0 0 0 1.5px rgba(255,255,255,0.55),
-    inset 0 -2px 3px rgba(0,0,0,0.35),
-    0 1px 2px rgba(0,0,0,0.45);
-}
-.coin::after {
-  content: "";
-  position: absolute;
-  inset: 18%;
-  border-radius: 50%;
-  border: 1px dashed rgba(255,255,255,0.4);
-}
-.pusher-placed-coin {
-  position: absolute;
-}
-
-/* ── 機台外框 ────────────────────────────────────────── */
-.pusher-cabinet {
-  background: linear-gradient(180deg, #6e0d0d, #3a0505);
-  border: 4px solid #ffd700;
-  border-radius: 12px;
-  padding: 10px;
-  box-shadow: inset 0 0 20px rgba(0,0,0,0.7), 0 4px 14px rgba(0,0,0,0.6);
-  margin-bottom: 14px;
-}
-
-/* ── 頂部跑馬燈燈泡 ──────────────────────────────────── */
-.pusher-marquee {
-  display: flex;
-  justify-content: space-evenly;
-  padding: 2px 4px 8px;
-}
-.pusher-bulb {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #fff2a8;
-  box-shadow: 0 0 6px 2px #ffd700;
-  animation: bulbBlink 1.4s ease-in-out infinite alternate;
-}
-@keyframes bulbBlink {
-  from { opacity: 0.35; }
-  to   { opacity: 1; }
-}
-
-/* ── 投幣口 ──────────────────────────────────────────── */
-.pusher-chute-row {
-  position: relative;
-  height: 30px;
-  display: flex;
-  justify-content: center;
-}
-.pusher-chute-slot {
-  width: 70px;
-  height: 10px;
-  margin-top: 4px;
-  background: #111;
-  border-radius: 6px;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.08);
-}
-.pusher-drop-coin {
-  position: absolute;
-  top: -26px;
-  opacity: 0;
-}
-.pusher-drop-coin.dropping {
-  animation: coinDropFall 0.55s cubic-bezier(0.55, 0, 1, 0.45) forwards;
-}
-@keyframes coinDropFall {
-  0%   { top: -26px; opacity: 1; }
-  80%  { top: 26px;  opacity: 1; }
-  100% { top: 30px;  opacity: 0; }
-}
-
-/* ── 推幣台（帶透視傾斜，模擬俯視角）───────────────────── */
-.pusher-playfield {
-  position: relative;
-  perspective: 700px;
-  padding: 4px 6px 10px;
-}
-.pusher-shelf-wrap {
-  position: relative;
-  height: 96px;
-  overflow: hidden;
-  border-radius: 6px 6px 0 0;
-  background: repeating-linear-gradient(45deg, #143a34, #143a34 10px, #123029 10px, #123029 20px);
-  border: 2px solid #1e5a50;
-  border-bottom: none;
-  transform: perspective(700px) rotateX(8deg);
-  transform-origin: bottom;
-}
-.pusher-shelf {
-  position: absolute;
-  left: 3%;
-  right: 3%;
-  top: -6px;
-  bottom: -6px;
-  background: linear-gradient(180deg, #d8d8d8, #9a9a9a);
-  border-radius: 4px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-  animation: shelfIdle 2.6s ease-in-out infinite alternate;
-}
-.pusher-shelf.pushing {
-  animation: shelfStroke 0.55s ease-in-out;
-}
-@keyframes shelfIdle {
-  from { transform: translateY(-4px); }
-  to   { transform: translateY(4px); }
-}
-@keyframes shelfStroke {
-  0%   { transform: translateY(-4px); }
-  45%  { transform: translateY(11px); }
-  100% { transform: translateY(-2px); }
-}
-
-.pusher-base {
-  position: relative;
-  height: 118px;
-  border-radius: 0 0 6px 6px;
-  background:
-    linear-gradient(180deg, rgba(0,0,0,0.2) 0%, transparent 20%),
-    repeating-linear-gradient(45deg, #0e3d33, #0e3d33 10px, #0c342c 10px, #0c342c 20px);
-  border: 2px solid #1e5a50;
-  overflow: hidden;
-}
-.pusher-base.jolt {
-  animation: baseJolt 0.5s ease-in-out 0.22s;
-}
-@keyframes baseJolt {
-  0%   { transform: translateY(0); }
-  45%  { transform: translateY(3px); }
-  100% { transform: translateY(0); }
-}
-.pusher-edge-lip {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 6px;
-  background: linear-gradient(90deg, #ffd700, #fff3b0, #ffd700);
-  box-shadow: 0 0 10px rgba(255,215,0,0.7);
-}
-
-/* ── 中獎落幣動畫（從邊緣掉落）───────────────────────────── */
-.pusher-fall-zone {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -4px;
-  height: 70px;
-  overflow: visible;
-  pointer-events: none;
-}
-.pusher-falling-coin {
-  position: absolute;
-  top: -12px;
-  animation: coinFall 1.15s cubic-bezier(0.55, 0, 1, 0.45) forwards;
-}
-@keyframes coinFall {
-  0%   { top: -12px; opacity: 1; transform: translateX(0) rotate(0deg); }
-  100% { top: 78px;  opacity: 0; transform: translateX(var(--drift, 0px)) rotate(340deg); }
-}
-
-/* ── 按钮 ────────────────────────────────────────────── */
-.pusher-push-btn {
-  display: block;
-  margin: 10px auto 0;
-  padding: 10px 30px;
-  background: linear-gradient(180deg, #2a8f87, #1c635d);
-  border: none;
-  border-radius: 30px;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #fff;
-  text-shadow: 1px 1px 2px black;
+  background: linear-gradient(180deg, #ffe184, #a75e16);
+  color: #201205;
+  font-size: 1rem;
+  font-weight: 900;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
-.pusher-push-btn:disabled {
-  opacity: 0.5;
+
+.pusher-stepper button:disabled,
+.pusher-launch:disabled {
+  opacity: 0.45;
   cursor: default;
 }
 
-/* ── 赢分弹窗 ────────────────────────────────────────── */
-.pusher-win-popup {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-}
-.pusher-win-popup .popup-content {
-  background: radial-gradient(circle, #2a8f87, #0c342c);
-  border: 3px solid #4fd0c8;
-  border-radius: 20px;
-  padding: 30px;
-  text-align: center;
-  animation: popIn 0.5s ease;
-}
-.pusher-win-popup .popup-title {
-  font-size: 1.6rem;
-  color: #ffe27a;
-  margin-bottom: 15px;
-}
-.pusher-win-popup .popup-amount {
-  font-size: 2.2rem;
-  color: #fff;
-  text-shadow: 0 0 10px #4fd0c8;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-@keyframes popIn {
-  0%   { transform: scale(0); opacity: 0; }
-  80%  { transform: scale(1.1); }
-  100% { transform: scale(1); opacity: 1; }
+.pusher-stepper strong {
+  min-height: 42px;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.36);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: #fff4bd;
+  font-size: 1.15rem;
 }
 
-/* ── 大獎（幣槽爆滿）彈窗 ────────────────────────────── */
+.pusher-control-group input[type="range"] {
+  width: 100%;
+  accent-color: #ffd15c;
+}
+
+.pusher-launch {
+  min-height: 48px;
+  font-size: 1.15rem;
+}
+
+.pusher-tips {
+  color: #cfc5a6;
+  line-height: 1.6;
+  font-size: 0.82rem;
+}
+
+.pusher-toast {
+  position: absolute;
+  top: 74px;
+  left: 50%;
+  z-index: 40;
+  transform: translateX(-50%);
+  max-width: min(420px, calc(100% - 24px));
+  padding: 9px 14px;
+  border: 1px solid rgba(255, 216, 107, 0.55);
+  border-radius: 8px;
+  background: rgba(15, 13, 8, 0.93);
+  color: #ffe9a3;
+  font-size: 0.88rem;
+  text-align: center;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.38);
+}
+
 .pusher-jackpot-popup {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-.jackpot-popup-content {
-  background: radial-gradient(circle, #ffb300, #7a3d00);
-  border: 4px solid #ffd700;
-  border-radius: 24px;
-  padding: 36px 44px;
-  text-align: center;
-  animation: jackpotPopIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 0 60px rgba(255,215,0,0.7);
-}
-.jackpot-popup-title {
-  font-size: 1.8rem;
-  color: #fff;
-  text-shadow: 0 0 10px #ff8c00;
-  margin-bottom: 18px;
-}
-.jackpot-popup-amount {
-  font-size: 2.8rem;
-  color: #fff9e0;
-  text-shadow: 0 0 14px gold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-@keyframes jackpotPopIn {
-  0%   { transform: scale(0) rotate(-8deg); opacity: 0; }
-  70%  { transform: scale(1.15) rotate(3deg); }
-  100% { transform: scale(1) rotate(0); opacity: 1; }
+  z-index: 1600;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.74);
 }
 
-/* ── 其他玩家中獎提示 ──────────────────────────────────── */
-.pusher-toast {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(20, 20, 20, 0.9);
-  border: 1px solid #ffd700;
-  color: #ffe27a;
-  padding: 6px 16px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  z-index: 50;
-  white-space: nowrap;
-  animation: popIn 0.3s ease;
+.pusher-jackpot-card {
+  min-width: 280px;
+  padding: 34px 42px;
+  text-align: center;
+  background: radial-gradient(circle at 50% 20%, #fff5a8, #db8f12 52%, #611f08);
+  border: 4px solid #ffe184;
+  border-radius: 8px;
+  box-shadow: 0 0 60px rgba(255, 216, 107, 0.65);
+  animation: pusher-jackpot-pop 0.48s cubic-bezier(0.2, 1.4, 0.34, 1);
 }
 
-/* ── 加载 / 关闭状态 ─────────────────────────────────── */
-.pusher-loading {
-  text-align: center;
-  padding: 40px;
-  color: #eafffb;
-  font-size: 1.1rem;
+.pusher-jackpot-card h2 {
+  margin: 0 0 8px;
+  color: #531002;
+  font-size: 2.2rem;
 }
-.pusher-closed {
-  text-align: center;
-  padding: 40px 20px;
-  color: #eafffb;
+
+.pusher-jackpot-card strong {
+  display: block;
+  color: #ffffff;
+  font-size: 3rem;
+  line-height: 1;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.5);
 }
-.pusher-closed-icon { font-size: 3rem; margin-bottom: 10px; }
-.pusher-closed-text { font-size: 1.2rem; color: #ffcc66; }
+
+.pusher-jackpot-card span {
+  color: #fff5d6;
+  font-weight: 900;
+}
+
+@keyframes pusher-jackpot-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 760px) {
+  .pusher-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .pusher-bank {
+    justify-content: flex-start;
+  }
+
+  .pusher-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .pusher-stage,
+  .pusher-phaser-host {
+    min-height: 430px;
+  }
+
+  .pusher-controls {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pusher-balance,
+  .pusher-tips,
+  .pusher-launch {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 460px) {
+  .pusher-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .pusher-stage,
+  .pusher-phaser-host {
+    min-height: 360px;
+  }
+}

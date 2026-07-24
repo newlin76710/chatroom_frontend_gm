@@ -95,11 +95,10 @@ const DEFAULT = {
   pusher_close_hour:         24,
   pusher_close_minute:       0,
   pusher_max_bet:            50,
-  pusher_house_edge:         100,
-  pusher_fill_per_bet:       5,
-  pusher_capacity:           1000,
+  pusher_special_chance_pct: 6,
   pusher_jackpot_rate:       30,
   pusher_jackpot_payout_pct: 60,
+  pusher_plate_speed:        "normal",
   currency_name:             "金蘋果",
   currency_emoji:            "🍎",
 };
@@ -762,35 +761,31 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   onChange={e => setInt("pusher_max_bet", e.target.value)} />
                 <span className="field-note">個{currencyName}</span>
               </Row>
-              <Row label="勝率偏向設定">
-                <input type="number" min={1} max={200} style={{ width: 80 }}
-                  value={settings.pusher_house_edge}
-                  onChange={e => setInt("pusher_house_edge", e.target.value)} />
-                <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家（影響立即小獎）</span>
-              </Row>
-              <Row label="幣槽容量">
-                <input type="number" min={10} max={100000} style={{ width: 90 }}
-                  value={settings.pusher_capacity}
-                  onChange={e => setInt("pusher_capacity", e.target.value)} />
-                <span className="field-note">累積達此值即觸發大量落幣</span>
-              </Row>
-              <Row label="每投 1 顆增加幣槽">
-                <input type="number" min={1} max={1000} style={{ width: 80 }}
-                  value={settings.pusher_fill_per_bet}
-                  onChange={e => setInt("pusher_fill_per_bet", e.target.value)} />
-                <span className="field-note">單位（決定幣槽填滿速度）</span>
+              <Row label="特殊物機率">
+                <input type="number" min={0} max={100} style={{ width: 80 }}
+                  value={settings.pusher_special_chance_pct}
+                  onChange={e => setInt("pusher_special_chance_pct", e.target.value)} />
+                <span className="field-note">% 投出的硬幣是鑽石/飛機/跑車/神秘大獎，而非普通幣</span>
               </Row>
               <Row label="獎池提撥比例">
                 <input type="number" min={0} max={100} style={{ width: 80 }}
                   value={settings.pusher_jackpot_rate}
                   onChange={e => setInt("pusher_jackpot_rate", e.target.value)} />
-                <span className="field-note">% 的下注金額會存入大獎池</span>
+                <span className="field-note">% 的下注金額會存入大獎池（神秘大獎推下去才可領取）</span>
               </Row>
               <Row label="大獎池發放比例">
                 <input type="number" min={1} max={100} style={{ width: 80 }}
                   value={settings.pusher_jackpot_payout_pct}
                   onChange={e => setInt("pusher_jackpot_payout_pct", e.target.value)} />
                 <span className="field-note">% 觸發時發放，其餘留在池中滾存</span>
+              </Row>
+              <Row label="推板速度">
+                <select value={settings.pusher_plate_speed}
+                  onChange={e => setSettings(p => ({ ...p, pusher_plate_speed: e.target.value }))}>
+                  <option value="slow">慢</option>
+                  <option value="normal">正常</option>
+                  <option value="fast">快</option>
+                </select>
               </Row>
             </section>
 
