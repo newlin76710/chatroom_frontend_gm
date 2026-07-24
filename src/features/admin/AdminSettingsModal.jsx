@@ -99,6 +99,17 @@ const DEFAULT = {
   pusher_jackpot_rate:       30,
   pusher_jackpot_payout_pct: 60,
   pusher_plate_speed:        "normal",
+  race_enabled:              true,
+  race_open_hour:            0,
+  race_open_minute:          0,
+  race_close_hour:           24,
+  race_close_minute:         0,
+  race_max_bet:              50,
+  race_house_edge:           100,
+  zombie_enabled:            true,
+  zombie_entry_cost:         10,
+  zombie_level_reward:       15,
+  zombie_daily_limit:        3,
   currency_name:             "金蘋果",
   currency_emoji:            "🍎",
 };
@@ -177,20 +188,15 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             {/* ─── 功能顯示 ──────────────────────────────────────── */}
             <section className="settings-section">
               <h4>功能顯示</h4>
-              <Row label="排行榜按鈕">
-                <label className="toggle-label">
-                  <input type="checkbox" checked={!!settings.leaderboard_enabled}
-                    onChange={e => setBool("leaderboard_enabled", e.target.checked)} />
-                  {" "}啟用排行榜
-                </label>
-              </Row>
-              <Row label="賣場／遊樂場分頁">
-                <label className="toggle-label">
-                  <input type="checkbox" checked={!!settings.new_section}
-                    onChange={e => setBool("new_section", e.target.checked)} />
-                  {" "}啟用後新增獨立的「賣場」「遊樂場」按鈕（遊樂場僅推幣機，娛樂城移除推幣機）
-                </label>
-              </Row>
+              {!settings.new_section && (
+                <Row label="排行榜按鈕">
+                  <label className="toggle-label">
+                    <input type="checkbox" checked={!!settings.leaderboard_enabled}
+                      onChange={e => setBool("leaderboard_enabled", e.target.checked)} />
+                    {" "}啟用排行榜
+                  </label>
+                </Row>
+              )}
             </section>
 
             {/* ─── 基本獎勵 ──────────────────────────────────────── */}
@@ -245,18 +251,22 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   </div>
                 </Row>
               )}
-              <Row label="單筆轉帳上限">
-                <input type="number" value={settings.per_transfer_limit}
-                  onChange={e => setInt("per_transfer_limit", e.target.value)} />
-              </Row>
-              <Row label="每日轉帳上限">
-                <input type="number" value={settings.daily_transfer_limit}
-                  onChange={e => setInt("daily_transfer_limit", e.target.value)} />
-              </Row>
-              <Row label="每日收禮上限">
-                <input type="number" value={settings.daily_receive_limit}
-                  onChange={e => setInt("daily_receive_limit", e.target.value)} />
-              </Row>
+              {!settings.new_section && (
+                <>
+                  <Row label="單筆轉帳上限">
+                    <input type="number" value={settings.per_transfer_limit}
+                      onChange={e => setInt("per_transfer_limit", e.target.value)} />
+                  </Row>
+                  <Row label="每日轉帳上限">
+                    <input type="number" value={settings.daily_transfer_limit}
+                      onChange={e => setInt("daily_transfer_limit", e.target.value)} />
+                  </Row>
+                  <Row label="每日收禮上限">
+                    <input type="number" value={settings.daily_receive_limit}
+                      onChange={e => setInt("daily_receive_limit", e.target.value)} />
+                  </Row>
+                </>
+              )}
               <Row label="跑馬燈獎勵">
                 <input type="number" value={settings.marquee_reward}
                   onChange={e => setInt("marquee_reward", e.target.value)} />
@@ -265,13 +275,16 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <input type="number" value={settings.marquee_duration}
                   onChange={e => setInt("marquee_duration", e.target.value)} />
               </Row>
-              <Row label="每日樂透獎勵">
-                <input type="number" value={settings.surprise_reward}
-                  onChange={e => setInt("surprise_reward", e.target.value)} />
-              </Row>
+              {!settings.new_section && (
+                <Row label="每日樂透獎勵">
+                  <input type="number" value={settings.surprise_reward}
+                    onChange={e => setInt("surprise_reward", e.target.value)} />
+                </Row>
+              )}
             </section>
 
             {/* ─── 遊戲一：多顆金蘋果 ────────────────────────────── */}
+            {!settings.new_section && (
             <section className="settings-section">
               <h4>
                 {currencyEmoji} 遊戲一：撈{currencyName}（多顆模式）
@@ -320,8 +333,10 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 </div>
               </Row>
             </section>
+            )}
 
             {/* ─── 遊戲二：一顆大金蘋果 ──────────────────────────── */}
+            {!settings.new_section && (
             <section className="settings-section">
               <h4>
                 🔥 遊戲二：搶{currencyName}（第一個點到即結束）
@@ -365,8 +380,10 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 </div>
               </Row>
             </section>
+            )}
 
             {/* ─── 遊戲三：打金蘋果（打地鼠） ────────────────────── */}
+            {!settings.new_section && (
             <section className="settings-section">
               <h4>
                 🔨 遊戲三：打{currencyName}（打地鼠風格）
@@ -429,8 +446,10 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 </div>
               </Row>
             </section>
+            )}
 
             {/* ─── 遊戲四：夾蘋果機 ───────────────────────────────── */}
+            {!settings.new_section && (
             <section className="settings-section">
               <h4>
                 🎰 遊戲四：夾{currencyName}機（夾娃娃機風格）
@@ -493,8 +512,10 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <span className="field-note">顆（1–40，越多越滿）</span>
               </Row>
             </section>
+            )}
 
             {/* ─── 娛樂城：金蘋果輪盤 ──────────────────────────── */}
+            {!settings.new_section && (
             <section className="settings-section">
               <h4>
                 🎰 娛樂城：{currencyName}輪盤
@@ -539,8 +560,10 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
               </Row>
             </section>
+            )}
 
             {/* ─── 娛樂城：21點 ────────────────────────────────── */}
+            {!settings.new_section && (
             <section className="settings-section">
               <h4>
                 🃏 娛樂城：21點
@@ -585,8 +608,10 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
               </Row>
             </section>
+            )}
 
             {/* ─── 娛樂城：骰寶 ────────────────────────────────── */}
+            {!settings.new_section && (
             <section className="settings-section">
               <h4>
                 🎲 娛樂城：骰寶
@@ -631,8 +656,10 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
               </Row>
             </section>
+            )}
 
             {/* ─── 娛樂城：老虎機 ──────────────────────────────── */}
+            {!settings.new_section && (
             <section className="settings-section">
               <h4>
                 🎰 娛樂城：老虎機
@@ -677,7 +704,9 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
               </Row>
             </section>
+            )}
 
+            {!settings.new_section && (
             <section className="settings-section">
               <h4>
                 🀄 娛樂城：百家樂
@@ -722,11 +751,12 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
               </Row>
             </section>
+            )}
 
-            {/* ─── 娛樂城：推幣機 ──────────────────────────────── */}
+            {/* ─── 遊樂場：推幣機 ──────────────────────────────── */}
             <section className="settings-section">
               <h4>
-                🪙 娛樂城：推幣機
+                🎰 遊樂場：推幣機
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={!!settings.pusher_enabled}
                     onChange={e => setBool("pusher_enabled", e.target.checked)} />
@@ -786,6 +816,83 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   <option value="normal">正常</option>
                   <option value="fast">快</option>
                 </select>
+              </Row>
+            </section>
+
+            {/* ─── 遊樂場：賽車 ──────────────────────────────── */}
+            <section className="settings-section">
+              <h4>
+                🏎️ 遊樂場：賽車
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.race_enabled}
+                    onChange={e => setBool("race_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+
+              <Row label="開放時間（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                  <input type="number" min={0} max={23} style={{ width: 56 }}
+                    value={settings.race_open_hour}
+                    onChange={e => setInt("race_open_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.race_open_minute}
+                    onChange={e => setInt("race_open_minute", e.target.value)} />
+                  <span>分 ～</span>
+                  <input type="number" min={0} max={24} style={{ width: 56 }}
+                    value={settings.race_close_hour}
+                    onChange={e => setInt("race_close_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.race_close_minute}
+                    onChange={e => setInt("race_close_minute", e.target.value)} />
+                  <span>分</span>
+                  <span style={{ color: "#aaa", fontSize: "0.8rem" }}>（24時 = 午夜）</span>
+                </div>
+              </Row>
+              <Row label="單注上限">
+                <input type="number" min={1} max={9999} style={{ width: 80 }}
+                  value={settings.race_max_bet}
+                  onChange={e => setInt("race_max_bet", e.target.value)} />
+                <span className="field-note">個{currencyName}（5 台車，中獎 1 賠 4）</span>
+              </Row>
+              <Row label="勝率偏向設定">
+                <input type="number" min={1} max={200} style={{ width: 80 }}
+                  value={settings.race_house_edge}
+                  onChange={e => setInt("race_house_edge", e.target.value)} />
+                <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
+              </Row>
+            </section>
+
+            {/* ─── 遊樂場：殭屍生存戰 ──────────────────────────── */}
+            <section className="settings-section">
+              <h4>
+                🧟 遊樂場：殭屍生存戰
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.zombie_enabled}
+                    onChange={e => setBool("zombie_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+
+              <Row label="入場費用">
+                <input type="number" min={0} max={9999} style={{ width: 80 }}
+                  value={settings.zombie_entry_cost}
+                  onChange={e => setInt("zombie_entry_cost", e.target.value)} />
+                <span className="field-note">個{currencyName}（每次挑戰扣一次，不分關卡）</span>
+              </Row>
+              <Row label="每關過關獎勵">
+                <input type="number" min={0} max={9999} style={{ width: 80 }}
+                  value={settings.zombie_level_reward}
+                  onChange={e => setInt("zombie_level_reward", e.target.value)} />
+                <span className="field-note">個{currencyName}（共 3 關，全破最多 ×3）</span>
+              </Row>
+              <Row label="每日挑戰次數上限">
+                <input type="number" min={1} max={99} style={{ width: 80 }}
+                  value={settings.zombie_daily_limit}
+                  onChange={e => setInt("zombie_daily_limit", e.target.value)} />
+                <span className="field-note">次（不論成功或失敗都算一次）</span>
               </Row>
             </section>
 

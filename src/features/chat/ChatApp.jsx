@@ -356,7 +356,7 @@ export default function ChatApp() {
       addMessage(m, userListRef.current);
     };
     const handleSystemMessage = (m) => {
-      if (!roomConfig.new_function && m?.message?.includes('唱歌獲得') && m?.message?.includes(roomConfig.currency_name)) return;
+      if (!roomConfig.new_function && !roomConfig.new_section && m?.message?.includes('唱歌獲得') && m?.message?.includes(roomConfig.currency_name)) return;
       addSystemMessage(m);
     };
     const handleVideoUpdate = (v) => {
@@ -899,7 +899,7 @@ export default function ChatApp() {
                 <button onClick={send} disabled={cooldown}>發送</button>
               </div>
 
-              {NF && isMember && (
+              {(NF || roomConfig.new_section) && isMember && (
                 <div className="trade-apple">
                   <div className="trade-apple-label" style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     {level >= AML && (
@@ -915,7 +915,7 @@ export default function ChatApp() {
                         {marqueeActive ? "🎰 進行中…" : "🎰 跑馬燈"}
                       </button>
                     )}
-                    <SurpriseHistoryPanel token={token} />
+                    {!roomConfig.new_section && <SurpriseHistoryPanel token={token} />}
                     {roomConfig.currency_name}樂園{" "}
                     <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} />{" "}
                     當前{roomConfig.currency_name}數量：{apples}

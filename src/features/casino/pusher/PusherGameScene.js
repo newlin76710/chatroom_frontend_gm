@@ -175,7 +175,7 @@ export default class PusherGameScene extends Phaser.Scene {
     this.laneIndicator = this.add.graphics();
   }
 
-  // ?箏馳雿蔭 0~100嚗?=?撌? 50=蝵桐葉, 100=??喉?????撟?銝?祕??X 摨扳?
+  // 出幣位置 0~100（0=最左, 50=置中, 100=最右）換算成投幣口下方的實際 X 座標
   laneToX(positionPct) {
     const t = clamp(Number(positionPct ?? 50), 0, 100) / 100;
     return (TABLE.left + 70) + t * (TABLE.right - TABLE.left - 140);
@@ -183,7 +183,7 @@ export default class PusherGameScene extends Phaser.Scene {
 
   updateLaneIndicator() {
     this.laneIndicator.clear();
-    if (this.aim.active) return; // ??????aimLine 憿舐內
+    if (this.aim.active) return; // 拖曳瞄準時改由 aimLine 顯示
     const x = this.laneToX(this.state.position);
     this.laneIndicator.lineStyle(3, 0x8be9ff, 0.8);
     this.laneIndicator.lineBetween(CHUTE.x, CHUTE.y, x, Math.min(TABLE.drop - 190, this.pusherBackY + ENTRY_GAP_FROM_PUSHER));
@@ -400,7 +400,7 @@ export default class PusherGameScene extends Phaser.Scene {
   dropLabel(sprite) {
     const { kind, value } = sprite.pusherMeta;
     if (kind === "jackpot") return "JACKPOT!";
-    if (value > 0) return `${KIND_META[kind]?.valueLabel || "??"} +${value}`;
+    if (value > 0) return `${KIND_META[kind]?.valueLabel || "獎品"} +${value}`;
     return "DROP";
   }
 
@@ -520,7 +520,7 @@ export default class PusherGameScene extends Phaser.Scene {
     try {
       const result = await this.services.collectDrops(tokenIds);
       if (result?.credited > 0) {
-        this.floatText(GAME_WIDTH / 2, 176, `?祆活 +${result.credited}`, "#ffd86b");
+        this.floatText(GAME_WIDTH / 2, 176, `本次收益 +${result.credited}`, "#ffd86b");
       }
       if (result?.jackpotHit) {
         this.cameras.main.flash(500, 255, 230, 92);

@@ -117,7 +117,7 @@ export default function Login() {
       setAvatar(data.avatar || "");
 
       // ⭐ 首次登入獲得 1 顆金蘋果
-      if (roomConfig.new_function && data.reward_apple > 0) {
+      if ((roomConfig.new_function || roomConfig.new_section) && data.reward_apple > 0) {
         alert(`🎉 本日首次登入獲得 ${data.reward_apple} 顆${roomConfig.currency_name}！`);
       }
       navigate("/chat");
