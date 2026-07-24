@@ -8,13 +8,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "livekit-client": "^2.17.0",
+    "matter-js": "^0.20.0",
+    "opencc-js": "^1.0.5",
+    "phaser": "^3.90.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.14.2",
     "react-youtube": "^10.0.0",
-    "socket.io-client": "^4.7.5",
-    "livekit-client": "^2.17.0",
-    "opencc-js": "^1.0.5"
+    "socket.io-client": "^4.7.5"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.0.0",
