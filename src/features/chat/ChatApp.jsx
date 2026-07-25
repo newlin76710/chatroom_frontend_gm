@@ -741,7 +741,7 @@ export default function ChatApp() {
               />
             </DeferredPanel>
           )}
-          {roomConfig.new_section && showPlayground && (
+          {roomConfig.new_section && (
             <DeferredPanel>
               <CasinoPanel
                 token={token} apples={apples} onApplesChange={setApples}

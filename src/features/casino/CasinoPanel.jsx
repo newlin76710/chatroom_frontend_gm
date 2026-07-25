@@ -34,10 +34,15 @@ export default function CasinoPanel({ token, apples, onApplesChange, open, onClo
   const [tab, setTab] = useState(isPlayground ? "pusher" : "blackjack");
   const [showRules, setShowRules] = useState(false);
 
-  if (!open) return null;
+  // 遊樂場面板即使關閉也保持掛載（改用隱藏），推幣機的桌面局面才不會每次重開都重新排列
+  if (!open && !isPlayground) return null;
 
   return (
-    <div className="casino-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <div
+      className="casino-overlay"
+      style={open ? undefined : { display: "none" }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
       <div className="casino-panel">
 
         {/* ── Light bulbs top ── */}
@@ -129,13 +134,15 @@ export default function CasinoPanel({ token, apples, onApplesChange, open, onClo
           <Suspense fallback={null}>
             {isPlayground ? (
               <>
-                {tab === "pusher" && (
+                {/* 推幣機常駐掛載（用隱藏取代卸載），切分頁或關閉再打開遊樂場都不會重新排列桌面 */}
+                <div style={{ display: tab === "pusher" ? "contents" : "none" }}>
                   <PusherMachine
                     token={token}
                     apples={apples}
                     onApplesChange={onApplesChange}
+                    visible={open && tab === "pusher"}
                   />
-                )}
+                </div>
                 {tab === "race" && (
                   <RacingGame
                     token={token}
@@ -188,12 +195,15 @@ export default function CasinoPanel({ token, apples, onApplesChange, open, onClo
                     onApplesChange={onApplesChange}
                   />
                 )}
-                {tab === "pusher" && includePusher && (
-                  <PusherMachine
-                    token={token}
-                    apples={apples}
-                    onApplesChange={onApplesChange}
-                  />
+                {includePusher && (
+                  <div style={{ display: tab === "pusher" ? "contents" : "none" }}>
+                    <PusherMachine
+                      token={token}
+                      apples={apples}
+                      onApplesChange={onApplesChange}
+                      visible={open && tab === "pusher"}
+                    />
+                  </div>
                 )}
               </>
             )}

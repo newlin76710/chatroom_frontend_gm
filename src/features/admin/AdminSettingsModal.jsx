@@ -94,7 +94,6 @@ const DEFAULT = {
   pusher_open_minute:        0,
   pusher_close_hour:         24,
   pusher_close_minute:       0,
-  pusher_max_bet:            50,
   pusher_special_chance_pct: 6,
   pusher_jackpot_rate:       30,
   pusher_jackpot_payout_pct: 60,
@@ -785,12 +784,6 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   <span>分</span>
                   <span style={{ color: "#aaa", fontSize: "0.8rem" }}>（24時 = 午夜）</span>
                 </div>
-              </Row>
-              <Row label="單次投幣上限">
-                <input type="number" min={1} max={9999} style={{ width: 80 }}
-                  value={settings.pusher_max_bet}
-                  onChange={e => setInt("pusher_max_bet", e.target.value)} />
-                <span className="field-note">個{currencyName}</span>
               </Row>
               <Row label="特殊物機率">
                 <input type="number" min={0} max={100} style={{ width: 80 }}

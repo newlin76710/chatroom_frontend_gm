@@ -6,13 +6,15 @@ import socket from "../../shared/socket";
 import PusherGameScene, { GAME_HEIGHT, GAME_WIDTH } from "./pusher/PusherGameScene";
 import { closePusherAudio, unlockPusherAudio } from "./pusher/SoundManager";
 
+// 每次投幣固定 1 顆，不再開放自訂投幣數量
+const BET = 1;
+
 const DEFAULT_SETTINGS = {
   enabled: true,
   open_hour: 0,
   open_min: 0,
   close_hour: 24,
   close_min: 0,
-  max_bet: 50,
   plate_speed: "normal",
   jackpotPool: 0,
 };
@@ -41,29 +43,29 @@ function formatHours(settings) {
   return `${open} - ${close}`;
 }
 
-export default function PusherMachine({ token, apples, onApplesChange, demo = false }) {
+export default function PusherMachine({ token, apples, onApplesChange, demo = false, visible = true }) {
   const hostRef = useRef(null);
   const gameRef = useRef(null);
   const sceneRef = useRef(null);
   const controlsRef = useRef(null);
   const applesRef = useRef(apples ?? 0);
-  const betRef = useRef(1);
   const positionRef = useRef(50);
   const demoTokenIdRef = useRef(1000);
   const demoTokenValueRef = useRef(new Map());
   const jackpotPoolRef = useRef(0);
   const [settings, setSettings] = useState(null);
-  const [bet, setBet] = useState(1);
   const [position, setPosition] = useState(50);
   const [message, setMessage] = useState("");
   const [jackpotPool, setJackpotPool] = useState(0);
   jackpotPoolRef.current = jackpotPool;
   const [sessionWin, setSessionWin] = useState(0);
   const [jackpotPopup, setJackpotPopup] = useState(null);
+  const [dailyCapInfo, setDailyCapInfo] = useState(null);
 
   const currencyIcon = `/gifts/${roomConfig.currency_icon}`;
   const currencyName = roomConfig.currency_name || "金蘋果";
   const open = isOpenNow(settings);
+  const capReached = !!dailyCapInfo && dailyCapInfo.netProfit >= dailyCapInfo.cap;
 
   useEffect(() => {
     applesRef.current = apples ?? 0;
@@ -72,22 +74,25 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
   }, [apples]);
 
   useEffect(() => {
-    betRef.current = bet;
-    sceneRef.current?.setExternalState({ bet });
-    controlsRef.current?.setState({ bet });
-  }, [bet]);
-
-  useEffect(() => {
     positionRef.current = position;
     sceneRef.current?.setExternalState({ position });
     controlsRef.current?.setState({ position });
   }, [position]);
 
+  // 面板切到背景（切分頁/關閉遊樂場）時讓 Phaser 進入休眠，避免物理模擬持續耗費效能；
+  // 重新顯示時喚醒即可，桌面上的幣局不會被重新排列。
+  useEffect(() => {
+    const game = gameRef.current;
+    if (!game) return;
+    if (visible) game.loop.wake();
+    else game.loop.sleep();
+  }, [visible]);
+
   useEffect(() => {
     let cancelled = false;
     async function loadSettings() {
       if (demo) {
-        const next = { ...DEFAULT_SETTINGS, max_bet: 25, special_chance_pct: 18, jackpotPool: 500 };
+        const next = { ...DEFAULT_SETTINGS, special_chance_pct: 18, jackpotPool: 500 };
         setSettings(next);
         setJackpotPool(next.jackpotPool);
         return;
@@ -106,6 +111,7 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
           const next = { ...DEFAULT_SETTINGS, ...data };
           setSettings(next);
           setJackpotPool(Number(next.jackpotPool || 0));
+          setDailyCapInfo({ netProfit: Number(data.dailyNetProfit || 0), cap: Number(data.dailyCap || 100) });
         }
       } catch {
         if (!cancelled) setSettings(DEFAULT_SETTINGS);
@@ -119,16 +125,15 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
 
   useEffect(() => {
     if (!settings) return;
-    setBet((value) => Math.max(1, Math.min(value, settings.max_bet || 50, Math.max(1, applesRef.current || 1))));
     sceneRef.current?.setExternalState({
       plateSpeed: settings.plate_speed || "normal",
-      enabled: settings.enabled && open,
+      enabled: settings.enabled && open && !capReached,
     });
     controlsRef.current?.setState({
       plateSpeed: settings.plate_speed || "normal",
-      enabled: settings.enabled && open,
+      enabled: settings.enabled && open && !capReached,
     });
-  }, [settings, open]);
+  }, [settings, open, capReached]);
 
   useEffect(() => {
     const onPool = ({ jackpotPool: nextPool }) => setJackpotPool(Number(nextPool || 0));
@@ -144,14 +149,14 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
     };
   }, [currencyName]);
 
-  const insertCoin = useCallback(async (amount) => {
+  const insertCoin = useCallback(async () => {
     if (demo) {
-      if ((applesRef.current || 0) < amount) throw new Error("試玩餘額不足");
+      if ((applesRef.current || 0) < BET) throw new Error("試玩餘額不足");
       const kinds = [
         { kind: "coin", multiplier: 1, weight: 72 },
-        { kind: "diamond", multiplier: 10, weight: 10 },
-        { kind: "car", multiplier: 8, weight: 7 },
-        { kind: "plane", multiplier: 12, weight: 7 },
+        { kind: "diamond", multiplier: 2, weight: 10 },
+        { kind: "car", multiplier: 3, weight: 7 },
+        { kind: "plane", multiplier: 4, weight: 7 },
         { kind: "jackpot", multiplier: 0, weight: 4 },
       ];
       const total = kinds.reduce((sum, item) => sum + item.weight, 0);
@@ -161,23 +166,27 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
         return roll <= 0;
       }) || kinds[0];
       const tokenId = demoTokenIdRef.current++;
-      const value = picked.kind === "jackpot" ? null : Math.max(1, Math.round(amount * picked.multiplier));
-      applesRef.current -= amount;
+      const value = picked.kind === "jackpot" ? null : Math.max(1, Math.round(BET * picked.multiplier));
+      applesRef.current -= BET;
       demoTokenValueRef.current.set(tokenId, { kind: picked.kind, value });
       onApplesChange?.(applesRef.current);
-      setJackpotPool((pool) => pool + Math.floor(amount * 0.3));
+      // 獎池提撥比例以小數累積，避免固定投 1 顆時每次都無條件捨去到 0
+      setJackpotPool((pool) => pool + BET * 0.3);
       return { tokenId, kind: picked.kind, value, newApples: applesRef.current };
     }
 
     const res = await fetch(`${BACKEND}/api/pusher/insert`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ bet: amount, room: RN }),
+      body: JSON.stringify({ bet: BET, room: RN }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "投幣失敗");
     applesRef.current = Number(data.newApples ?? applesRef.current);
     onApplesChange?.(applesRef.current);
+    if (data.dailyCap != null) {
+      setDailyCapInfo({ netProfit: Number(data.dailyNetProfit || 0), cap: Number(data.dailyCap || 100) });
+    }
     setMessage("");
     return data;
   }, [demo, onApplesChange, token]);
@@ -220,6 +229,13 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
     onApplesChange?.(applesRef.current);
     if (data.credited > 0) setSessionWin((value) => value + Number(data.credited || 0));
     if (data.jackpotHit) setJackpotPopup({ amount: data.jackpotAmount });
+    if (data.dailyCap != null) {
+      setDailyCapInfo({ netProfit: Number(data.dailyNetProfit || 0), cap: Number(data.dailyCap || 100) });
+    }
+    if (data.capped && data.message) {
+      setMessage(data.message);
+      setTimeout(() => setMessage(""), 3200);
+    }
     return data;
   }, [demo, onApplesChange, token]);
 
@@ -234,6 +250,8 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
   settingsRef.current = settings;
   const openRef = useRef(open);
   openRef.current = open;
+  const capReachedRef = useRef(capReached);
+  capReachedRef.current = capReached;
 
   const services = useMemo(() => ({
     insertCoin: (...args) => insertCoinRef.current(...args),
@@ -245,11 +263,11 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
     onReady: (controls) => {
       controlsRef.current = controls;
       controls.setState({
-        bet: betRef.current,
+        bet: BET,
         position: positionRef.current,
         balance: applesRef.current,
         plateSpeed: settingsRef.current?.plate_speed || "normal",
-        enabled: settingsRef.current?.enabled && openRef.current,
+        enabled: settingsRef.current?.enabled && openRef.current && !capReachedRef.current,
       });
     },
   }), []);
@@ -279,14 +297,15 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
       },
     });
     gameRef.current = game;
+    if (!visible) game.loop.sleep();
     game.scene.add("PusherGameScene", PusherGameScene, true, {
       services,
       initialState: {
-        bet: betRef.current,
+        bet: BET,
         position: positionRef.current,
         balance: applesRef.current,
         plateSpeed: settings.plate_speed || "normal",
-        enabled: settings.enabled && open,
+        enabled: settings.enabled && open && !capReached,
       },
     });
     const scene = game.scene.getScene("PusherGameScene");
@@ -302,26 +321,20 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
 
   useEffect(() => {
     sceneRef.current?.setExternalState({
-      bet,
+      bet: BET,
       position,
       balance: apples ?? 0,
       plateSpeed: settings?.plate_speed || "normal",
-      enabled: settings?.enabled && open,
+      enabled: settings?.enabled && open && !capReached,
     });
     controlsRef.current?.setState({
-      bet,
+      bet: BET,
       position,
       balance: apples ?? 0,
       plateSpeed: settings?.plate_speed || "normal",
-      enabled: settings?.enabled && open,
+      enabled: settings?.enabled && open && !capReached,
     });
-  }, [apples, bet, open, position, settings]);
-
-  const changeBet = (delta) => {
-    const availableApples = apples ?? (settings?.max_bet || 50);
-    const max = Math.max(1, Math.min(settings?.max_bet || 50, availableApples));
-    setBet((value) => Math.max(1, Math.min(max, value + delta)));
-  };
+  }, [apples, open, position, settings, capReached]);
 
   const quickDrop = () => {
     unlockPusherAudio();
@@ -351,7 +364,7 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
           </span>
         </div>
         <div className="pusher-bank">
-          <span>Jackpot {jackpotPool}</span>
+          <span>Jackpot {Math.floor(jackpotPool)}</span>
           <span>本局收益 {sessionWin}</span>
         </div>
       </header>
@@ -369,14 +382,11 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
             <small>{currencyName}</small>
           </div>
 
-          <div className="pusher-control-group">
-            <label>每次投幣</label>
-            <div className="pusher-stepper">
-              <button type="button" onClick={() => changeBet(-1)} disabled={bet <= 1}>-</button>
-              <strong>{bet}</strong>
-              <button type="button" onClick={() => changeBet(1)} disabled={bet >= (settings.max_bet || 50)}>+</button>
+          {dailyCapInfo && (
+            <div className="pusher-control-group">
+              <label>今日淨賺 {Math.min(dailyCapInfo.netProfit, dailyCapInfo.cap)} / {dailyCapInfo.cap} {currencyName}</label>
             </div>
-          </div>
+          )}
 
           <div className="pusher-control-group">
             <label htmlFor="pusher-position">出幣位置 {position < 40 ? "◀ 偏左" : position > 60 ? "偏右 ▶" : "中間"}</label>
@@ -390,8 +400,8 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
             />
           </div>
 
-          <button type="button" className="pusher-launch" onClick={quickDrop} disabled={!open || (!token && !demo)}>
-            投幣
+          <button type="button" className="pusher-launch" onClick={quickDrop} disabled={!open || (!token && !demo) || capReached}>
+            {capReached ? "已達本日賺取上限" : "投幣 (每次 1 顆)"}
           </button>
 
           <div className="pusher-tips">
