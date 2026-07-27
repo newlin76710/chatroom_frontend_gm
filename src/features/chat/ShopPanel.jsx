@@ -2,8 +2,20 @@ import { useState } from "react";
 import "./ShopPanel.css";
 import { BACKEND, RN, roomConfig } from "../../shared/roomConfig";
 
+const CAKE_VARIANTS = [
+  { id: "original",       emoji: "🎂", name: "原味蛋糕",   image: "/gifts/cake.gif" },
+  { id: "pink",           emoji: "🩷", name: "淑女蛋糕",   image: "/gifts/cake_pink.gif" },
+  { id: "blue",           emoji: "🎩", name: "紳士蛋糕",   image: "/gifts/cake_blue.gif" },
+  { id: "birthday",       emoji: "🎉", name: "生日蛋糕",   image: "/gifts/cake_birthday.gif" },
+  { id: "strawberry",     emoji: "🍓", name: "草莓蛋糕",   image: "/gifts/cake_strawberry.gif" },
+  { id: "lemon",          emoji: "🍋", name: "檸檬蛋糕",   image: "/gifts/cake_lemon.gif" },
+  { id: "chocolate_cake", emoji: "🍫", name: "巧克力蛋糕", image: "/gifts/cake_chocolate.gif" },
+  { id: "cupcake",        emoji: "🧁", name: "杯子蛋糕",   image: "/gifts/cake_cupcake.gif" },
+];
+
 export default function ShopPanel({ token, myName, myLevel, targetName, open, onClose, title = "商城" }) {
   const [buying, setBuying] = useState(null);
+  const [showCakePicker, setShowCakePicker] = useState(false);
 
   if (!open) return null;
 
@@ -31,7 +43,7 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
         { id: "rename",    name: "✏️ 升級卡(+1級)",  price: 1000 },
       ];
 
-  const buyItem = async (item) => {
+  const buyItem = async (item, cakeVariant = null) => {
     if (GIFT_IDS.includes(item.id) && !targetName) {
       alert("請先選擇贈送對象");
       return;
@@ -42,6 +54,7 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
       setBuying(item.id);
 
       const body = { itemId: item.id, targetName, room: RN };
+      if (cakeVariant) body.cakeVariant = cakeVariant;
 
       const res = await fetch(`${BACKEND}/api/shop/buy`, {
         method: "POST",
@@ -81,20 +94,49 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
 
         <div className="shop-items">
           {items.map((item) => (
-            <div key={item.id} className="shop-item">
-              <div className="shop-name">{item.name}</div>
+            <div key={item.id}>
+              <div className="shop-item">
+                <div className="shop-name">{item.name}</div>
 
-              <div className="shop-right">
-                <span className="shop-price">{item.price} <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} /></span>
+                <div className="shop-right">
+                  <span className="shop-price">{item.price} <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} /></span>
 
-                <button
-                  className="buy-btn"
-                  disabled={buying === item.id}
-                  onClick={() => buyItem(item)}
-                >
-                  {buying === item.id ? "購買中..." : "購買"}
-                </button>
+                  <button
+                    className="buy-btn"
+                    disabled={buying === item.id}
+                    onClick={() => {
+                      if (item.id === "cake") {
+                        setShowCakePicker((prev) => !prev);
+                      } else {
+                        buyItem(item);
+                      }
+                    }}
+                  >
+                    {item.id === "cake"
+                      ? (showCakePicker ? "收起 ▲" : "選款 ▼")
+                      : buying === item.id ? "購買中..." : "購買"}
+                  </button>
+                </div>
               </div>
+
+              {item.id === "cake" && showCakePicker && (
+                <div className="cake-picker">
+                  {CAKE_VARIANTS.map((v) => (
+                    <button
+                      key={v.id}
+                      className="cake-variant-btn"
+                      disabled={buying === "cake"}
+                      onClick={() => {
+                        setShowCakePicker(false);
+                        buyItem(item, v.id);
+                      }}
+                    >
+                      <img src={v.image} alt={v.name} style={{ width: 36, height: 36, display: "block", margin: "0 auto 4px" }} />
+                      {v.name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
