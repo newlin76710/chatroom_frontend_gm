@@ -130,9 +130,9 @@ export default function Login() {
       sessionStorage.setItem("exp", data.exp ?? 0);
       sessionStorage.setItem("apples", data.gold_apples ?? 0);
 
-      // ⭐ 99 級（管理員）可選擇本次登入是否隱形
+      // ⭐ 99 級（管理員）可選擇本次登入是否隱形（房間可關閉此功能）
       const AML = roomConfig.admin_max_level || 99;
-      if (Number(data.level) >= AML) {
+      if (roomConfig.invisible_mode_enabled !== false && Number(data.level) >= AML) {
         const wantInvisible = window.confirm(
           "本次登入是否要使用隱形模式？\n\n隱形模式：不會顯示進出訊息、其他人（非管理員）看不到你在線上名單，只能私聊，且不能使用互動遊戲/商城買賣/贈送。\n\n選「確定」= 隱形，「取消」= 正常登入"
         );

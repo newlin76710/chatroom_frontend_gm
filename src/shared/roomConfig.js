@@ -17,6 +17,7 @@ const _cfg = {
   own_message_left:    false,
   legacy_chat_ui:      false,
   message_cooldown_seconds: 1,
+  invisible_mode_enabled: true,
 };
 
 export const roomConfig = _cfg;

@@ -103,6 +103,17 @@ export default function AdminRoomSettingsPanel({ token }) {
         </label>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>開啟隱形</span>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13 }}>
+          <input
+            type="checkbox"
+            checked={settings.invisible_mode_enabled !== false}
+            onChange={e => setSettings(s => ({ ...s, invisible_mode_enabled: e.target.checked }))}
+          />
+          啟用（99 級登入時可選擇本次是否隱形；關閉後 99 級一律正常登入）
+        </label>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>發言間隔秒數</span>
         <input
           type="number"

@@ -7,16 +7,29 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
 
   if (!open) return null;
 
-  const GIFT_IDS = ["diamond", "plane", "car"];
+  const isMarket = title === "賣場";
 
-  const items = [
-    { id: "diamond",  name: "💎 鑽石(送禮)",   price: 5 },
-    { id: "plane",    name: "✈️ 飛機(送禮)",   price: 5 },
-    { id: "car",      name: "🚗 跑車(送禮)",   price: 5 },
-    { id: "firework", name: "🎆 放煙火(全場特效)", price: 15 },
-    { id: "ball",     name: "🔮 積分球(+1000積分)", price: 30 },
-    { id: "rename",   name: "✏️ 升級卡(+1級)",  price: 1000 },
-  ];
+  const GIFT_IDS = isMarket
+    ? ["diamond", "plane", "car"]
+    : ["rose", "chocolate", "cake"];
+
+  const items = isMarket
+    ? [
+        { id: "diamond",  name: "💎 鑽石(送禮)", price: 5 },
+        { id: "plane",    name: "✈️ 飛機(送禮)", price: 5 },
+        { id: "car",      name: "🚗 跑車(送禮)", price: 5 },
+        { id: "firework", name: "🎆 放煙火(全場特效)", price: 15 },
+        { id: "ball",     name: "🔮 積分球(+1000積分)", price: 30 },
+        { id: "rename",   name: "✏️ 升級卡(+1級)",  price: 1000 },
+      ]
+    : [
+        { id: "rose",      name: "🌹 玫瑰(送禮)",   price: 5 },
+        { id: "chocolate", name: "🍫 巧克力(送禮)", price: 5 },
+        { id: "cake",      name: "🎂 蛋糕(送禮)",   price: 5 },
+        { id: "firework",  name: "🎆 放煙火(全場特效)", price: 15 },
+        { id: "ball",      name: "🔮 積分球(+1000積分)", price: 30 },
+        { id: "rename",    name: "✏️ 升級卡(+1級)",  price: 1000 },
+      ];
 
   const buyItem = async (item) => {
     if (GIFT_IDS.includes(item.id) && !targetName) {
