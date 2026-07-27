@@ -51,6 +51,14 @@ const DEFAULT = {
   claw_speed:           100,
   claw_drop_speed:      100,
   claw_apple_count:     12,
+  cherry_enabled:       true,
+  cherry_hour:          21,
+  cherry_minute:        0,
+  cherry_duration:      60,
+  cherry_count:         15,
+  cherry_reward:        1,
+  cherry_spd_lo:        3,
+  cherry_spd_hi:        6,
   roulette_enabled:          true,
   roulette_open_hour:        13,
   roulette_open_minute:      0,
@@ -748,6 +756,63 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   value={settings.baccarat_house_edge}
                   onChange={e => setInt("baccarat_house_edge", e.target.value)} />
                 <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
+              </Row>
+            </section>
+            )}
+
+            {/* ─── 遊樂場：接櫻桃 ──────────────────────────────── */}
+            {settings.new_section && (
+            <section className="settings-section">
+              <h4>
+                🍒 遊樂場：接櫻桃（每日排程活動）
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.cherry_enabled}
+                    onChange={e => setBool("cherry_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+
+              <Row label="每日開始時間（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <input type="number" min={0} max={23} style={{ width: 64 }}
+                    value={settings.cherry_hour}
+                    onChange={e => setInt("cherry_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 64 }}
+                    value={settings.cherry_minute}
+                    onChange={e => setInt("cherry_minute", e.target.value)} />
+                  <span>分</span>
+                  <span style={{ color: "#aaa", fontSize: "0.85rem" }}>
+                    → {fmtTime(settings.cherry_hour, settings.cherry_minute)}
+                  </span>
+                </div>
+              </Row>
+              <Row label="持續時間">
+                <input type="number" min={10} max={300} value={settings.cherry_duration}
+                  onChange={e => setInt("cherry_duration", e.target.value)} />
+                <span className="field-note">秒</span>
+              </Row>
+              <Row label="櫻桃數量">
+                <input type="number" min={1} max={50} value={settings.cherry_count}
+                  onChange={e => setInt("cherry_count", e.target.value)} />
+                <span className="field-note">顆（本場總共會掉落幾顆，每人最多接這麼多顆）</span>
+              </Row>
+              <Row label="每顆獎勵">
+                <input type="number" min={1} value={settings.cherry_reward}
+                  onChange={e => setInt("cherry_reward", e.target.value)} />
+                <span className="field-note">個{currencyName}</span>
+              </Row>
+              <Row label="掉落速度（px/幀）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <span>最慢</span>
+                  <input type="number" min={1} max={20} style={{ width: 64 }}
+                    value={settings.cherry_spd_lo}
+                    onChange={e => setInt("cherry_spd_lo", e.target.value)} />
+                  <span>最快</span>
+                  <input type="number" min={1} max={20} style={{ width: 64 }}
+                    value={settings.cherry_spd_hi}
+                    onChange={e => setInt("cherry_spd_hi", e.target.value)} />
+                </div>
               </Row>
             </section>
             )}

@@ -6,9 +6,6 @@ export const MAX_MESSAGES = 500;
 // Socket 心跳間隔（毫秒）
 export const HEARTBEAT_INTERVAL = 10_000;
 
-// 發送訊息冷卻（毫秒）
-export const COOLDOWN_MS = 1_000;
-
 // 離開訊息延遲顯示（毫秒）— 讓快速重連不顯示離開訊息
 export const PENDING_LEAVE_DELAY = 3_000;
 

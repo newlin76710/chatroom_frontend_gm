@@ -1,12 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { BACKEND, RN } from "../../shared/roomConfig";
+import { useClickOutside } from "../../shared/hooks/useClickOutside";
 
-export default function QuickPhrasePanel({ token, onSelect }) {
+export default function QuickPhrasePanel({ token, onSelect, openSignal, triggerClassName, triggerLabel = "💬 常用語" }) {
   const [open, setOpen] = useState(false);
   const [phrases, setPhrases] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [value, setValue] = useState("");
+  const containerRef = useRef(null);
+  useClickOutside(containerRef, () => setOpen(false), open);
+
+  // 讓外部（例如舊版介面的「功能選單」）可以觸發打開這個面板
+  useEffect(() => {
+    if (openSignal) setOpen(true);
+  }, [openSignal]);
 
   const headers = {
     "Content-Type": "application/json",
@@ -81,12 +89,13 @@ export default function QuickPhrasePanel({ token, onSelect }) {
   };
 
   return (
-    <div style={{ position: "relative", display: "inline-block" }}>
+    <div ref={containerRef} style={{ position: "relative", display: "inline-block" }}>
       <button
         onClick={() => setOpen(!open)}
-        style={{ marginLeft: "6px", fontSize: "0.8rem" }}
+        className={triggerClassName}
+        style={triggerClassName ? undefined : { marginLeft: "6px", fontSize: "0.8rem" }}
       >
-        💬 常用語
+        {triggerLabel}
       </button>
 
       {open && (

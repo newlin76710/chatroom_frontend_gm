@@ -24,6 +24,9 @@ import RPS from "./RPS";
 import PingPong from "./PingPong";
 import SurpriseHistoryPanel from "./SurpriseHistoryPanel";
 import QuickPhrasePanel from "./QuickPhrasePanel";
+import ColorSwatchPicker from "./ColorSwatchPicker";
+import FunctionMenuPicker from "./FunctionMenuPicker";
+import TextEmotionPicker from "./TextEmotionPicker";
 import AnnouncementPanel from "./AnnouncementPanel";
 import MyMessageLogPanel from "./MyMessageLogPanel";
 import AppErrorBoundary from "../../shared/AppErrorBoundary";
@@ -31,7 +34,7 @@ import { getAiAvatar } from "../../shared/aiConfig";
 import { expForNextLevel, safeText } from "../../shared/utils";
 import { useMessages } from "../../shared/hooks/useMessages";
 import { useUserState } from "../../shared/hooks/useUserState";
-import { HEARTBEAT_INTERVAL, COOLDOWN_MS, GENDER_COLORS } from "../../shared/constants";
+import { HEARTBEAT_INTERVAL, GENDER_COLORS } from "../../shared/constants";
 import { Converter } from "opencc-js";
 
 // ─── 環境設定 ────────────────────────────────────────────────────────────────
@@ -74,6 +77,7 @@ const AdminSettingsModal = lazy(() => import("../admin/AdminSettingsModal"));
 const GoldAppleGame = lazy(() => import("../games/GoldAppleGame"));
 const WhackAppleGame = lazy(() => import("../games/WhackAppleGame"));
 const ClawMachineGame = lazy(() => import("../games/ClawMachineGame"));
+const CherryTreeGame = lazy(() => import("../games/CherryTreeGame"));
 const MarqueeGame = lazy(() => import("../games/MarqueeGame"));
 const AdminToolPanel = lazy(() => import("../admin/AdminToolPanel"));
 const ShopPanel = lazy(() => import("./ShopPanel"));
@@ -91,16 +95,34 @@ export default function ChatApp() {
   const socket = socketInstance;
   const [room] = useState(RN);
   const [CN, setCN] = useState("");
+  const invisible = sessionStorage.getItem("invisible") === "true"; // 99級隱形登入
 
   const openaiRef = useRef(false);
+  const [ownMessageLeft, setOwnMessageLeft] = useState(!!roomConfig.own_message_left);
+  const [legacyChatUI, setLegacyChatUI] = useState(!!roomConfig.legacy_chat_ui);
 
   // ─── 從後端 room_settings 取得設定 ──────────────────────────────────────
   useEffect(() => {
     loadRoomConfig().then(cfg => {
       setCN(cfg.room_name || "");
       openaiRef.current = cfg.openai === true;
+      setOwnMessageLeft(!!cfg.own_message_left);
+      setLegacyChatUI(!!cfg.legacy_chat_ui);
     });
   }, []);
+
+  // ─── 管理員即時更新聊天室設定（不需重新整理） ───────────────────────────
+  useEffect(() => {
+    const handleRoomConfigUpdate = (data) => {
+      if (!data) return;
+      Object.assign(roomConfig, data);
+      if (data.own_message_left !== undefined) setOwnMessageLeft(!!data.own_message_left);
+      if (data.legacy_chat_ui !== undefined) setLegacyChatUI(!!data.legacy_chat_ui);
+    };
+    socket.on("roomConfigUpdate", handleRoomConfigUpdate);
+    return () => socket.off("roomConfigUpdate", handleRoomConfigUpdate);
+  }, [socket]);
+
   const AML    = roomConfig.admin_max_level || 99;
   const ANL    = roomConfig.admin_min_level || 91;
   const OPENAI = roomConfig.openai;
@@ -131,15 +153,19 @@ export default function ChatApp() {
   const [currentVideo, setCurrentVideo] = useState(null);
   const [videoUrl, setVideoUrl] = useState("");
   const [closedVideoId, setClosedVideoId] = useState(null);
-  const [chatMode, setChatMode] = useState("public");
+  const [chatMode, setChatMode] = useState(() => (sessionStorage.getItem("invisible") === "true" ? "private" : "public"));
   const [userListCollapsed, setUserListCollapsed] = useState(false);
   const [text, setText] = useState("");
+  const [messageHistory, setMessageHistory] = useState([]); // 進入聊天室後所有已發送訊息（舊版介面 </> 記憶功能用，新到舊排序）
+  const [historyIndex, setHistoryIndex] = useState(-1); // -1 = 目前為新輸入，非瀏覽紀錄中
   const [cooldown, setCooldown] = useState(false);
   const [placeholder, setPlaceholder] = useState("輸入訊息...");
   const [chatColor, setChatColor] = useState(
     () => sessionStorage.getItem("chatColor") || "#ffffff"
   );
+  const [textEmotion, setTextEmotion] = useState(""); // 舊版介面文字表情（例如「深情款款」）
   const [showAnnouncement, setShowAnnouncement] = useState(false);
+  const [showSongRequestModal, setShowSongRequestModal] = useState(false);
   const [showMessageBoard, setShowMessageBoard] = useState(false);
   const [showShop, setShowShop] = useState(false);
   const [shopTitle, setShopTitle] = useState("商城");
@@ -171,6 +197,10 @@ export default function ChatApp() {
   const inputRef = useRef(null);
   const versionReportInFlightRef = useRef(false);
   const versionReloadingRef = useRef(false);
+  const videoUrlInputRef = useRef(null);
+  const songRoomRef = useRef(null);
+  const listenerRef = useRef(null);
+  const [quickPhraseOpenSignal, setQuickPhraseOpenSignal] = useState(0);
 
   const userType = sessionStorage.getItem("type") || "guest";
   const isMember = userType === "account";
@@ -307,6 +337,7 @@ export default function ChatApp() {
           name: nameRef.current,
           type: sessionStorage.getItem("type") || "guest",
           token: sessionStorage.getItem("token"),
+          invisible,
         },
       });
     };
@@ -512,6 +543,7 @@ export default function ChatApp() {
         name,
         type: sessionStorage.getItem("type") || "guest",
         token: sessionStorage.getItem("token") || sessionStorage.getItem("guestToken"),
+        invisible,
       },
     });
     joinedRef.current = true;
@@ -572,17 +604,46 @@ export default function ChatApp() {
       user: { name },
       target: target || "",
       mode: chatMode,
+      emotion: textEmotion || "",
       timestamp: new Date().toLocaleTimeString(),
     });
 
+    setMessageHistory((prev) => [text, ...prev]);
+    setHistoryIndex(-1);
+
+    const cooldownSeconds = Math.max(0, Number(roomConfig.message_cooldown_seconds) || 0);
     setText("");
-    setCooldown(true);
-    setPlaceholder("請等待 1 秒後再發送…");
-    setTimeout(() => {
-      setCooldown(false);
-      setPlaceholder("輸入訊息...");
-    }, COOLDOWN_MS);
-  }, [socket, cooldown, text, chatMode, target, room, convertTC, chatColor, name]);
+    if (cooldownSeconds > 0) {
+      setCooldown(true);
+      setPlaceholder(`請等待 ${cooldownSeconds} 秒後再發送…`);
+      setTimeout(() => {
+        setCooldown(false);
+        setPlaceholder("輸入訊息...");
+      }, cooldownSeconds * 1000);
+    }
+  }, [socket, cooldown, text, chatMode, target, room, convertTC, chatColor, name, textEmotion]);
+
+  // ─── 發言紀錄瀏覽（舊版介面 < > 按鈕）────────────────────────────────────
+  const recallOlderMessage = useCallback(() => {
+    setHistoryIndex((idx) => {
+      if (messageHistory.length === 0) return idx;
+      const next = Math.min(idx + 1, messageHistory.length - 1);
+      setText(messageHistory[next]);
+      return next;
+    });
+  }, [messageHistory]);
+
+  const recallNewerMessage = useCallback(() => {
+    setHistoryIndex((idx) => {
+      if (idx <= 0) {
+        setText("");
+        return -1;
+      }
+      const next = idx - 1;
+      setText(messageHistory[next]);
+      return next;
+    });
+  }, [messageHistory]);
 
   // ─── 點播影片 ─────────────────────────────────────────────────────────────
   const playVideo = useCallback(() => {
@@ -666,7 +727,7 @@ export default function ChatApp() {
   // ─── 渲染 ─────────────────────────────────────────────────────────────────
   return (
     <>
-      <div className="chat-layout">
+      <div className={`chat-layout${legacyChatUI ? " chat-layout--legacy" : ""}`}>
         {/* 左側聊天區 */}
         <div className="chat-left">
           <div className="chat-title-bar">
@@ -685,23 +746,23 @@ export default function ChatApp() {
               <DeferredPanel>
                 {NF && <Leaderboard room={room} token={token} enabled={!!LB} />}
               </DeferredPanel>
-              {NF && isMember && (
+              {!invisible && NF && isMember && (
                 <button className="announce-btn" title="商城" onClick={() => { setShopTitle("商城"); setShowShop(true); }}>
                   <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} /> 商城
                 </button>
               )}
-              {NF && isMember && (
+              {!invisible && NF && isMember && (
                 <button className="announce-btn" title="娛樂城" onClick={() => setShowCasino(true)}
                   style={{ background: "linear-gradient(135deg,#2a1500,#4a2800)", border: "1px solid #d4af37", color: "#ffd700" }}>
                   🎰 娛樂城
                 </button>
               )}
-              {isMember && roomConfig.new_section && (
+              {!invisible && isMember && roomConfig.new_section && (
                 <button className="announce-btn" title="賣場" onClick={() => { setShopTitle("賣場"); setShowShop(true); }}>
                   <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} /> 賣場
                 </button>
               )}
-              {isMember && roomConfig.new_section && (
+              {!invisible && isMember && roomConfig.new_section && (
                 <button className="announce-btn" title="遊樂場" onClick={() => setShowPlayground(true)}
                   style={{ background: "linear-gradient(135deg,#003a2a,#005a45)", border: "1px solid #4fd0c8", color: "#7fffe8" }}>
                   🎡 遊樂場
@@ -760,6 +821,7 @@ export default function ChatApp() {
                     {name}
                   </span>
                   &nbsp;等級:{formatLv(level)}
+                  {invisible && <span style={{ color: "#aaa", marginLeft: 6 }} title="其他人（非管理員）看不到你在線上">👻 隱形中</span>}
                   {isMember && initializedRef.current && level < ANL - 1
                     ? ` 積分: ${exp} / ${expForNextLevel(level)}`
                     : ""}
@@ -775,31 +837,38 @@ export default function ChatApp() {
 
                 {isMember ? (
                   <>
-                    <div className="video-request">
-                      <input
-                        style={{ width: 130 }}
-                        value={videoUrl}
-                        onChange={(e) => setVideoUrl(e.target.value)}
-                        placeholder="貼上YouTube連結"
-                      />
-                      <button onClick={playVideo}>🎵 點播</button>
-                    </div>
-                    <SongRoom room={room} name={name} socket={socket} currentSinger={currentSinger} myLevel={level} />
+                    {!invisible && !legacyChatUI && (
+                      <div className="video-request">
+                        <input
+                          ref={videoUrlInputRef}
+                          style={{ width: 130 }}
+                          value={videoUrl}
+                          onChange={(e) => setVideoUrl(e.target.value)}
+                          placeholder="貼上YouTube連結"
+                        />
+                        <button onClick={playVideo}>🎵 點播</button>
+                      </div>
+                    )}
+                    {!invisible && (
+                      <SongRoom ref={songRoomRef} room={room} name={name} socket={socket} currentSinger={currentSinger} myLevel={level} />
+                    )}
                   </>
                 ) : (
                   <>
-                    <div className="video-request">
-                      <button disabled title="登入會員即可使用點播功能" style={{ opacity: 0.5, cursor: "not-allowed" }}>
-                        🎵 點播（限會員）
-                      </button>
-                    </div>
+                    {!legacyChatUI && (
+                      <div className="video-request">
+                        <button disabled title="登入會員即可使用點播功能" style={{ opacity: 0.5, cursor: "not-allowed" }}>
+                          🎵 點播（限會員）
+                        </button>
+                      </div>
+                    )}
                     <button disabled title="登入會員即可使用唱歌功能" style={{ opacity: 0.5, cursor: "not-allowed" }}>
                       🎤 唱歌（限會員）
                     </button>
                   </>
                 )}
 
-                <Listener room={room} name={name} socket={socket} onSingerChange={setCurrentSinger} />
+                <Listener ref={listenerRef} room={room} name={name} socket={socket} onSingerChange={setCurrentSinger} />
               </div>
 
               {/* ✅ visibleMessages 是 memoized，不會每次 render 重新過濾 */}
@@ -808,96 +877,266 @@ export default function ChatApp() {
                 name={name}
                 level={level}
                 typing={typing}
+                ownMessageLeft={ownMessageLeft}
                 messagesEndRef={messagesEndRef}
                 onSelectTarget={(targetName) => {
                   if (!targetName) return;
                   setTarget(targetName);
-                  if (chatMode !== "publicTarget") setChatMode("private");
+                  setChatMode(chatMode === "private" ? "private" : "publicTarget");
                   focusInput();
                 }}
                 userList={userList}
                 scrollLocked={scrollLocked}
                 scrollLockedRef={scrollLockedRef}
+                legacyUI={legacyChatUI}
               />
 
-              <div className="chat-input">
-                <button className="clear-btn" onClick={clearMessages}>🧹清空畫面</button>
-                <button
-                  className={`clear-btn scroll-lock-btn${scrollLocked ? " active" : ""}`}
-                  onClick={() => {
-                    const next = !scrollLockedRef.current;
-                    scrollLockedRef.current = next;
-                    setScrollLocked(next);
-                  }}
-                  title={scrollLocked ? "自動捲動" : "停止捲動"}
-                >
-                  {scrollLocked ? "🔓自動捲動" : "🔒停止捲動"}
-                </button>
+              {legacyChatUI ? (
+                <div className="chat-input chat-input--legacy">
+                  <div className="legacy-row">
+                    <span className="legacy-label">發言:</span>
+                    <button
+                      type="button"
+                      className="legacy-btn legacy-btn-grey legacy-history-btn"
+                      onClick={recallOlderMessage}
+                      disabled={messageHistory.length === 0 || historyIndex >= messageHistory.length - 1}
+                      title="上一筆紀錄"
+                    >
+                      &lt;
+                    </button>
+                    <input
+                      ref={inputRef}
+                      className="legacy-text-input"
+                      value={text}
+                      onChange={(e) => { setText(e.target.value); setHistoryIndex(-1); }}
+                      onKeyDown={(e) => e.key === "Enter" && send()}
+                      placeholder={placeholder}
+                      disabled={cooldown}
+                    />
+                    <button
+                      type="button"
+                      className="legacy-btn legacy-btn-grey legacy-history-btn"
+                      onClick={recallNewerMessage}
+                      disabled={historyIndex < 0}
+                      title="下一筆紀錄"
+                    >
+                      &gt;
+                    </button>
+                    <button className="legacy-btn legacy-btn-grey" onClick={send} disabled={cooldown}>送出</button>
+                  </div>
 
-                {/* ✅ 管理工具包 AppErrorBoundary，防止管理面板錯誤炸掉整個聊天室 */}
-                {level >= ANL && (
-                  <AppErrorBoundary label="管理工具">
-                    {showAdminTools ? (
-                      <DeferredPanel>
-                        <AdminToolPanel
-                          myName={name}
-                          myLevel={level}
-                          token={token}
-                          userList={userList}
-                          initialOpen
-                        />
-                      </DeferredPanel>
-                    ) : (
-                      <button className="admin-btn" onClick={() => setShowAdminTools(true)}>
-                        🛡 管理
-                      </button>
+                  <div className="legacy-row">
+                    <FunctionMenuPicker
+                      items={[
+                        { label: "站務公告", onClick: () => setShowAnnouncement(true) },
+                        { label: "編輯常用詞", onClick: () => setQuickPhraseOpenSignal((n) => n + 1) },
+                        ...(!invisible ? [
+                          { label: "點播歌曲", onClick: () => setShowSongRequestModal(true) },
+                          { label: "開始聽", onClick: () => listenerRef.current?.startListen() },
+                          { label: "結束聽", onClick: () => listenerRef.current?.stopListen() },
+                          { label: "排麥", onClick: () => songRoomRef.current?.startVoice() },
+                          { label: "下麥", onClick: () => songRoomRef.current?.stopVoice() },
+                        ] : []),
+                      ]}
+                    />
+                    <TextEmotionPicker value={textEmotion} onChange={setTextEmotion} />
+                    <ColorSwatchPicker
+                      value={chatColor}
+                      onChange={(c) => {
+                        setChatColor(c);
+                        sessionStorage.setItem("chatColor", c);
+                      }}
+                    />
+                    <QuickPhrasePanel
+                      token={token}
+                      onSelect={(content) => setText((prev) => (prev ? prev + " " : "") + content)}
+                      openSignal={quickPhraseOpenSignal}
+                      triggerClassName="legacy-select-pink"
+                      triggerLabel="常用詞句 ▾"
+                    />
+                    {level >= ANL && (
+                      <AppErrorBoundary label="管理工具">
+                        {showAdminTools ? (
+                          <DeferredPanel>
+                            <AdminToolPanel
+                              myName={name}
+                              myLevel={level}
+                              token={token}
+                              userList={userList}
+                              initialOpen
+                            />
+                          </DeferredPanel>
+                        ) : (
+                          <button className="legacy-btn legacy-btn-yellow" onClick={() => setShowAdminTools(true)}>
+                            🛡 管理
+                          </button>
+                        )}
+                      </AppErrorBoundary>
                     )}
-                  </AppErrorBoundary>
-                )}
+                    <label className="legacy-check">
+                      <input
+                        type="checkbox"
+                        checked={!scrollLocked}
+                        onChange={(e) => {
+                          const next = !e.target.checked;
+                          scrollLockedRef.current = next;
+                          setScrollLocked(next);
+                        }}
+                      /> 捲動
+                    </label>
+                    <label className="legacy-check">
+                      <input
+                        type="checkbox"
+                        checked={chatMode === "private"}
+                        disabled={invisible}
+                        onChange={(e) => setChatMode(e.target.checked ? "private" : (target ? "publicTarget" : "public"))}
+                      /> 密談
+                    </label>
+                    <label className="legacy-check">
+                      <input type="checkbox" checked={convertTC} onChange={(e) => setConvertTC(e.target.checked)} /> 簡-繁
+                    </label>
+                    <span className="legacy-label legacy-label-green">對象:</span>
+                    <select
+                      className="legacy-select-green"
+                      value={target}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setTarget(val);
+                        if (chatMode !== "private") setChatMode(val ? "publicTarget" : "public");
+                        focusInput();
+                      }}
+                    >
+                      <option value="">選擇對象</option>
+                      {userList
+                        .filter((u) => u.name !== name)
+                        .map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
+                    </select>
+                    <button
+                      className="legacy-btn legacy-btn-green"
+                      onClick={() => {
+                        setTarget("");
+                        if (chatMode !== "private") setChatMode("public");
+                      }}
+                    >
+                      清空對象
+                    </button>
+                    <button className="legacy-btn legacy-btn-yellow" onClick={clearMessages}>清除畫面</button>
+                    <button className="legacy-btn legacy-btn-pink" onClick={leaveRoom}>離開</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="chat-input">
+                  <button className="clear-btn" onClick={clearMessages}>🧹清空畫面</button>
+                  <button
+                    className={`clear-btn scroll-lock-btn${scrollLocked ? " active" : ""}`}
+                    onClick={() => {
+                      const next = !scrollLockedRef.current;
+                      scrollLockedRef.current = next;
+                      setScrollLocked(next);
+                    }}
+                    title={scrollLocked ? "自動捲動" : "停止捲動"}
+                  >
+                    {scrollLocked ? "🔓自動捲動" : "🔒停止捲動"}
+                  </button>
 
-                <label><input type="radio" checked={chatMode === "public"} onChange={() => { setChatMode("public"); setTarget(""); }} /> 公開</label>
-                <label><input type="radio" checked={chatMode === "publicTarget"} onChange={() => setChatMode("publicTarget")} /> 公開對象</label>
-                <label><input type="radio" checked={chatMode === "private"} onChange={() => setChatMode("private")} /> 私聊</label>
+                  {/* ✅ 管理工具包 AppErrorBoundary，防止管理面板錯誤炸掉整個聊天室 */}
+                  {level >= ANL && (
+                    <AppErrorBoundary label="管理工具">
+                      {showAdminTools ? (
+                        <DeferredPanel>
+                          <AdminToolPanel
+                            myName={name}
+                            myLevel={level}
+                            token={token}
+                            userList={userList}
+                            initialOpen
+                          />
+                        </DeferredPanel>
+                      ) : (
+                        <button className="admin-btn" onClick={() => setShowAdminTools(true)}>
+                          🛡 管理
+                        </button>
+                      )}
+                    </AppErrorBoundary>
+                  )}
 
-                {chatMode !== "public" && (
-                  <select value={target} onChange={(e) => { setTarget(e.target.value); focusInput(); }}>
-                    <option value="">選擇對象</option>
-                    {userList
-                      .filter((u) => u.name !== name)
-                      .map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
-                  </select>
-                )}
+                  {!invisible && (
+                    <>
+                      <label><input type="radio" checked={chatMode === "public"} onChange={() => { setChatMode("public"); setTarget(""); }} /> 公開</label>
+                      <label><input type="radio" checked={chatMode === "publicTarget"} onChange={() => setChatMode("publicTarget")} /> 公開對象</label>
+                    </>
+                  )}
+                  <label><input type="radio" checked={chatMode === "private"} onChange={() => setChatMode("private")} /> 私聊</label>
 
-                <input
-                  type="color"
-                  value={chatColor}
-                  title="選擇聊天顏色"
-                  onChange={(e) => {
-                    setChatColor(e.target.value);
-                    sessionStorage.setItem("chatColor", e.target.value);
-                  }}
-                />
+                  {chatMode !== "public" && (
+                    <select value={target} onChange={(e) => { setTarget(e.target.value); focusInput(); }}>
+                      <option value="">選擇對象</option>
+                      {userList
+                        .filter((u) => u.name !== name)
+                        .map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
+                    </select>
+                  )}
 
-                <QuickPhrasePanel
-                  token={token}
-                  onSelect={(content) => setText((prev) => (prev ? prev + " " : "") + content)}
-                />
+                  <input
+                    type="color"
+                    value={chatColor}
+                    title="選擇聊天顏色"
+                    onChange={(e) => {
+                      setChatColor(e.target.value);
+                      sessionStorage.setItem("chatColor", e.target.value);
+                    }}
+                  />
 
-                <label>
-                  <input type="checkbox" checked={convertTC} onChange={(e) => setConvertTC(e.target.checked)} />
-                  簡轉繁
-                </label>
+                  <QuickPhrasePanel
+                    token={token}
+                    onSelect={(content) => setText((prev) => (prev ? prev + " " : "") + content)}
+                  />
 
-                <input
-                  ref={inputRef}
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && send()}
-                  placeholder={placeholder}
-                  disabled={cooldown}
-                />
-                <button onClick={send} disabled={cooldown}>發送</button>
-              </div>
+                  <label>
+                    <input type="checkbox" checked={convertTC} onChange={(e) => setConvertTC(e.target.checked)} />
+                    簡轉繁
+                  </label>
+
+                  <input
+                    ref={inputRef}
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && send()}
+                    placeholder={placeholder}
+                    disabled={cooldown}
+                  />
+                  <button onClick={send} disabled={cooldown}>發送</button>
+                </div>
+              )}
+
+              {showSongRequestModal && (
+                <div className="song-request-modal-overlay" onClick={() => setShowSongRequestModal(false)}>
+                  <div className="song-request-modal" onClick={(e) => e.stopPropagation()}>
+                    <div className="song-request-modal-title">🎵 點播歌曲</div>
+                    <input
+                      autoFocus
+                      className="song-request-modal-input"
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                      placeholder="貼上YouTube連結"
+                      onKeyDown={(e) => {
+                        if (e.key !== "Enter") return;
+                        playVideo();
+                        setShowSongRequestModal(false);
+                      }}
+                    />
+                    <div className="song-request-modal-actions">
+                      <button onClick={() => setShowSongRequestModal(false)}>取消</button>
+                      <button
+                        className="song-request-modal-submit"
+                        onClick={() => { playVideo(); setShowSongRequestModal(false); }}
+                      >
+                        送出點播
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {(NF || roomConfig.new_section) && isMember && (
                 <div className="trade-apple">
@@ -916,12 +1155,12 @@ export default function ChatApp() {
                       </button>
                     )}
                     {!roomConfig.new_section && <SurpriseHistoryPanel token={token} />}
-                    {roomConfig.currency_name}樂園{" "}
+                    {roomConfig.currency_name === "金蘋果" && <>{roomConfig.currency_name}樂園{" "}</>}
                     <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} />{" "}
                     當前{roomConfig.currency_name}數量：{apples}
                   </div>
 
-                  {!roomConfig.new_section && (
+                  {!invisible && !roomConfig.new_section && (
                     <>
                       <select value={target} onChange={(e) => setTarget(e.target.value)}>
                         <option value="">選擇對象</option>
@@ -990,12 +1229,12 @@ export default function ChatApp() {
               kickAndBlockUser={(targetName, reason) => socket.emit("kickAndBlockUser", { room, targetName, reason })}
               muteUser={(targetName) => socket.emit("muteUser", { room, targetName })}
               gamesBusy={gamesBusy}
-              onRpsChallenge={(targetName) => {
+              onRpsChallenge={invisible ? undefined : (targetName) => {
                 if (gamesBusy) return;
                 socket.emit("rpsChallenge", { room, challenger: name, target: targetName });
                 setRpsPending(targetName);
               }}
-              onPingpongChallenge={(targetName) => {
+              onPingpongChallenge={invisible ? undefined : (targetName) => {
                 if (gamesBusy) return;
                 socket.emit("pingpongChallenge", { room, challenger: name, target: targetName });
                 setPingpongPending(targetName);
@@ -1070,6 +1309,18 @@ export default function ChatApp() {
       <DeferredPanel>
         {NF && !roomConfig.new_section && (
           <ClawMachineGame
+            socket={socket}
+            token={token}
+            name={name}
+            setApples={setApples}
+          />
+        )}
+      </DeferredPanel>
+
+      {/* 櫻桃樹接櫻桃遊戲（new_section 模式專用，取代舊版撈金蘋果遊戲一） */}
+      <DeferredPanel>
+        {roomConfig.new_section && (
+          <CherryTreeGame
             socket={socket}
             token={token}
             name={name}

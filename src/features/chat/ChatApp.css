@@ -197,6 +197,210 @@ body {
   cursor: pointer;
 }
 
+/* ===== 舊版整體外皮（置中 + 仿舊版配色的外框） ===== */
+.chat-layout--legacy {
+  max-width: 1400px;
+  margin: 0 auto;
+  border: 3px solid #cc66cc;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #2a0a2a 0%, #120212 100%);
+  box-shadow: 0 0 24px rgba(204, 102, 204, 0.35);
+}
+
+.chat-layout--legacy .chat-title-bar {
+  background: linear-gradient(90deg, #4a0e4a, #8a2a7a, #4a0e4a);
+  border: 1px solid #e0a0e0;
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+.chat-layout--legacy .chat-title { color: #ffe066; }
+
+.chat-layout--legacy .message-list {
+  background-color: #000;
+  border: 1px solid #663366;
+}
+
+.chat-layout--legacy .chat-right {
+  background: linear-gradient(180deg, #3a0e3a, #1a041a);
+  border: 2px solid #cc66cc;
+}
+
+.chat-layout--legacy .user-list {
+  background-color: transparent;
+  border: none;
+}
+
+.chat-layout--legacy .user-list-header {
+  background: linear-gradient(90deg, #6a1a6a, #a83aa8);
+  color: #ffe066;
+  border-radius: 6px;
+}
+
+.chat-layout--legacy .user-item {
+  border-bottom: 1px solid #4a1a4a;
+}
+
+.chat-layout--legacy .user-item:hover,
+.chat-layout--legacy .user-item.selected {
+  background-color: #4a1a4a;
+}
+
+.chat-layout--legacy .chat-input--legacy {
+  border-color: #e0a0e0;
+}
+
+/* ===== 舊版聊天介面 ===== */
+.chat-input--legacy {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  background: #000;
+  padding: 6px 8px;
+  border: 1px solid #335;
+  border-radius: 6px;
+}
+
+.chat-input--legacy .legacy-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.chat-input--legacy .legacy-label {
+  color: #ffd54a;
+  font-size: 0.85rem;
+  font-weight: bold;
+  flex: 0 0 auto;
+}
+.chat-input--legacy .legacy-label-green { color: #33cc33; }
+
+.chat-input--legacy .legacy-text-input {
+  flex: 1;
+  min-width: 0;
+  background: #c9c8f0;
+  color: #111;
+  border: 2px solid #333;
+  border-radius: 4px;
+  padding: 6px 8px;
+}
+
+.chat-input--legacy .legacy-check {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: #fff;
+  font-size: 0.8rem;
+  flex: 0 0 auto;
+}
+.chat-input--legacy .legacy-check input[type="checkbox"] {
+  width: auto;
+  height: auto;
+  padding: 0;
+  background: none;
+  border: none;
+  flex: none;
+}
+
+.chat-input--legacy .legacy-select-green {
+  flex: 0 0 auto;
+  background: #baf7ba;
+  color: #111;
+  border: 1px solid #388e3c;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 0.8rem;
+}
+
+.chat-input--legacy .legacy-select-pink {
+  flex: 0 0 auto;
+  background: #f5a0f5;
+  color: #111;
+  border: 1px solid #cc66cc;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 0.8rem;
+}
+
+.chat-input--legacy .legacy-btn {
+  flex: 0 0 auto;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #111;
+  cursor: pointer;
+}
+.chat-input--legacy .legacy-history-btn {
+  padding: 5px 8px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.chat-input--legacy .legacy-btn-grey   { background: #d9d9d9; }
+.chat-input--legacy .legacy-btn-green  { background: #a8e6a8; }
+.chat-input--legacy .legacy-btn-yellow { background: #f5f279; }
+.chat-input--legacy .legacy-btn-pink   { background: #f5a0f5; }
+.chat-input--legacy .legacy-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ===== 點播歌曲小視窗（舊版功能選單用） ===== */
+.song-request-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.song-request-modal {
+  background: #1a1a1a;
+  border: 1px solid #666;
+  border-radius: 8px;
+  padding: 16px;
+  width: 300px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.song-request-modal-title {
+  color: #ffd54a;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.song-request-modal-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid #555;
+  background: #111;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.song-request-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.song-request-modal-actions button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.song-request-modal-submit {
+  background: #6200ee;
+  color: #fff;
+  font-weight: bold;
+}
+
 /* 清空畫面按鈕樣式 */
 .clear-btn {
   font-size: 0.7rem;

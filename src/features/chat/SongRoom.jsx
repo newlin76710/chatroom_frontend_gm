@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { Room, LocalAudioTrack } from "livekit-client";
 import "./SongRoom.css";
 import { roomConfig } from "../../shared/roomConfig";
@@ -6,7 +6,7 @@ import { roomConfig } from "../../shared/roomConfig";
 const MAX_SING_DURATION = 5000;
 const BASE_SING_DURATION = 480;
 
-export default function SongRoom({ room, name, socket, currentSinger, myLevel }) {
+const SongRoom = forwardRef(function SongRoom({ room, name, socket, currentSinger, myLevel }, ref) {
   const [lkRoom, setLkRoom] = useState(null);
   const [singing, setSinging] = useState(false);
   const [waiting, setWaiting] = useState(false);
@@ -275,6 +275,18 @@ export default function SongRoom({ room, name, socket, currentSinger, myLevel })
 
   const otherSinger = currentSinger && currentSinger !== name;
 
+  // 讓外部（例如舊版介面的「功能選單」）可以觸發開啟/關閉語音
+  useImperativeHandle(ref, () => ({
+    startVoice: () => {
+      if (isProcessing || singing || inQueue) return;
+      otherSinger ? joinQueue() : grabMic();
+    },
+    stopVoice: () => {
+      if (singing) stopSing();
+      else if (inQueue) leaveQueue();
+    },
+  }));
+
   return (
     <div className="songroom-container">
       <button className="songroom-button" disabled={isProcessing}
@@ -371,4 +383,6 @@ export default function SongRoom({ room, name, socket, currentSinger, myLevel })
       </div>
     </div>
   );
-}
+});
+
+export default SongRoom;

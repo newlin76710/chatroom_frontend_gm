@@ -81,6 +81,40 @@ export default function AdminRoomSettingsPanel({ token }) {
         </label>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>全訊息靠左顯示</span>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13 }}>
+          <input
+            type="checkbox"
+            checked={!!settings.own_message_left}
+            onChange={e => setSettings(s => ({ ...s, own_message_left: e.target.checked }))}
+          />
+          啟用
+        </label>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>舊版聊天介面</span>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13 }}>
+          <input
+            type="checkbox"
+            checked={!!settings.legacy_chat_ui}
+            onChange={e => setSettings(s => ({ ...s, legacy_chat_ui: e.target.checked }))}
+          />
+          啟用（所有人使用舊版聊天操作列）
+        </label>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>發言間隔秒數</span>
+        <input
+          type="number"
+          min={0}
+          max={60}
+          value={settings.message_cooldown_seconds ?? 1}
+          onChange={e => setSettings(s => ({ ...s, message_cooldown_seconds: Number(e.target.value) }))}
+          style={{ width: 70, padding: "5px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }}
+        />
+        <span style={{ fontSize: 12, color: "#888" }}>秒（0-60，發送訊息後需等待的秒數）</span>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>暱稱長度上限</span>
         <input
           type="number"

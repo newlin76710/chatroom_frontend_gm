@@ -14,6 +14,9 @@ const _cfg = {
   currency_icon:       "gold_apple.gif",
   currency_emoji:      "🍎",
   nickname_max_length: 10,
+  own_message_left:    false,
+  legacy_chat_ui:      false,
+  message_cooldown_seconds: 1,
 };
 
 export const roomConfig = _cfg;

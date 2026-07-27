@@ -20,6 +20,8 @@ export default function MessageList({
   userList = [],
   scrollLocked = false,
   scrollLockedRef,         // 從 ChatApp 傳入的 ref，點擊時同步更新
+  ownMessageLeft = roomConfig.own_message_left,
+  legacyUI = false,
 }) {
   const AML = roomConfig.admin_max_level || 99;
   const containerRef = useRef(null);
@@ -87,9 +89,11 @@ export default function MessageList({
         .map((m, i) => {
           const userName = safeText(m.user?.name);
           const targetName = safeText(m.target);
+          const emotionText = safeText(m.emotion);
           let messageText = safeText(m.message);
           const timestamp = m.timestamp || new Date().toLocaleTimeString();
           const isSelf = userName === name;
+          const alignRight = isSelf && !ownMessageLeft;
           const isSystem = userName === "系統";
           const isTransaction = m.type === "transaction";
           const isGift = m.type === "gift";
@@ -148,7 +152,7 @@ export default function MessageList({
           }
 
           const bgColor = isRelatedToMe ? "#004477" : "transparent";
-          const tag = m.mode === "private" ? "(私聊)" : "";
+          const tag = m.mode === "private" ? (legacyUI ? "(密)" : "(私聊)") : "";
 
           if (isSurprise) {
             return (
@@ -175,8 +179,8 @@ export default function MessageList({
           }
 
           return (
-            <div key={i} className="message-row" style={{ display: "flex", justifyContent: isSelf ? "flex-end" : "flex-start", marginBottom: 6 }}>
-              {!isSelf && !isSystem && !isTransaction && !isGift && (
+            <div key={i} className="message-row" style={{ display: "flex", justifyContent: alignRight ? "flex-end" : "flex-start", marginBottom: 6 }}>
+              {!alignRight && !isSystem && !isTransaction && !isGift && (
                 <img
                   src={m.user?.avatar || getAiAvatar(userName) || "/avatars/g01.gif"}
                   alt={userName}
@@ -221,6 +225,22 @@ export default function MessageList({
                       </span>
                     )}
                     <span style={{ color: "#ff9900" }}> {messageText}</span>
+                  </>
+                ) : (!isSystem && emotionText) ? (
+                  <>
+                    <span style={{ fontWeight: "bold", cursor: "pointer", color: getUserColor(userName) }} onClick={() => handleSelectUser(userName)}>
+                      {userName}
+                    </span>
+                    <span> {emotionText}{targetName ? "地對 " : "的說"}</span>
+                    {targetName && (
+                      <>
+                        <span style={{ fontWeight: "bold", cursor: "pointer", color: getUserColor(targetName) }} onClick={() => handleSelectUser(targetName)}>
+                          {targetName}
+                        </span>
+                        <span> 說</span>
+                      </>
+                    )}
+                    <span>：{messageText}</span>
                   </>
                 ) : (
                   <>

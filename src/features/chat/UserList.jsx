@@ -78,7 +78,7 @@ export default function UserList({
               key={`${u.name}-${idx}`}
               className={`user-item ${u.name === target ? "selected" : ""}`}
               onClick={() => {
-                if (chatMode !== "publicTarget") setChatMode("private");
+                setChatMode(chatMode === "private" ? "private" : "publicTarget");
                 setTarget(u.name);
                 focusInput?.();
               }}

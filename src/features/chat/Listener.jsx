@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { Room } from "livekit-client";
 import "./Listener.css";
 import { roomConfig, BACKEND } from "../../shared/roomConfig";
 
-export default function Listener({ room, name, socket, onSingerChange }) {
+const Listener = forwardRef(function Listener({ room, name, socket, onSingerChange }, ref) {
   const lkRoomRef = useRef(null); // ← ref 取代 state，避免 stale closure
   const [listening, setListening] = useState(false);
   const [currentSinger, setCurrentSinger] = useState(null);
@@ -213,6 +213,20 @@ export default function Listener({ room, name, socket, onSingerChange }) {
     }
   };
 
+  // 讓外部（例如舊版介面的「功能選單」）可以觸發開始聽/結束聽
+  useImperativeHandle(ref, () => ({
+    startListen: async () => {
+      if (togglingRef.current || isSinging || listeningRef.current) return;
+      togglingRef.current = true;
+      try { await startListening(); } finally { togglingRef.current = false; }
+    },
+    stopListen: async () => {
+      if (togglingRef.current || !listeningRef.current) return;
+      togglingRef.current = true;
+      try { await stopListening(); } finally { togglingRef.current = false; }
+    },
+  }));
+
   return (
     <div className="listener-bar">
       <span className="current-singer">
@@ -251,4 +265,6 @@ export default function Listener({ room, name, socket, onSingerChange }) {
 
     </div>
   );
-}
+});
+
+export default Listener;

@@ -30,7 +30,12 @@ const buttonStyle = {
 export default function Login() {
   const navigate = useNavigate();
   const [roomName, setRoomName] = useState("");
-  const [mode, setMode] = useState("guest"); // guest | login | register | edit | forgot
+  const [roomUserCount, setRoomUserCount] = useState(null);
+  const VALID_MODES = ["guest", "login", "register", "edit", "forgot"];
+  const [mode, setMode] = useState(() => {
+    const m = new URLSearchParams(window.location.search).get("mode");
+    return VALID_MODES.includes(m) ? m : "guest";
+  }); // guest | login | register | edit | forgot
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -45,6 +50,19 @@ export default function Login() {
 
   useEffect(() => {
     loadRoomConfig().then(cfg => setRoomName(cfg.room_name || RN));
+  }, []);
+
+  // ─── 目前聊天室人數 ────────────────────────────────────────────────────
+  useEffect(() => {
+    const fetchRoomUserCount = () => {
+      fetch(`${BACKEND}/getRoomUsers?room=${RN}`)
+        .then(r => r.json())
+        .then(data => setRoomUserCount(Array.isArray(data.users) ? data.users.length : null))
+        .catch(() => {});
+    };
+    fetchRoomUserCount();
+    const timer = setInterval(fetchRoomUserCount, 15000);
+    return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -111,6 +129,17 @@ export default function Login() {
       sessionStorage.setItem("level", data.level ?? 1);
       sessionStorage.setItem("exp", data.exp ?? 0);
       sessionStorage.setItem("apples", data.gold_apples ?? 0);
+
+      // ⭐ 99 級（管理員）可選擇本次登入是否隱形
+      const AML = roomConfig.admin_max_level || 99;
+      if (Number(data.level) >= AML) {
+        const wantInvisible = window.confirm(
+          "本次登入是否要使用隱形模式？\n\n隱形模式：不會顯示進出訊息、其他人（非管理員）看不到你在線上名單，只能私聊，且不能使用互動遊戲/商城買賣/贈送。\n\n選「確定」= 隱形，「取消」= 正常登入"
+        );
+        sessionStorage.setItem("invisible", wantInvisible ? "true" : "false");
+      } else {
+        sessionStorage.setItem("invisible", "false");
+      }
 
       setUsername(data.name);
       setGender(data.gender);
@@ -201,6 +230,11 @@ export default function Login() {
   return (
     <div style={{ maxWidth: 420, margin: "60px auto", padding: 20 }}>
       <h2 style={{ textAlign: "center", marginBottom: 10 }}>{roomName}聊天室</h2>
+      {roomUserCount !== null && (
+        <div style={{ textAlign: "center", color: "#66ccff", fontSize: 14, marginBottom: 6 }}>
+          （目前人數{roomUserCount}人）
+        </div>
+      )}
       <div style={{ textAlign: "center", color: "#aaa", fontSize: 14 }}>
         聊天越多，等級越高（最高 Lv.90）
       </div>

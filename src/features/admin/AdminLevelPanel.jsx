@@ -246,7 +246,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
     return (
         <>
             <button className="admin-btn" onClick={() => { setOpen(true); loadUsers(1); }}>
-                🛡 管理使用者等級 {roomConfig.new_function && (roomConfig.open_peony ? `& ${roomConfig.currency_name} & 金牡丹` : `& ${roomConfig.currency_name}`)}
+                🛡 管理使用者等級 {(roomConfig.new_function || roomConfig.new_section) && `& ${roomConfig.currency_name}`}{roomConfig.new_function && roomConfig.open_peony && ` & 金牡丹`}
             </button>
 
             {open && (
@@ -275,7 +275,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                         <th>帳號</th>
                                         <th>等級</th>
                                         <th>積分</th>
-                                        {roomConfig.new_function && <th>{roomConfig.currency_name}</th>}
+                                        {(roomConfig.new_function || roomConfig.new_section) && <th>{roomConfig.currency_name}</th>}
                                         {roomConfig.new_function && roomConfig.open_peony && <th>金牡丹</th>}
                                         <th>建立時間</th>
                                         <th>最近登入</th>
@@ -334,7 +334,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                                     修改
                                                 </button>
                                             </td>
-                                            {roomConfig.new_function && (<td>
+                                            {(roomConfig.new_function || roomConfig.new_section) && (<td>
                                                 <input
                                                     type="number"
                                                     min="0"
@@ -386,7 +386,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                         </tr>
                                     )) : (
                                         <tr>
-                                            <td colSpan={roomConfig.new_function ? (roomConfig.open_peony ? 7 : 6) : 5} style={{ textAlign: "center" }}>無資料</td>
+                                            <td colSpan={5 + ((roomConfig.new_function || roomConfig.new_section) ? 1 : 0) + ((roomConfig.new_function && roomConfig.open_peony) ? 1 : 0)} style={{ textAlign: "center" }}>無資料</td>
                                         </tr>
                                     )}
                                 </tbody>

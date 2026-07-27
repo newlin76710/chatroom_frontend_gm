@@ -1,0 +1,261 @@
+/* ── CherryTreeGame.css ── */
+
+/* ─── 全螢幕遊戲覆蓋層 ──────────────────────────────────────── */
+.ctg-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 9100;
+  overflow: hidden;
+  user-select: none;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  isolation: isolate;
+}
+
+/* ─── 抬頭顯示（倒計時 + 提示）────────────────────────────── */
+.ctg-hud {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.65);
+  border: 2px solid #ff4d6d;
+  border-radius: 40px;
+  padding: 8px 28px;
+  z-index: 10;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.ctg-timer {
+  font-size: 2.6rem;
+  font-weight: 900;
+  color: #ff4d6d;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.ctg-timer-unit {
+  font-size: 1rem;
+  color: #fff;
+  margin-left: -4px;
+}
+
+.ctg-hint {
+  font-size: 1rem;
+  color: #ffb3c1;
+  margin-left: 8px;
+}
+
+/* ─── 大樹 ──────────────────────────────────────────────────── */
+.ctg-tree {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 7rem;
+  line-height: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
+}
+
+/* ─── 櫻桃 ──────────────────────────────────────────────────── */
+.ctg-cherry-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+  pointer-events: none;
+  font-size: 2rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 6px rgba(255, 0, 60, 0.6));
+}
+
+/* ─── 籃子 ──────────────────────────────────────────────────── */
+.ctg-basket {
+  position: absolute;
+  bottom: 40px;
+  transform: translateX(-50%);
+  font-size: 3.4rem;
+  line-height: 1;
+  pointer-events: none;
+  will-change: left;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+}
+
+/* 平板/手機：稍微縮小一點，避免佔比過大 */
+@media (max-width: 1024px) {
+  .ctg-tree { font-size: 5.5rem; }
+  .ctg-cherry-wrap { font-size: 1.7rem; }
+  .ctg-basket { font-size: 2.8rem; }
+}
+
+/* ─── 遊戲結果卡片 ───────────────────────────────────────────── */
+.ctg-result {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(145deg, #2a0a12 0%, #1a0209 100%);
+  border: 3px solid #ff4d6d;
+  border-radius: 20px;
+  padding: 32px 44px;
+  color: #fff;
+  text-align: center;
+  min-width: 320px;
+  max-width: 520px;
+  z-index: 20;
+  box-shadow: 0 0 40px rgba(255, 77, 109, 0.35);
+  animation: ctg-fadein 0.3s ease;
+  cursor: pointer;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.ctg-result h2 {
+  font-size: 1.9rem;
+  color: #ff4d6d;
+  margin: 0 0 16px;
+}
+
+.ctg-result ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+  text-align: left;
+  max-height: 300px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+.ctg-result ul li {
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255, 77, 109, 0.15);
+}
+
+.ctg-result ul li.me {
+  color: #ff8fa3;
+  font-weight: bold;
+}
+
+.ctg-result ul::-webkit-scrollbar { width: 6px; }
+.ctg-result ul::-webkit-scrollbar-track { background: transparent; }
+.ctg-result ul::-webkit-scrollbar-thumb {
+  background: rgba(255, 77, 109, 0.5);
+  border-radius: 4px;
+}
+.ctg-result ul::-webkit-scrollbar-thumb:hover { background: #ff4d6d; }
+
+.ctg-result .ctg-dismiss-hint {
+  margin-top: 18px;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+/* ─── 30 秒預告說明彈窗 ───────────────────────────────────────── */
+.ctg-warn-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9150;
+  background: rgba(0, 0, 0, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.ctg-warn-card {
+  background: linear-gradient(145deg, #2a0a12 0%, #1a0209 100%);
+  border: 3px solid #ff4d6d;
+  border-radius: 22px;
+  padding: 28px 36px 24px;
+  text-align: center;
+  color: #fff;
+  min-width: 280px;
+  max-width: 400px;
+  width: 90vw;
+  cursor: default;
+  box-shadow:
+    0 0 50px rgba(255, 77, 109, 0.4),
+    0 0 100px rgba(120, 0, 30, 0.2);
+  animation: ctg-warn-fadein 0.35s ease;
+}
+
+@keyframes ctg-warn-fadein {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.ctg-warn-countdown {
+  font-size: 4rem;
+  font-weight: 900;
+  color: #ff4d6d;
+  line-height: 1;
+  text-shadow: 0 0 20px #ff4d6d, 0 0 40px #ff0033;
+  font-variant-numeric: tabular-nums;
+}
+
+.ctg-warn-unit {
+  font-size: 1rem;
+  color: #ffb3c1;
+  margin-bottom: 12px;
+}
+
+.ctg-warn-title {
+  font-size: 1.6rem;
+  color: #fff;
+  margin: 0 0 16px;
+  text-shadow: 0 0 10px #ff4d6d;
+  letter-spacing: 2px;
+}
+
+.ctg-warn-rules {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ctg-warn-rules li {
+  font-size: 1rem;
+  color: #ddd;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 8px 14px;
+  border-left: 3px solid #ff4d6d;
+  line-height: 1.5;
+}
+
+.ctg-warn-rules li strong { color: #ff8fa3; }
+
+.ctg-warn-close {
+  width: 100%;
+  padding: 12px 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2a0208;
+  background: linear-gradient(180deg, #ff8fa3 0%, #ff4d6d 100%);
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #b0002a, 0 6px 16px rgba(255, 77, 109, 0.4);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.ctg-warn-close:hover  { transform: translateY(-1px); box-shadow: 0 5px 0 #b0002a; }
+.ctg-warn-close:active { transform: translateY(3px);  box-shadow: 0 1px 0 #b0002a; }
+
+@keyframes ctg-fadein {
+  from { opacity: 0; transform: translate(-50%, -46%); }
+  to   { opacity: 1; transform: translate(-50%, -50%); }
+}
