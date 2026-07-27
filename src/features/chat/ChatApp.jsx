@@ -465,6 +465,7 @@ export default function ChatApp() {
         case "system_whack": return `打${roomConfig.currency_name}`;
         case "system_claw": return `夾${roomConfig.currency_name}機`;
         case "system_surprise": return "每日樂透";
+        case "system_online_reward": return "在線獎勵";
         default: return roomConfig.currency_name;
       }
     };
@@ -724,6 +725,13 @@ export default function ChatApp() {
     requestAnimationFrame(() => inputRef.current?.focus());
   }, []);
 
+  const selectTarget = useCallback((targetName) => {
+    if (!targetName || targetName === name) return;
+    setTarget(targetName);
+    setChatMode(chatMode === "private" ? "private" : "publicTarget");
+    focusInput();
+  }, [chatMode, name, focusInput]);
+
   // ─── 渲染 ─────────────────────────────────────────────────────────────────
   return (
     <>
@@ -850,7 +858,7 @@ export default function ChatApp() {
                       </div>
                     )}
                     {!invisible && (
-                      <SongRoom ref={songRoomRef} room={room} name={name} socket={socket} currentSinger={currentSinger} myLevel={level} />
+                      <SongRoom ref={songRoomRef} room={room} name={name} socket={socket} currentSinger={currentSinger} myLevel={level} onSelectTarget={selectTarget} />
                     )}
                   </>
                 ) : (
@@ -868,7 +876,7 @@ export default function ChatApp() {
                   </>
                 )}
 
-                <Listener ref={listenerRef} room={room} name={name} socket={socket} onSingerChange={setCurrentSinger} />
+                <Listener ref={listenerRef} room={room} name={name} socket={socket} onSingerChange={setCurrentSinger} onSelectTarget={selectTarget} />
               </div>
 
               {/* ✅ visibleMessages 是 memoized，不會每次 render 重新過濾 */}
@@ -879,12 +887,7 @@ export default function ChatApp() {
                 typing={typing}
                 ownMessageLeft={ownMessageLeft}
                 messagesEndRef={messagesEndRef}
-                onSelectTarget={(targetName) => {
-                  if (!targetName) return;
-                  setTarget(targetName);
-                  setChatMode(chatMode === "private" ? "private" : "publicTarget");
-                  focusInput();
-                }}
+                onSelectTarget={selectTarget}
                 userList={userList}
                 scrollLocked={scrollLocked}
                 scrollLockedRef={scrollLockedRef}

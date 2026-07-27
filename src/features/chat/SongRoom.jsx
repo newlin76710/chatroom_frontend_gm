@@ -6,7 +6,7 @@ import { roomConfig } from "../../shared/roomConfig";
 const MAX_SING_DURATION = 5000;
 const BASE_SING_DURATION = 480;
 
-const SongRoom = forwardRef(function SongRoom({ room, name, socket, currentSinger, myLevel }, ref) {
+const SongRoom = forwardRef(function SongRoom({ room, name, socket, currentSinger, myLevel, onSelectTarget }, ref) {
   const [lkRoom, setLkRoom] = useState(null);
   const [singing, setSinging] = useState(false);
   const [waiting, setWaiting] = useState(false);
@@ -306,7 +306,12 @@ const SongRoom = forwardRef(function SongRoom({ room, name, socket, currentSinge
               {currentSinger && (
                 <>
                   <div className="queue-item">
-                    <span>{currentSinger}</span>
+                    <span
+                      style={currentSinger !== name ? { cursor: "pointer" } : undefined}
+                      onClick={() => onSelectTarget?.(currentSinger)}
+                    >
+                      {currentSinger}
+                    </span>
                     {myLevel >= (roomConfig.admin_min_level || 91) && <button className="kick-button" onClick={() => forceStopSinger(currentSinger)}>踢下麥</button>}
                   </div>
                   {myLevel >= (roomConfig.admin_min_level || 91) && (
@@ -329,7 +334,12 @@ const SongRoom = forwardRef(function SongRoom({ room, name, socket, currentSinge
               {queue.length === 0 ? <div style={{ opacity: 0.6 }}>目前沒有人排麥</div> :
                 queue.map((q, i) => (
                   <div key={i} className={`queue-item ${q === name ? "me" : ""}`}>
-                    <span>{i + 1}. {q}{q === name && " (我)"}</span>
+                    <span
+                      style={q !== name ? { cursor: "pointer" } : undefined}
+                      onClick={() => onSelectTarget?.(q)}
+                    >
+                      {i + 1}. {q}{q === name && " (我)"}
+                    </span>
                     {myLevel >= (roomConfig.admin_min_level || 91) && <div className="admin-controls">
                       {i === 0 && currentSinger && (
                         <button

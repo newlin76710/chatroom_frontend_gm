@@ -3,7 +3,7 @@ import { Room } from "livekit-client";
 import "./Listener.css";
 import { roomConfig, BACKEND } from "../../shared/roomConfig";
 
-const Listener = forwardRef(function Listener({ room, name, socket, onSingerChange }, ref) {
+const Listener = forwardRef(function Listener({ room, name, socket, onSingerChange, onSelectTarget }, ref) {
   const lkRoomRef = useRef(null); // ← ref 取代 state，避免 stale closure
   const [listening, setListening] = useState(false);
   const [currentSinger, setCurrentSinger] = useState(null);
@@ -230,13 +230,27 @@ const Listener = forwardRef(function Listener({ room, name, socket, onSingerChan
   return (
     <div className="listener-bar">
       <span className="current-singer">
-        🎤 演唱者：{currentSinger || "無"} &nbsp;
+        🎤 演唱者：
+        <span
+          style={currentSinger && currentSinger !== name ? { cursor: "pointer" } : undefined}
+          onClick={() => currentSinger && onSelectTarget?.(currentSinger)}
+        >
+          {currentSinger || "無"}
+        </span>
+        {" "}
       </span>
       {countdown !== null && currentSinger && (
         <span className="sing-countdown">⏱ 尚餘 {countdown} 秒 &nbsp;</span>
       )}
       <span className="next-singer">
-        ⏭ 下一位：{nextSinger || "無"} &nbsp;
+        ⏭ 下一位：
+        <span
+          style={nextSinger && nextSinger !== name ? { cursor: "pointer" } : undefined}
+          onClick={() => nextSinger && onSelectTarget?.(nextSinger)}
+        >
+          {nextSinger || "無"}
+        </span>
+        {" "}
       </span>
       <button className="listen-btn" disabled={isSinging} onClick={toggleListening}>
         {listening ? "🛑 停止聽" : "🎧 開始聽"}

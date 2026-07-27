@@ -20,6 +20,9 @@ const DEFAULT = {
   marquee_reward:       10,
   marquee_duration:     30,
   surprise_reward:      10,
+  online_reward_enabled:          true,
+  online_reward_interval_minutes: 60,
+  online_reward_amount:           2,
   game1_enabled:        true,
   game1_hour:           20,
   game1_minute:         30,
@@ -286,6 +289,29 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <Row label="每日樂透獎勵">
                   <input type="number" value={settings.surprise_reward}
                     onChange={e => setInt("surprise_reward", e.target.value)} />
+                </Row>
+              )}
+              <Row label="在線時數獎勵">
+                <label className="toggle-label">
+                  <input type="checkbox" checked={settings.online_reward_enabled !== false}
+                    onChange={e => setBool("online_reward_enabled", e.target.checked)} />
+                  {" "}啟用（持續在線每滿一段時間自動贈送{currencyName}）
+                </label>
+              </Row>
+              {settings.online_reward_enabled !== false && (
+                <Row label="在線獎勵間隔">
+                  <input type="number" min={1} style={{ width: 64 }}
+                    value={settings.online_reward_interval_minutes}
+                    onChange={e => setInt("online_reward_interval_minutes", e.target.value)} />
+                  <span className="field-note">分鐘（最少 1，持續在線滿此時間即贈送一次，可重複累加）</span>
+                </Row>
+              )}
+              {settings.online_reward_enabled !== false && (
+                <Row label="在線獎勵數量">
+                  <input type="number" min={0} style={{ width: 64 }}
+                    value={settings.online_reward_amount}
+                    onChange={e => setInt("online_reward_amount", e.target.value)} />
+                  <span className="field-note">顆{currencyName}／每次</span>
                 </Row>
               )}
             </section>
