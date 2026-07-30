@@ -19,7 +19,7 @@ export default function MarqueeGame({ socket, name, userList }) {
   const participantsRef = useRef([]);
 
   const participants = useMemo(
-    () => userList.filter((u) => u.type !== "AI").map((u) => u.name),
+    () => userList.filter((u) => u.type !== "AI" && !u.invisible).map((u) => u.name),
     [userList]
   );
   participantsRef.current = participants;

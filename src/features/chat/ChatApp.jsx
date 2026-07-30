@@ -466,6 +466,7 @@ export default function ChatApp() {
         case "system_claw": return `夾${roomConfig.currency_name}機`;
         case "system_surprise": return "每日樂透";
         case "system_online_reward": return "在線獎勵";
+        case "system_gift_convert": return "收到禮物回饋";
         default: return roomConfig.currency_name;
       }
     };
@@ -502,10 +503,18 @@ export default function ChatApp() {
     const handleFirework = (data) => {
       const container = document.createElement("div");
       container.className = "firework-container";
-      container.innerHTML = `
-        <img src="${data.imageUrl}" class="firework-gif" />
-        <div class="firework-message">${data.message}</div>
-      `;
+
+      const img = document.createElement("img");
+      img.src = "/gifts/firework-transparent.webp";
+      img.className = "firework-gif";
+      img.alt = "";
+
+      const message = document.createElement("div");
+      message.className = "firework-message";
+      message.textContent = data.message || "";
+
+      container.appendChild(img);
+      container.appendChild(message);
       document.body.appendChild(container);
       setTimeout(() => container.remove(), 5000);
     };
@@ -1150,9 +1159,9 @@ export default function ChatApp() {
                     {level >= AML && (
                       <button
                         className="admin-btn"
-                        disabled={marqueeActive}
+                        disabled={marqueeActive || invisible}
                         onClick={() => socket.emit("startMarquee", { token, room: RN })}
-                        title={marqueeActive ? "跑馬燈進行中" : "開始跑馬燈抽獎"}
+                        title={invisible ? "隱身模式下無法開始跑馬燈" : marqueeActive ? "跑馬燈進行中" : "開始跑馬燈抽獎"}
                       >
                         {marqueeActive ? "🎰 進行中…" : "🎰 跑馬燈"}
                       </button>
