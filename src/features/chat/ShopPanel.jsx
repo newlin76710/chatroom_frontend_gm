@@ -13,13 +13,23 @@ const CAKE_VARIANTS = [
   { id: "cupcake",        emoji: "🧁", name: "杯子蛋糕",   image: "/gifts/cake_cupcake.gif" },
 ];
 
+const MULTI_QTY_IDS = ["diamond", "plane", "car"];
+const MAX_GIFT_QUANTITY = 20;
+
 export default function ShopPanel({ token, myName, myLevel, targetName, open, onClose, title = "商城" }) {
   const [buying, setBuying] = useState(null);
   const [showCakePicker, setShowCakePicker] = useState(false);
+  const [quantities, setQuantities] = useState({});
 
   if (!open) return null;
 
   const isMarket = title === "賣場";
+
+  const getQuantity = (id) => quantities[id] ?? 1;
+  const setQuantity = (id, val) => {
+    const n = Math.max(1, Math.min(MAX_GIFT_QUANTITY, Math.floor(Number(val)) || 1));
+    setQuantities((prev) => ({ ...prev, [id]: n }));
+  };
 
   const GIFT_IDS = isMarket
     ? ["diamond", "plane", "car"]
@@ -50,11 +60,14 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
     }
     if (buying) return;
 
+    const quantity = MULTI_QTY_IDS.includes(item.id) ? getQuantity(item.id) : 1;
+
     try {
       setBuying(item.id);
 
       const body = { itemId: item.id, targetName, room: RN };
       if (cakeVariant) body.cakeVariant = cakeVariant;
+      if (quantity > 1) body.quantity = quantity;
 
       const res = await fetch(`${BACKEND}/api/shop/buy`, {
         method: "POST",
@@ -72,7 +85,7 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
         return;
       }
 
-      alert(`購買成功：${item.name}`);
+      alert(`購買成功：${item.name}${quantity > 1 ? ` ×${quantity}` : ""}`);
     } catch (err) {
       alert("此功能尚未開放!");
     } finally {
@@ -99,7 +112,18 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
                 <div className="shop-name">{item.name}</div>
 
                 <div className="shop-right">
-                  <span className="shop-price">{item.price} <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} /></span>
+                  {MULTI_QTY_IDS.includes(item.id) && (
+                    <input
+                      type="number"
+                      className="shop-qty-input"
+                      min={1}
+                      max={MAX_GIFT_QUANTITY}
+                      value={getQuantity(item.id)}
+                      onChange={(e) => setQuantity(item.id, e.target.value)}
+                    />
+                  )}
+
+                  <span className="shop-price">{item.price * getQuantity(item.id)} <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} /></span>
 
                   <button
                     className="buy-btn"

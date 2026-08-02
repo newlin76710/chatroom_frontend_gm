@@ -153,7 +153,7 @@ export default function AdminRoomSettingsPanel({ token }) {
         </div>
       )}
 
-      {roomConfig.new_function && (
+      {(roomConfig.new_function || roomConfig.new_section) && (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>相同IP可贈送</span>
           <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13 }}>
