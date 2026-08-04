@@ -20,6 +20,9 @@ const DEFAULT = {
   marquee_reward:       10,
   marquee_duration:     30,
   surprise_reward:      10,
+  online_reward_enabled:          true,
+  online_reward_interval_minutes: 60,
+  online_reward_amount:           2,
   game1_enabled:        true,
   game1_hour:           20,
   game1_minute:         30,
@@ -193,9 +196,9 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
         {loading ? <div>讀取中…</div> : (
           <>
             {/* ─── 功能顯示 ──────────────────────────────────────── */}
+            {!settings.new_section && (
             <section className="settings-section">
               <h4>功能顯示</h4>
-              {!settings.new_section && (
                 <Row label="排行榜按鈕">
                   <label className="toggle-label">
                     <input type="checkbox" checked={!!settings.leaderboard_enabled}
@@ -203,8 +206,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                     {" "}啟用排行榜
                   </label>
                 </Row>
-              )}
-            </section>
+            </section>)}
 
             {/* ─── 基本獎勵 ──────────────────────────────────────── */}
             <section className="settings-section">

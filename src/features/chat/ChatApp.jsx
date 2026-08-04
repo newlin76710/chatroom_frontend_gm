@@ -465,7 +465,7 @@ export default function ChatApp() {
         case "system_whack": return `打${roomConfig.currency_name}`;
         case "system_claw": return `夾${roomConfig.currency_name}機`;
         case "system_surprise": return "每日樂透";
-        case "system_gift_convert": return "收到禮物回饋";
+        case "system_online_reward": return "在線獎勵";
         default: return roomConfig.currency_name;
       }
     };

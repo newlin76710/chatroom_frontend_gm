@@ -56,6 +56,38 @@
   flex-shrink: 0;
 }
 
+/* ── 跑馬燈中獎橫幅 ────────────────────────────────── */
+@keyframes marqueePulse {
+  0%, 100% { box-shadow: 0 0 8px #FF2FD0, 0 0 16px #7B2FFF; }
+  50%       { box-shadow: 0 0 16px #FF2FD0, 0 0 32px #7B2FFF; }
+}
+
+.marquee-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, rgba(255,47,208,0.15), rgba(123,47,255,0.15));
+  border: 2px solid #FF2FD0;
+  border-radius: 10px;
+  animation: marqueePulse 2s ease-in-out 3;
+  max-width: 90%;
+}
+
+.marquee-text {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #FF2FD0;
+  text-shadow: 0 0 6px rgba(255,47,208,0.6);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.marquee-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
 /* ── 金牡丹橫幅 ────────────────────────────────── */
 @keyframes peonyPulse {
   0%, 100% { box-shadow: 0 0 8px #FF69B4, 0 0 16px #FF1493; }

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from "react";
+import { memo, useLayoutEffect, useRef } from "react";
 import { getAiAvatar } from "../../shared/aiConfig";
 import "./MessageList.css";
 import { safeText } from "../../shared/utils";
@@ -10,7 +10,7 @@ const countryFlag = code =>
     ? String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
     : "";
 
-export default function MessageList({
+function MessageList({
   messages = [],
   name = "",
   level = 1,
@@ -99,6 +99,7 @@ export default function MessageList({
           const isGift = m.type === "gift";
           const isSurprise = m.type === "surprise";
           const isPeony = m.type === "peony";
+          const isMarqueeWin = isSystem && /^🎉 恭喜 .+ 中了跑馬燈大獎/.test(messageText);
           const isRPS = isSystem && (messageText.includes("猜拳") || messageText.includes("✊") || messageText.includes("✌") || messageText.includes("🖐"));
           const isPingpong = isSystem && messageText.includes("🏓");
           // 處理系統訊息：進入 & 升級卡
@@ -108,6 +109,7 @@ export default function MessageList({
               { regex: /^(.+?) 進入聊天室$/, type: "enter" },
               { regex: /^(.+?) 使用升級卡/, type: "levelUp" },
               { regex: /^(.+?) 使用積分球/, type: "exp" },
+              { regex: /^(.+?) 在線獎勵/, type: "exp" },
               { regex: /^(.+?) 施放煙花/, type: "firework" },
               { regex: /^(.+?) 唱歌時間/, type: "time" }
             ];
@@ -160,6 +162,18 @@ export default function MessageList({
                   <span className="surprise-icon">🎊</span>
                   <span className="surprise-text">{messageText}</span>
                   <span className="surprise-icon">🎊</span>
+                </div>
+              </div>
+            );
+          }
+
+          if (isMarqueeWin) {
+            return (
+              <div key={i} className="message-row marquee-message" style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
+                <div className="marquee-banner">
+                  <span className="marquee-icon">🎰</span>
+                  <span className="marquee-text">{messageText}</span>
+                  <span className="marquee-icon">🎰</span>
                 </div>
               </div>
             );
@@ -275,3 +289,5 @@ export default function MessageList({
     </div>
   );
 }
+
+export default memo(MessageList);

@@ -13,7 +13,7 @@ const CAKE_VARIANTS = [
   { id: "cupcake",        emoji: "🧁", name: "杯子蛋糕",   image: "/gifts/cake_cupcake.gif" },
 ];
 
-const MULTI_QTY_IDS = ["diamond", "plane", "car"];
+const MULTI_QTY_IDS = ["diamond", "plane", "car", "ball"];
 const MAX_GIFT_QUANTITY = 20;
 
 export default function ShopPanel({ token, myName, myLevel, targetName, open, onClose, title = "商城" }) {
