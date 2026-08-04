@@ -114,6 +114,17 @@ export default function AdminRoomSettingsPanel({ token }) {
         </label>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>可監看密語</span>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13 }}>
+          <input
+            type="checkbox"
+            checked={settings.monitor_private_enabled !== false}
+            onChange={e => setSettings(s => ({ ...s, monitor_private_enabled: e.target.checked }))}
+          />
+          啟用（99 級可看到所有人的密語；關閉後 99 級也看不到別人的密語）
+        </label>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>發言間隔秒數</span>
         <input
           type="number"
