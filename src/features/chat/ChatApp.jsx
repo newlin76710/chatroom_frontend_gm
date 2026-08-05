@@ -320,6 +320,13 @@ export default function ChatApp() {
   }, [socket, handleUpdateUsersForSelf]);
   // ✅ handleUpdateUsersForSelf 本身是穩定的（deps=[]），所以這個 effect 只綁定一次
 
+  // ─── selfStatsUpdate：每則訊息都會收到自己最新的 level/exp（不影響線上名單）──
+  useEffect(() => {
+    const handler = (me) => handleUpdateUsersForSelf([me]);
+    socket.on("selfStatsUpdate", handler);
+    return () => socket.off("selfStatsUpdate", handler);
+  }, [socket, handleUpdateUsersForSelf]);
+
   // ─── 斷線 / 重連 ─────────────────────────────────────────────────────────
   useEffect(() => {
     const onDisconnect = (reason) => {
@@ -336,7 +343,7 @@ export default function ChatApp() {
         user: {
           name: nameRef.current,
           type: sessionStorage.getItem("type") || "guest",
-          token: sessionStorage.getItem("token"),
+          token: sessionStorage.getItem("token") || sessionStorage.getItem("guestToken"),
           invisible,
         },
       });
@@ -465,7 +472,6 @@ export default function ChatApp() {
         case "system_whack": return `打${roomConfig.currency_name}`;
         case "system_claw": return `夾${roomConfig.currency_name}機`;
         case "system_surprise": return "每日樂透";
-        case "system_online_reward": return "在線獎勵";
         default: return roomConfig.currency_name;
       }
     };
@@ -739,6 +745,22 @@ export default function ChatApp() {
     setChatMode(chatMode === "private" ? "private" : "publicTarget");
     focusInput();
   }, [chatMode, name, focusInput]);
+
+  // ✅ 給 UserList 用的穩定 callback 參考（避免每次打字都重新建立新函式，
+  // 讓 UserList 包 React.memo 之後真的能跳過重新 render）
+  const kickUser = useCallback((targetName) => socket.emit("kickUser", { room, targetName }), [socket, room]);
+  const kickAndBlockUser = useCallback((targetName, reason) => socket.emit("kickAndBlockUser", { room, targetName, reason }), [socket, room]);
+  const muteUser = useCallback((targetName) => socket.emit("muteUser", { room, targetName }), [socket, room]);
+  const onRpsChallenge = useCallback((targetName) => {
+    if (gamesBusy) return;
+    socket.emit("rpsChallenge", { room, challenger: name, target: targetName });
+    setRpsPending(targetName);
+  }, [socket, room, name, gamesBusy]);
+  const onPingpongChallenge = useCallback((targetName) => {
+    if (gamesBusy) return;
+    socket.emit("pingpongChallenge", { room, challenger: name, target: targetName });
+    setPingpongPending(targetName);
+  }, [socket, room, name, gamesBusy]);
 
   // ─── 渲染 ─────────────────────────────────────────────────────────────────
   return (
@@ -1236,20 +1258,12 @@ export default function ChatApp() {
               chatMode={chatMode}
               userListCollapsed={userListCollapsed}
               setUserListCollapsed={setUserListCollapsed}
-              kickUser={(targetName) => socket.emit("kickUser", { room, targetName })}
-              kickAndBlockUser={(targetName, reason) => socket.emit("kickAndBlockUser", { room, targetName, reason })}
-              muteUser={(targetName) => socket.emit("muteUser", { room, targetName })}
+              kickUser={kickUser}
+              kickAndBlockUser={kickAndBlockUser}
+              muteUser={muteUser}
               gamesBusy={gamesBusy}
-              onRpsChallenge={invisible ? undefined : (targetName) => {
-                if (gamesBusy) return;
-                socket.emit("rpsChallenge", { room, challenger: name, target: targetName });
-                setRpsPending(targetName);
-              }}
-              onPingpongChallenge={invisible ? undefined : (targetName) => {
-                if (gamesBusy) return;
-                socket.emit("pingpongChallenge", { room, challenger: name, target: targetName });
-                setPingpongPending(targetName);
-              }}
+              onRpsChallenge={invisible ? undefined : onRpsChallenge}
+              onPingpongChallenge={invisible ? undefined : onPingpongChallenge}
               myLevel={level}
               myName={name}
               filteredUsers={filteredUsers}

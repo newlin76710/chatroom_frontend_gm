@@ -4,7 +4,7 @@ import { getAiAvatar } from "../../shared/aiConfig";
 import "./UserList.css";
 import { roomConfig } from "../../shared/roomConfig";
 
-export default function UserList({
+function UserList({
   userList = [],
   target,
   setTarget,
@@ -243,3 +243,5 @@ export default function UserList({
     </>
   );
 }
+
+export default React.memo(UserList);
