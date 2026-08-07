@@ -30,6 +30,8 @@ export const aiAvatars = [
   ["~平風造雨四無君~", "/avatars/j61.gif"],
   ["~四無君之微風情~", "/avatars/b37.gif"],
   ["~四無君之菜菜子~", "/avatars/j79.gif"],
+  ["九顆櫻桃", "/avatars/g61.gif"],
+  ["香小愛", "/avatars/j109.gif"],
 ];
 
 export const getAiAvatar = (name) => aiAvatars.find(([n]) => n === name)?.[1] ?? null;

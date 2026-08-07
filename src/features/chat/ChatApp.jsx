@@ -320,13 +320,6 @@ export default function ChatApp() {
   }, [socket, handleUpdateUsersForSelf]);
   // ✅ handleUpdateUsersForSelf 本身是穩定的（deps=[]），所以這個 effect 只綁定一次
 
-  // ─── selfStatsUpdate：每則訊息都會收到自己最新的 level/exp（不影響線上名單）──
-  useEffect(() => {
-    const handler = (me) => handleUpdateUsersForSelf([me]);
-    socket.on("selfStatsUpdate", handler);
-    return () => socket.off("selfStatsUpdate", handler);
-  }, [socket, handleUpdateUsersForSelf]);
-
   // ─── 斷線 / 重連 ─────────────────────────────────────────────────────────
   useEffect(() => {
     const onDisconnect = (reason) => {
