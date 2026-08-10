@@ -10,6 +10,7 @@ function UserList({
   setTarget,
   setChatMode,
   chatMode,
+  onSelectTarget,
   userListCollapsed,
   setUserListCollapsed,
   kickUser,
@@ -78,9 +79,13 @@ function UserList({
               key={`${u.name}-${idx}`}
               className={`user-item ${u.name === target ? "selected" : ""}`}
               onClick={() => {
-                setChatMode(chatMode === "private" ? "private" : "publicTarget");
-                setTarget(u.name);
-                focusInput?.();
+                if (onSelectTarget) {
+                  onSelectTarget(u.name);
+                } else {
+                  setChatMode(chatMode === "private" ? "private" : "publicTarget");
+                  setTarget(u.name);
+                  focusInput?.();
+                }
               }}
             >
               {avatarUrl && (

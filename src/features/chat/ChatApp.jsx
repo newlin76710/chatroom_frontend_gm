@@ -148,6 +148,7 @@ export default function ChatApp() {
   const [offline, setOffline] = useState(false);
   const [showReloadNotice, setShowReloadNotice] = useState(false);
   const [target, setTarget] = useState("");
+  const [contactedNames, setContactedNames] = useState(() => new Set()); // 舊版介面「選擇對象」清單：登入後有私聊/點過的人
   const [typing] = useState("");
   const [userList, setUserList] = useState([]);
   const [currentVideo, setCurrentVideo] = useState(null);
@@ -385,6 +386,16 @@ export default function ChatApp() {
     const handleMessage = (m) => {
       if (m?.room && m.room !== roomRef.current) return;
       addMessage(m, userListRef.current);
+      if (m?.mode === "private" || m?.mode === "publicTarget") {
+        const isSender = m.user?.name === nameRef.current;
+        const isTarget = m.target === nameRef.current;
+        if (isSender || isTarget) {
+          const other = isSender ? m.target : m.user?.name;
+          if (other && other !== nameRef.current) {
+            setContactedNames((prev) => (prev.has(other) ? prev : new Set(prev).add(other)));
+          }
+        }
+      }
     };
     const handleSystemMessage = (m) => {
       if (!roomConfig.new_function && !roomConfig.new_section && m?.message?.includes('唱歌獲得') && m?.message?.includes(roomConfig.currency_name)) return;
@@ -736,6 +747,7 @@ export default function ChatApp() {
     if (!targetName || targetName === name) return;
     setTarget(targetName);
     setChatMode(chatMode === "private" ? "private" : "publicTarget");
+    setContactedNames((prev) => (prev.has(targetName) ? prev : new Set(prev).add(targetName)));
     focusInput();
   }, [chatMode, name, focusInput]);
 
@@ -1034,7 +1046,7 @@ export default function ChatApp() {
                     >
                       <option value="">選擇對象</option>
                       {userList
-                        .filter((u) => u.name !== name)
+                        .filter((u) => u.name !== name && contactedNames.has(u.name))
                         .map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
                     </select>
                     <button
@@ -1249,6 +1261,7 @@ export default function ChatApp() {
               setTarget={setTarget}
               setChatMode={setChatMode}
               chatMode={chatMode}
+              onSelectTarget={selectTarget}
               userListCollapsed={userListCollapsed}
               setUserListCollapsed={setUserListCollapsed}
               kickUser={kickUser}
