@@ -211,6 +211,10 @@ export default function ChatApp() {
   const closedVideoIdRef = useRef(closedVideoId);
   const roomRef = useRef(room);
   const nameRef = useRef(name);
+  // 登入後累計發話則數（純前端計數，達門檻才向後端雙重驗證，避免每則訊息都查一次 DB）
+  const speechCountRef = useRef(0);
+  // 在線獎勵：下一次跟後端核對的排程 timer
+  const onlineRewardTimerRef = useRef(null);
   useEffect(() => { userListRef.current = userList; }, [userList]);
   useEffect(() => { closedVideoIdRef.current = closedVideoId; }, [closedVideoId]);
   useEffect(() => { roomRef.current = room; }, [room]);
@@ -568,6 +572,64 @@ export default function ChatApp() {
     joinedRef.current = true;
   }, [name]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ─── 發話獎勵：上線後先跟後端校正一次本地計數器 ──────────────────────────
+  // joinRoom 是 async handler，緊接著送 claimSpeechReward 可能會搶在伺服器把
+  // socket.data.room/name 設好之前送達；改成等第一次 updateUsers（join 完成後
+  // 伺服器一定會 broadcastUserList）才校正一次，確保當下讀到的一定是正確身分。
+  useEffect(() => {
+    if (!(roomConfig.new_section || roomConfig.new_function)) return;
+    let calibrated = false;
+    const handleFirstUpdateUsers = () => {
+      if (calibrated) return;
+      calibrated = true;
+      socket.off("updateUsers", handleFirstUpdateUsers);
+      socket.emit("claimSpeechReward", { room }, (res) => {
+        if (res && Number.isFinite(res.remainder)) {
+          speechCountRef.current = res.remainder;
+        }
+      });
+    };
+    socket.on("updateUsers", handleFirstUpdateUsers);
+    return () => socket.off("updateUsers", handleFirstUpdateUsers);
+  }, [socket, room]);
+
+  // ─── 在線獎勵：上線先校正一次，之後由後端算出的剩餘秒數自己排下一次檢查 ──
+  // 前端只負責「什麼時候該去問」，實際是否已經在線滿一段時間、發過幾次，
+  // 全部由後端用 login_logs（最近一次成功登入時間）現算，不用前端自己計時累積，
+  // 這樣重新整理頁面也不會讓在線時長歸零重算。
+  useEffect(() => {
+    if (!(roomConfig.new_section || roomConfig.new_function)) return;
+    let cancelled = false;
+
+    const scheduleNext = (delaySeconds) => {
+      if (cancelled) return;
+      if (onlineRewardTimerRef.current) clearTimeout(onlineRewardTimerRef.current);
+      const delayMs = Math.max(1000, (Number(delaySeconds) || 3600) * 1000);
+      onlineRewardTimerRef.current = setTimeout(claim, delayMs);
+    };
+
+    const claim = () => {
+      socket.emit("claimOnlineReward", { room }, (res) => {
+        scheduleNext(res && Number.isFinite(res.remainderSeconds) ? res.remainderSeconds : 3600);
+      });
+    };
+
+    let calibrated = false;
+    const handleFirstUpdateUsers = () => {
+      if (calibrated) return;
+      calibrated = true;
+      socket.off("updateUsers", handleFirstUpdateUsers);
+      claim();
+    };
+    socket.on("updateUsers", handleFirstUpdateUsers);
+
+    return () => {
+      cancelled = true;
+      socket.off("updateUsers", handleFirstUpdateUsers);
+      if (onlineRewardTimerRef.current) clearTimeout(onlineRewardTimerRef.current);
+    };
+  }, [socket, room]);
+
   // ─── beforeunload 登出 ────────────────────────────────────────────────────
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -626,6 +688,23 @@ export default function ChatApp() {
       emotion: textEmotion || "",
       timestamp: new Date().toLocaleTimeString(),
     });
+
+    // 發話獎勵：累計次數達門檻才請後端雙重驗證並發放
+    if (roomConfig.new_section || roomConfig.new_function) {
+      const threshold = Math.max(1, Number(roomConfig.speech_reward_threshold) || 100);
+      speechCountRef.current += 1;
+      if (speechCountRef.current >= threshold) {
+        speechCountRef.current = 0; // 先樂觀歸零避免連續觸發，等後端回覆權威值再校正
+        socket.emit("claimSpeechReward", { room }, (res) => {
+          // 後端用 message_logs 當日總數算出的 remainder 才是準的：
+          // 若前端計數器因重新整理/多分頁而跟後端總數有落差，用這個值校正回來，
+          // 否則落差會一直存在，200、300…之後的門檻永遠對不上而不會再發放。
+          if (res && Number.isFinite(res.remainder)) {
+            speechCountRef.current = res.remainder;
+          }
+        });
+      }
+    }
 
     setMessageHistory((prev) => [text, ...prev]);
     setHistoryIndex(-1);

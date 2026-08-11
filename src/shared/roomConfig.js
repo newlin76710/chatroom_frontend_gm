@@ -18,6 +18,8 @@ const _cfg = {
   legacy_chat_ui:      false,
   message_cooldown_seconds: 1,
   invisible_mode_enabled: true,
+  speech_reward_enabled:   true,
+  speech_reward_threshold: 100,
 };
 
 export const roomConfig = _cfg;

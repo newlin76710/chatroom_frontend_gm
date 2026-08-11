@@ -5,6 +5,7 @@ import { RN } from "../../shared/roomConfig";
 const DEFAULT = {
   leaderboard_enabled:  false,
   new_section:          false,
+  new_function:         false,
   show_ip:              true,
   daily_login_reward:   1,
   singing_reward:       2,
@@ -117,6 +118,12 @@ const DEFAULT = {
   zombie_entry_cost:         10,
   zombie_level_reward:       15,
   zombie_daily_limit:        3,
+  speech_reward_enabled:     true,
+  speech_reward_threshold:   100,
+  speech_reward_amount:      10,
+  online_reward_enabled:            true,
+  online_reward_interval_minutes:   60,
+  online_reward_amount:             5,
   currency_name:             "金蘋果",
   currency_emoji:            "🍎",
 };
@@ -286,6 +293,52 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   <input type="number" value={settings.surprise_reward}
                     onChange={e => setInt("surprise_reward", e.target.value)} />
                 </Row>
+              )}
+              {(settings.new_function || settings.new_section) && (
+                <>
+                  <Row label="發話獎勵">
+                    <label className="toggle-label">
+                      <input type="checkbox" checked={!!settings.speech_reward_enabled}
+                        onChange={e => setBool("speech_reward_enabled", e.target.checked)} />
+                      {" "}啟用累計發話獎勵
+                    </label>
+                  </Row>
+                  {settings.speech_reward_enabled && (
+                    <>
+                      <Row label="每發話幾則">
+                        <input type="number" min={1} value={settings.speech_reward_threshold}
+                          onChange={e => setInt("speech_reward_threshold", e.target.value)} />
+                        <span className="field-note">則（累計達到即發放一次，達標後重新累計，隔日歸零重算）</span>
+                      </Row>
+                      <Row label="每次發放">
+                        <input type="number" min={0} value={settings.speech_reward_amount}
+                          onChange={e => setInt("speech_reward_amount", e.target.value)} />
+                        <span className="field-note">個{currencyName}</span>
+                      </Row>
+                    </>
+                  )}
+                  <Row label="在線獎勵">
+                    <label className="toggle-label">
+                      <input type="checkbox" checked={!!settings.online_reward_enabled}
+                        onChange={e => setBool("online_reward_enabled", e.target.checked)} />
+                      {" "}啟用在線時長獎勵
+                    </label>
+                  </Row>
+                  {settings.online_reward_enabled && (
+                    <>
+                      <Row label="每上線幾分鐘">
+                        <input type="number" min={1} value={settings.online_reward_interval_minutes}
+                          onChange={e => setInt("online_reward_interval_minutes", e.target.value)} />
+                        <span className="field-note">分鐘（以登入時間持續累計發放，不會每天重置；離線後重新登入才會重新起算）</span>
+                      </Row>
+                      <Row label="每次發放">
+                        <input type="number" min={0} value={settings.online_reward_amount}
+                          onChange={e => setInt("online_reward_amount", e.target.value)} />
+                        <span className="field-note">個{currencyName}</span>
+                      </Row>
+                    </>
+                  )}
+                </>
               )}
             </section>
 
