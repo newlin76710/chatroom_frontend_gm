@@ -164,6 +164,20 @@ export default function AdminRoomSettingsPanel({ token }) {
         </div>
       )}
 
+      {(roomConfig.new_function || roomConfig.new_section) && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>煙火冷卻分鐘數</span>
+          <input
+            type="number"
+            min={0}
+            value={settings.firework_cooldown_minutes ?? 0}
+            onChange={e => setSettings(s => ({ ...s, firework_cooldown_minutes: Number(e.target.value) }))}
+            style={{ width: 70, padding: "5px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }}
+          />
+          <span style={{ fontSize: 12, color: "#888" }}>分鐘（同一 IP 施放一次後要等幾分鐘才能再放；0 = 不限制）</span>
+        </div>
+      )}
+
       {roomConfig.new_function && (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>相同IP可贈送</span>
