@@ -219,6 +219,14 @@ body {
 .chat-layout--legacy .message-list {
   background-color: #000;
   border: 1px solid #663366;
+  gap: 1px;
+  padding: 6px 8px;
+}
+
+.chat-layout--legacy .message-avatar {
+  width: 18px;
+  height: 18px;
+  margin-right: 4px;
 }
 
 .chat-layout--legacy .chat-right {

@@ -24,6 +24,22 @@
   white-space:pre-line;
 }
 
+/* 舊版介面：贈禮文字不換行，跟在對象名稱後方 */
+.gift-poem--inline{
+  display:inline;
+  margin-top:0;
+  white-space:pre-line;
+}
+
+/* 舊版介面：贈禮圖片縮小並接在文字右側，不獨立換行 */
+.gift-big-image--legacy{
+  width:36px;
+  margin-top:0;
+  margin-left:6px;
+  vertical-align:middle;
+  display:inline-block;
+}
+
 /* ── 樂透金蘋果橫幅 ────────────────────────────────── */
 @keyframes surprisePulse {
   0%, 100% { box-shadow: 0 0 8px #FFD700, 0 0 16px #FF8C00; }

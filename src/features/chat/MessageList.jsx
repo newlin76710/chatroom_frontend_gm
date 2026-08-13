@@ -76,6 +76,11 @@ function MessageList({
     if (onSelectTarget && user && user !== name) onSelectTarget(user);
   };
 
+  const scrollToBottomOnImageLoad = () => {
+    const el = containerRef.current;
+    if (el && !activeScrollLockedRef.current) el.scrollTop = el.scrollHeight;
+  };
+
   const getUserColor = (userName) => {
     const user = userList.find((u) => u.name === userName);
     if (!user) return "#00aa00";
@@ -192,7 +197,7 @@ function MessageList({
           }
 
           return (
-            <div key={i} className="message-row" style={{ display: "flex", justifyContent: alignRight ? "flex-end" : "flex-start", marginBottom: 6 }}>
+            <div key={i} className="message-row" style={{ display: "flex", justifyContent: alignRight ? "flex-end" : "flex-start", marginBottom: legacyUI ? 2 : 6 }}>
               {!alignRight && !isSystem && !isTransaction && !isGift && (
                 <img
                   src={m.user?.avatar || getAiAvatar(userName) || "/avatars/g01.gif"}
@@ -201,7 +206,7 @@ function MessageList({
                 />
               )}
 
-              <div style={{ maxWidth: "75%", color, background: bgColor, padding: isRelatedToMe ? "6px 10px" : 0, borderRadius: isRelatedToMe ? 8 : 0, fontSize: (isRPS || isPingpong) ? "1.15rem" : "1rem", whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: 1.4 }}>
+              <div style={{ maxWidth: legacyUI ? "92%" : "75%", color, background: bgColor, padding: isRelatedToMe ? "6px 10px" : 0, borderRadius: isRelatedToMe ? 8 : 0, fontSize: legacyUI ? ((isRPS || isPingpong) ? "1rem" : "1rem") : ((isRPS || isPingpong) ? "1.15rem" : "1rem"), whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: legacyUI ? 1.2 : 1.4 }}>
                 {tag && <span style={{ fontSize: "0.7rem", color: "#e60909", marginRight: 4 }}>{tag}</span>}
 
                 {(isTransaction || isGift) ? (
@@ -215,18 +220,30 @@ function MessageList({
                       {targetName}
                     </span>
 
-                    {isGift && <div className="gift-poem">{messageText}</div>}
-                    {m.imageUrl && <div >
-                      <img
-                        src={m.imageUrl}
-                        alt="gift"
-                        className="gift-big-image"
-                        onLoad={() => {
-                          const el = containerRef.current;
-                          if (el && !activeScrollLockedRef.current) el.scrollTop = el.scrollHeight;
-                        }}
-                      />
-                    </div>}
+                    {isGift && (
+                      legacyUI
+                        ? <span className="gift-poem gift-poem--inline"> {messageText}</span>
+                        : <div className="gift-poem">{messageText}</div>
+                    )}
+                    {m.imageUrl && (
+                      legacyUI ? (
+                        <img
+                          src={m.imageUrl}
+                          alt="gift"
+                          className="gift-big-image gift-big-image--legacy"
+                          onLoad={scrollToBottomOnImageLoad}
+                        />
+                      ) : (
+                        <div>
+                          <img
+                            src={m.imageUrl}
+                            alt="gift"
+                            className="gift-big-image"
+                            onLoad={scrollToBottomOnImageLoad}
+                          />
+                        </div>
+                      )
+                    )}
                     {isTransaction && <span> {messageText}</span>}
                   </>
                 ) : isSystem && relatedUser ? (
@@ -277,7 +294,7 @@ function MessageList({
                     ({m.ip ? `IP: ${m.ip}${m.country ? " " : ""}` : ""}{m.country ? `${countryFlag(m.country.countryCode)} ${countryZh(m.country.countryCode) ?? m.country.country}` : ""})
                   </span>
                 )}
-                <span style={{ fontSize: "0.7rem", color: "#888", marginLeft: 6, whiteSpace: "nowrap" }}>{timestamp}</span>
+                <span style={{ fontSize: legacyUI ? "0.65rem" : "0.7rem", color: "#888", marginLeft: legacyUI ? 4 : 6, whiteSpace: "nowrap" }}>{timestamp}</span>
               </div>
             </div>
           );
