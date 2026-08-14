@@ -67,6 +67,7 @@ function UserList({
         在線：{visibleUsers.length} 人
         <span className="ul-gender-count" style={{ color: "#A7C7E7" }}>♂{maleCount}人</span>
         <span className="ul-gender-count" style={{ color: "#F8C8DC" }}>♀{femaleCount}人</span>
+        <span className="ul-capacity-count">容量:{roomConfig.room_capacity ?? 100}人</span>
       </div>
 
       {!userListCollapsed &&

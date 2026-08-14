@@ -501,6 +501,8 @@ body {
 }
 
 .user-list-header {
+  display: flex;
+  align-items: center;
   padding: 4px 8px;
   background: #222;
   cursor: pointer;
@@ -513,6 +515,14 @@ body {
   margin-left: 6px;
   font-weight: normal;
   font-size: 0.8rem;
+}
+
+.ul-capacity-count {
+  margin-left: auto;
+  padding-left: 6px;
+  font-weight: normal;
+  font-size: 0.8rem;
+  color: #aaa;
 }
 
 .user-item {
