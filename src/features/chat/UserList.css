@@ -124,6 +124,24 @@
   cursor: default;
 }
 
+/* 🔱 管理員徽章（91 級以上、未達站長級，暱稱後面） */
+.ul-admin-badge {
+  margin-left: 2px;
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+  cursor: default;
+}
+
+/* 👑 大站長徽章（99 級 / admin_max_level 以上，暱稱後面） */
+.ul-owner-badge {
+  margin-left: 2px;
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+  cursor: default;
+}
+
 /* 🙈 過濾（藍灰） */
 .ul-admin-filter {
   background: #f0f5ff;

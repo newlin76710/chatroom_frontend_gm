@@ -108,6 +108,12 @@ function UserList({
               {!isAI && u.level >= SNOWBALL_MIN_LEVEL && u.level < ANL && (
                 <span className="ul-premium-badge" title="高級會員">🎖️</span>
               )}
+              {!isAI && u.level >= AML && (
+                <span className="ul-owner-badge" title="大站長">👑</span>
+              )}
+              {!isAI && u.level >= ANL && u.level < AML && (
+                <span className="ul-admin-badge" title="管理員">🔱</span>
+              )}
               &nbsp;
               {isAI ? "AI" : u.type === "guest" ? 1 : u.level}
 
