@@ -20,6 +20,7 @@ const _cfg = {
   invisible_mode_enabled: true,
   speech_reward_enabled:   true,
   speech_reward_threshold: 100,
+  snowball_cooldown_minutes: 10,
 };
 
 export const roomConfig = _cfg;

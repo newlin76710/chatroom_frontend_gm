@@ -532,11 +532,55 @@ export default function ChatApp() {
       setTimeout(() => container.remove(), 5000);
     };
 
+    const showSnowballEffect = (text) => {
+      console.log("❄️ showSnowballEffect:", text);
+      const container = document.createElement("div");
+      container.className = "snowball-container";
+
+      const message = document.createElement("div");
+      message.className = "snowball-message";
+      message.textContent = text;
+      container.appendChild(message);
+
+      const FLAKE_COUNT = 24;
+      for (let i = 0; i < FLAKE_COUNT; i++) {
+        const flake = document.createElement("span");
+        flake.className = "snowball-flake";
+        flake.textContent = "❄️";
+        flake.style.left = `${Math.random() * 100}%`;
+        flake.style.animationDelay = `${(Math.random() * 0.4).toFixed(2)}s`;
+        flake.style.fontSize = `${16 + Math.random() * 20}px`;
+        container.appendChild(flake);
+      }
+
+      document.body.appendChild(container);
+      setTimeout(() => container.remove(), 2500);
+    };
+
+    const handleSnowballHit = ({ from }) => {
+      showSnowballEffect(`❄️ ${from} 對你丟了一個雪球！`);
+    };
+
+    const handleSnowballThrown = ({ target }) => {
+      showSnowballEffect(`❄️ 你對 ${target} 丟了一個雪球！`);
+    };
+
+    const handleSnowballError = ({ reason }) => {
+      console.log("❄️ snowballError:", reason);
+      alert(`❄️ ${reason || "丟雪球失敗"}`);
+    };
+
     socket.on("joinFailed", handleJoinFail);
     socket.on("fireworkShow", handleFirework);
+    socket.on("snowballHit", handleSnowballHit);
+    socket.on("snowballThrown", handleSnowballThrown);
+    socket.on("snowballError", handleSnowballError);
     return () => {
       socket.off("joinFailed", handleJoinFail);
       socket.off("fireworkShow", handleFirework);
+      socket.off("snowballHit", handleSnowballHit);
+      socket.off("snowballThrown", handleSnowballThrown);
+      socket.off("snowballError", handleSnowballError);
     };
   }, [socket]);
 
@@ -845,6 +889,10 @@ export default function ChatApp() {
     socket.emit("pingpongChallenge", { room, challenger: name, target: targetName });
     setPingpongPending(targetName);
   }, [socket, room, name, gamesBusy]);
+  const onSnowballThrow = useCallback((targetName) => {
+    console.log("❄️ emit throwSnowball:", { room, from: name, target: targetName });
+    socket.emit("throwSnowball", { room, from: name, target: targetName });
+  }, [socket, room, name]);
 
   // ─── 渲染 ─────────────────────────────────────────────────────────────────
   return (
@@ -1349,6 +1397,7 @@ export default function ChatApp() {
               gamesBusy={gamesBusy}
               onRpsChallenge={invisible ? undefined : onRpsChallenge}
               onPingpongChallenge={invisible ? undefined : onPingpongChallenge}
+              onSnowballThrow={invisible ? undefined : onSnowballThrow}
               myLevel={level}
               myName={name}
               filteredUsers={filteredUsers}

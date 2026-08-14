@@ -3,6 +3,7 @@ import React from "react";
 import { getAiAvatar } from "../../shared/aiConfig";
 import "./UserList.css";
 import { roomConfig } from "../../shared/roomConfig";
+import { SNOWBALL_MIN_LEVEL } from "../../shared/constants";
 
 function UserList({
   userList = [],
@@ -24,6 +25,7 @@ function UserList({
   token,
   onRpsChallenge,
   onPingpongChallenge,
+  onSnowballThrow,
   gamesBusy,
 }) {
   const ANL = roomConfig.admin_min_level || 91;
@@ -37,6 +39,8 @@ function UserList({
   };
 
   const visibleUsers = userList.filter(u => OPENAI || u.type !== "AI");
+  const maleCount = visibleUsers.filter(u => u.type !== "AI" && u.gender === "男").length;
+  const femaleCount = visibleUsers.filter(u => u.type !== "AI" && u.gender === "女").length;
 
   const toggleFilter = (userName) => {
     if (!setFilteredUsers) return;
@@ -61,6 +65,8 @@ function UserList({
         onClick={() => setUserListCollapsed(!userListCollapsed)}
       >
         在線：{visibleUsers.length} 人
+        <span className="ul-gender-count" style={{ color: "#A7C7E7" }}>♂{maleCount}人</span>
+        <span className="ul-gender-count" style={{ color: "#F8C8DC" }}>♀{femaleCount}人</span>
       </div>
 
       {!userListCollapsed &&
@@ -98,6 +104,9 @@ function UserList({
               >
                 {u.name}
               </span>
+              {!isAI && u.level >= SNOWBALL_MIN_LEVEL && u.level < ANL && (
+                <span className="ul-premium-badge" title="高級會員">🎖️</span>
+              )}
               &nbsp;
               {isAI ? "AI" : u.type === "guest" ? 1 : u.level}
 
@@ -160,6 +169,21 @@ function UserList({
                           }}
                         >
                           🏓 乒乓球
+                        </button>
+                      )}
+
+                      {/* 丟雪球 — 50 級以上可用 */}
+                      {onSnowballThrow && myLevel >= SNOWBALL_MIN_LEVEL && (
+                        <button
+                          className="ul-admin-snowball"
+                          title={`冷卻時間：約 ${roomConfig.snowball_cooldown_minutes ?? 10} 分鐘`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSnowballThrow(u.name);
+                            setOpenMenu(null);
+                          }}
+                        >
+                          ❄️ 丟雪球
                         </button>
                       )}
 

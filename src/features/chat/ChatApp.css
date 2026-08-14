@@ -141,13 +141,21 @@ body {
 .chat-message.system { font-weight: bold; color: #ff9900; background: transparent; }
 
 /* 頭像 */
-.message-avatar,
-.user-avatar {
+.message-avatar {
   width: 24px;
   height: 24px;
   border-radius: 50%;
   margin-right: 6px;
   object-fit: cover;
+}
+
+.user-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-right: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 /* ===== CHAT INPUT ===== */
@@ -493,23 +501,39 @@ body {
 }
 
 .user-list-header {
-  padding: 6px 10px;
+  padding: 4px 8px;
   background: #222;
   cursor: pointer;
   font-weight: bold;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.ul-gender-count {
+  margin-left: 6px;
+  font-weight: normal;
+  font-size: 0.8rem;
 }
 
 .user-item {
-  padding: 6px 10px;
+  padding: 3px 6px;
   border-bottom: 1px solid #333;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 3px;
+  min-width: 0;
+  font-size: 0.85rem;
 }
 
 .user-item:hover,
 .user-item.selected { background-color: #2a2a2a; }
+
+.user-name {
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
 
 /* 使用者性別顏色 */
 .user-male { color: #A7C7E7; }
@@ -691,6 +715,43 @@ body {
   10% { opacity: 1; }
   90% { opacity: 1; }
   100% { opacity: 0; }
+}
+
+.snowball-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 9999;
+  background: transparent;
+}
+
+.snowball-flake {
+  position: absolute;
+  top: -40px;
+  animation: snowball-fall 1.8s ease-in forwards;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
+}
+
+.snowball-message {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 1.6rem;
+  color: #fff;
+  text-shadow: 0 0 10px #1e88e5, 0 0 4px #000;
+  animation: fadeInOut 2.2s forwards;
+}
+
+@keyframes snowball-fall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
 }
 
 /* ===== TABLET RESPONSIVE (481px – 768px) ===== */

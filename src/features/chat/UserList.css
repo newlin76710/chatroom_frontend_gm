@@ -2,7 +2,8 @@
 .ul-admin-wrap {
   position: relative;
   display: inline-block;
-  margin-left: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 /* 🔴 主按鈕（紅色） */
@@ -10,9 +11,9 @@
   background: linear-gradient(135deg, #ff4d4f, #d9363e);
   color: white;
   border: none;
-  padding: 3px 8px;
+  padding: 2px 6px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 11px;
   cursor: pointer;
   transition: 0.2s;
 }
@@ -102,6 +103,25 @@
   opacity: 0.35;
   cursor: not-allowed;
   pointer-events: none;
+}
+
+/* ❄️ 丟雪球（藍色，50 級以上限定） */
+.ul-admin-snowball {
+  background: #e6f7ff;
+  color: #0958d9;
+}
+
+.ul-admin-snowball:hover {
+  background: #bae0ff;
+}
+
+/* 🎖️ 高級會員徽章（暱稱後面） */
+.ul-premium-badge {
+  margin-left: 2px;
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+  cursor: default;
 }
 
 /* 🙈 過濾（藍灰） */

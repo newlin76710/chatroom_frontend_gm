@@ -24,3 +24,6 @@ export const GENDER_COLORS = {
 
 // 系統頭像路徑
 export const SYSTEM_AVATAR = "/avatars/system.png";
+
+// 高級會員徽章 / 丟雪球互動的等級門檻
+export const SNOWBALL_MIN_LEVEL = 50;
