@@ -28,9 +28,9 @@ body {
   height: 100%;
 }
 
-/* 右側聊天室區域（YouTube + userlist, 固定寬 270px） */
+/* 右側聊天室區域（YouTube + userlist, 固定寬 275px） */
 .chat-right {
-  flex: 0 0 270px;
+  flex: 0 0 275px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -150,8 +150,8 @@ body {
 }
 
 .user-avatar {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   margin-right: 6px;
   object-fit: cover;
@@ -232,9 +232,11 @@ body {
 }
 
 .chat-layout--legacy .message-avatar {
-  width: 18px;
-  height: 18px;
-  margin-right: 4px;
+  /* 跟一般介面一樣改成 24x24——訊息泡泡本身的高度（含 padding/行高）已經比頭像高，
+     頭像放大不會讓每則訊息的列高變高，畫面能容納的訊息數量維持不變 */
+  width: 24px;
+  height: 24px;
+  margin-right: 6px;
 }
 
 .chat-layout--legacy .chat-right {
