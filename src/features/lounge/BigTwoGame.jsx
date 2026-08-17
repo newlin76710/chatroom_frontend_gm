@@ -120,24 +120,40 @@ function BigTwoGame({ socket, room, name, apples, onActiveChange }, ref) {
     setTimeout(() => setToast(t => (t === msg ? null : t)), 3500);
   }, []);
 
-  // 讓父層（休閒廳）在切分頁前可以判斷「這一局還在打」，以及在使用者確認要中離時強制中離
+  // 讓父層（休閒廳）在切分頁/開新桌前可以判斷「我現在佔用大老二到什麼程度」：
+  // "playing" = 對局進行中（中離要跳警告會損失入場費）
+  // "waiting" = 已經開桌/加入等湊人數，或上一局打完等重賽（中離沒有損失，只是要先離開才能做別的事）
+  // null      = 沒有佔用，可以自由切走
   useEffect(() => {
-    onActiveChange?.(view === "game" && st?.status === "playing");
+    const mode = (view === "game" && st?.status === "playing") ? "playing"
+      : (view === "waiting" || view === "postHand") ? "waiting"
+      : null;
+    onActiveChange?.(mode);
   }, [view, st?.status, onActiveChange]);
 
   useImperativeHandle(ref, () => ({
-    forfeitIfPlaying() {
-      if (view !== "game" || st?.status !== "playing" || !tableId) return;
-      socket.emit("bigTwoForfeit", { tableId });
-      // 座位已經轉代打，伺服器之後不會再對這個座位送任何狀態更新，這裡直接樂觀地
-      // 把本地畫面收回大廳，不然元件會停在剛剛那手牌的畫面，切分頁回來時像卡住
-      setView("lobby");
-      setTableId(null);
-      setSt(null);
-      setPostHand(null);
-      socket.emit("bigTwoGetTables");
+    leaveCurrent() {
+      if (view === "game" && st?.status === "playing" && tableId) {
+        socket.emit("bigTwoForfeit", { tableId });
+        // 座位已經轉代打，伺服器之後不會再對這個座位送任何狀態更新，這裡直接樂觀地
+        // 把本地畫面收回大廳，不然元件會停在剛剛那手牌的畫面，切分頁回來時像卡住
+        setView("lobby");
+        setTableId(null);
+        setSt(null);
+        setPostHand(null);
+        socket.emit("bigTwoGetTables");
+        return;
+      }
+      if (view === "postHand") {
+        handleLeaveAfterHand();
+        return;
+      }
+      if (view === "waiting") {
+        const t = tables.find(x => x.id === tableId) || tables.find(x => x.seats.includes(name));
+        handleCancelOrLeave(tableId ?? t?.id, t?.hostName === name);
+      }
     },
-  }), [view, st?.status, tableId, socket]);
+  }), [view, st?.status, tableId, tables, name, socket]);
 
   useEffect(() => {
     if (!socket) return;
@@ -151,7 +167,14 @@ function BigTwoGame({ socket, room, name, apples, onActiveChange }, ref) {
     };
     const onTableWaiting = (payload) => { setPostHand(payload); setView("postHand"); };
     const onCancelled = () => { showToast("房主已取消此桌"); setView("lobby"); setTableId(null); };
-    const onError = ({ reason }) => showToast(reason || "發生錯誤");
+    // 建桌/加入是樂觀切到 waiting 畫面、不等伺服器確認；如果伺服器拒絕（例如已經在
+    // 別的休閒廳遊戲中），要把畫面收回大廳，不然會卡在「等待其他玩家加入」但其實
+    // 桌子根本沒建立成功
+    const onError = ({ reason }) => {
+      showToast(reason || "發生錯誤");
+      setView(v => (v === "waiting" ? "lobby" : v));
+      setTableId(null);
+    };
     const onToastMsg = ({ msg }) => showToast(msg);
 
     socket.on("bigTwoTableList", onTableList);

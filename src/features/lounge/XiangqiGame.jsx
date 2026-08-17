@@ -135,26 +135,46 @@ function XiangqiGame({ socket, room, name, apples, onActiveChange }, ref) {
     setTimeout(() => setToast(t => (t === msg ? null : t)), 3500);
   }, []);
 
-  // 讓父層（休閒廳）在切分頁前可以判斷「這一局還在下」，以及在使用者確認要中離時強制投降
+  // 象棋沒有獨立的「等待中」畫面——建桌後仍留在 lobby，只是桌子列表裡多了自己的名字，
+  // 要靠這個推算「我是不是正在某張桌子等對手」，這裡不分是不是房主，反正象棋建桌者就是唯一在場的人
+  const myWaitingTable = tables.find(t => t.hostName === name || (t.seats || []).includes(name));
+
+  // 讓父層（休閒廳）在切分頁/開新桌前可以判斷「我現在佔用象棋到什麼程度」：
+  // "playing" = 對局進行中（中離要跳警告會損失入場費）
+  // "waiting" = 已經開桌等對手，或上一局打完等重賽（中離沒有損失，只是要先離開才能做別的事）
+  // null      = 沒有佔用，可以自由切走
   useEffect(() => {
-    onActiveChange?.(view === "game" && status === "playing");
-  }, [view, status, onActiveChange]);
+    const mode = (view === "game" && status === "playing") ? "playing"
+      : (view === "postHand" || (view === "lobby" && myWaitingTable)) ? "waiting"
+      : null;
+    onActiveChange?.(mode);
+  }, [view, status, myWaitingTable, onActiveChange]);
 
   useImperativeHandle(ref, () => ({
-    forfeitIfPlaying() {
-      if (view !== "game" || status !== "playing" || !tableId) return;
-      socket.emit("xiangqiForfeit", { tableId });
-      // 座位在後端已經整個空出來了（跟斷線同一條路徑），這裡直接樂觀地把本地畫面
-      // 收回大廳，不然元件會停在剛剛那盤棋的畫面，等分頁被切回來時看起來像卡住
-      setView("lobby");
-      setTableId(null);
-      setBoard(null);
-      setRedName(null);
-      setBlackName(null);
-      setPostHand(null);
-      socket.emit("xiangqiGetTables");
+    leaveCurrent() {
+      if (view === "game" && status === "playing" && tableId) {
+        socket.emit("xiangqiForfeit", { tableId });
+        // 座位在後端已經整個空出來了（跟斷線同一條路徑），這裡直接樂觀地把本地畫面
+        // 收回大廳，不然元件會停在剛剛那盤棋的畫面，等分頁被切回來時看起來像卡住
+        setView("lobby");
+        setTableId(null);
+        setBoard(null);
+        setRedName(null);
+        setBlackName(null);
+        setPostHand(null);
+        socket.emit("xiangqiGetTables");
+        return;
+      }
+      if (view === "postHand") {
+        handleLeaveAfterHand();
+        return;
+      }
+      if (view === "lobby" && myWaitingTable) {
+        socket.emit("xiangqiCancelTable", { tableId: myWaitingTable.id });
+        socket.emit("xiangqiGetTables");
+      }
     },
-  }), [view, status, tableId, socket]);
+  }), [view, status, tableId, myWaitingTable, socket]);
 
   useEffect(() => {
     if (!socket) return;

@@ -12,13 +12,13 @@ export default function LoungePanel({ socket, room, name, apples, open, onClose 
   const [tab, setTab] = useState("xiangqi");
   const { windowRef, onPointerDown } = useDraggableWindow();
 
-  // 三個遊戲都用同一套機制回報「這一局還在打嗎」，並在確認中離時觸發強制中離
-  // （中離者座位轉代打，其他玩家繼續，入場費算輸掉——跟斷線時的處理完全一樣）
+  // 三個遊戲都用同一套機制回報「我現在佔用這個遊戲到什麼程度」：
+  // "playing" = 對局進行中，"waiting" = 已開桌/加入等湊人數或等重賽，null/false = 沒佔用
   const mahjongRef = useRef(null);
   const bigtwoRef = useRef(null);
   const xiangqiRef = useRef(null);
   const gameRefs = { mahjong: mahjongRef, bigtwo: bigtwoRef, xiangqi: xiangqiRef };
-  const [activeMap, setActiveMap] = useState({ mahjong: false, bigtwo: false, xiangqi: false });
+  const [activeMap, setActiveMap] = useState({ mahjong: null, bigtwo: null, xiangqi: null });
 
   // 用 useCallback 固定參考，避免每次 render 都產生新函式，導致遊戲元件裡
   // 依賴 onActiveChange 的 useEffect 無限重新觸發（setState → re-render → 新函式 → 再觸發…）
@@ -27,10 +27,14 @@ export default function LoungePanel({ socket, room, name, apples, open, onClose 
   const onXiangqiActiveChange = useCallback((v) => setActiveMap(m => (m.xiangqi === v ? m : { ...m, xiangqi: v })), []);
 
   function confirmLeaveActiveGame() {
-    if (!activeMap[tab]) return true;
-    const ok = window.confirm(`您正在${TAB_LABEL[tab]}中，確定要中離嗎？會直接損失入場費`);
+    const mode = activeMap[tab];
+    if (!mode) return true;
+    const msg = mode === "playing"
+      ? `您正在${TAB_LABEL[tab]}中，確定要中離嗎？會直接損失入場費`
+      : `您已在${TAB_LABEL[tab]}開桌等待中，請確認離開該遊戲加入新遊戲嗎`;
+    const ok = window.confirm(msg);
     if (!ok) return false;
-    gameRefs[tab].current?.forfeitIfPlaying();
+    gameRefs[tab].current?.leaveCurrent();
     return true;
   }
 
