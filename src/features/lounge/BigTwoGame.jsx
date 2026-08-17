@@ -127,9 +127,15 @@ function BigTwoGame({ socket, room, name, apples, onActiveChange }, ref) {
 
   useImperativeHandle(ref, () => ({
     forfeitIfPlaying() {
-      if (view === "game" && st?.status === "playing" && tableId) {
-        socket.emit("bigTwoForfeit", { tableId });
-      }
+      if (view !== "game" || st?.status !== "playing" || !tableId) return;
+      socket.emit("bigTwoForfeit", { tableId });
+      // 座位已經轉代打，伺服器之後不會再對這個座位送任何狀態更新，這裡直接樂觀地
+      // 把本地畫面收回大廳，不然元件會停在剛剛那手牌的畫面，切分頁回來時像卡住
+      setView("lobby");
+      setTableId(null);
+      setSt(null);
+      setPostHand(null);
+      socket.emit("bigTwoGetTables");
     },
   }), [view, st?.status, tableId, socket]);
 

@@ -142,9 +142,17 @@ function XiangqiGame({ socket, room, name, apples, onActiveChange }, ref) {
 
   useImperativeHandle(ref, () => ({
     forfeitIfPlaying() {
-      if (view === "game" && status === "playing" && tableId) {
-        socket.emit("xiangqiResign", { tableId });
-      }
+      if (view !== "game" || status !== "playing" || !tableId) return;
+      socket.emit("xiangqiForfeit", { tableId });
+      // 座位在後端已經整個空出來了（跟斷線同一條路徑），這裡直接樂觀地把本地畫面
+      // 收回大廳，不然元件會停在剛剛那盤棋的畫面，等分頁被切回來時看起來像卡住
+      setView("lobby");
+      setTableId(null);
+      setBoard(null);
+      setRedName(null);
+      setBlackName(null);
+      setPostHand(null);
+      socket.emit("xiangqiGetTables");
     },
   }), [view, status, tableId, socket]);
 
