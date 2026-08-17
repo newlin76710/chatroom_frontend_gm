@@ -24,6 +24,7 @@ const _cfg = {
   room_capacity:       100,
   currency_enabled:    true,
   lounge_enabled:      true,
+  playground_enabled:  true,
 };
 
 export const roomConfig = _cfg;

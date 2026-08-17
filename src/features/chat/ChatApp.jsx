@@ -78,6 +78,7 @@ const GoldAppleGame = lazy(() => import("../games/GoldAppleGame"));
 const WhackAppleGame = lazy(() => import("../games/WhackAppleGame"));
 const ClawMachineGame = lazy(() => import("../games/ClawMachineGame"));
 const CherryTreeGame = lazy(() => import("../games/CherryTreeGame"));
+const MarqueeGame = lazy(() => import("../games/MarqueeGame"));
 const AdminToolPanel = lazy(() => import("../admin/AdminToolPanel"));
 const ShopPanel = lazy(() => import("./ShopPanel"));
 const CasinoPanel = lazy(() => import("../casino/CasinoPanel"));
@@ -305,6 +306,9 @@ export default function ChatApp() {
             golden_peonies: u.golden_peonies || 0,
             gender: u?.gender || "女",
             type: u?.type || "guest",
+            // 管理員收到的 updateUsers 會包含隱身使用者（見 chat.js 的 broadcastUserList），
+            // 這個欄位要留著，跑馬燈才能正確把隱身的人排除在跑動名單跟中獎名單之外
+            invisible: !!u?.invisible,
             avatar:
               u?.avatar && u.avatar !== ""
                 ? u.avatar
@@ -933,7 +937,7 @@ export default function ChatApp() {
                   <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} /> 賣場
                 </button>
               )}
-              {!invisible && isMember && roomConfig.new_section && (
+              {!invisible && isMember && roomConfig.new_section && roomConfig.playground_enabled && (
                 <button className="announce-btn" title="遊樂場" onClick={() => setShowPlayground(true)}
                   style={{ background: "linear-gradient(135deg,#003a2a,#005a45)", border: "1px solid #4fd0c8", color: "#7fffe8" }}>
                   🎡 遊樂場
@@ -979,7 +983,7 @@ export default function ChatApp() {
               />
             </DeferredPanel>
           )}
-          {roomConfig.new_section && (
+          {roomConfig.new_section && roomConfig.playground_enabled && (
             <DeferredPanel>
               <CasinoPanel
                 token={token} apples={apples} onApplesChange={setApples}
@@ -1501,6 +1505,18 @@ export default function ChatApp() {
             token={token}
             name={name}
             setApples={setApples}
+          />
+        )}
+      </DeferredPanel>
+
+      {/* 跑馬燈抽獎遊戲（管理員手動觸發），右下角小卡片顯示狀態，不擋畫面；
+          跟觸發按鈕（trade-apple 那段）用同一個條件，new_section 房間也要看得到 */}
+      <DeferredPanel>
+        {(NF || roomConfig.new_section) && (
+          <MarqueeGame
+            socket={socket}
+            name={name}
+            userList={userList}
           />
         )}
       </DeferredPanel>
