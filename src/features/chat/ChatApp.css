@@ -150,10 +150,10 @@ body {
 }
 
 .user-avatar {
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  margin-right: 4px;
+  margin-right: 6px;
   object-fit: cover;
   flex-shrink: 0;
 }
@@ -443,8 +443,10 @@ body {
 }
 
 /* ===== YouTube PLAYER ===== */
+/* 高度交給裡面 .video-player-float 的 aspect-ratio 決定，這裡不能再固定高度，
+   不然寬度變窄、影片跟著變矮之後，這層外框還是原本的高度，底下會空出一大截 */
 .youtube-container {
-  flex: 0 0 200px;
+  flex: 0 0 auto;
   background: #121212;
   border-radius: 8px;
   overflow: hidden;
