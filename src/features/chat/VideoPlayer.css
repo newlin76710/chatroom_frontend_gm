@@ -1,7 +1,7 @@
 /* ===== 外框播放器 ===== */
 .video-player-float {
-  width: 240px;
-  height: 180px;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   background: #000;
   border-radius: 12px;
   overflow: hidden;
@@ -27,7 +27,7 @@
 /* ===== iframe ===== */
 .video-player-float iframe {
   width: 100%;
-  height: 135px;
+  height: 100%;
   border: none;
 }
 
