@@ -78,10 +78,10 @@ const GoldAppleGame = lazy(() => import("../games/GoldAppleGame"));
 const WhackAppleGame = lazy(() => import("../games/WhackAppleGame"));
 const ClawMachineGame = lazy(() => import("../games/ClawMachineGame"));
 const CherryTreeGame = lazy(() => import("../games/CherryTreeGame"));
-const MarqueeGame = lazy(() => import("../games/MarqueeGame"));
 const AdminToolPanel = lazy(() => import("../admin/AdminToolPanel"));
 const ShopPanel = lazy(() => import("./ShopPanel"));
 const CasinoPanel = lazy(() => import("../casino/CasinoPanel"));
+const LoungePanel = lazy(() => import("../lounge/LoungePanel"));
 const MessageBoard = lazy(() => import("./MessageBoard"));
 const Leaderboard = lazy(() => import("./Leaderboard"));
 
@@ -172,6 +172,7 @@ export default function ChatApp() {
   const [shopTitle, setShopTitle] = useState("商城");
   const [showCasino, setShowCasino] = useState(false);
   const [showPlayground, setShowPlayground] = useState(false);
+  const [showLounge, setShowLounge] = useState(false);
   const [showAdminTools, setShowAdminTools] = useState(false);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [currentSinger, setCurrentSinger] = useState(null);
@@ -927,6 +928,12 @@ export default function ChatApp() {
                   🎰 娛樂城
                 </button>
               )}
+              {!invisible && isMember && roomConfig.lounge_enabled && (
+                <button className="announce-btn" title="休閒廳" onClick={() => setShowLounge(true)}
+                  style={{ background: "linear-gradient(135deg,#102316,#1a3d22)", border: "1px solid #7fbf8a", color: "#b7e8bd" }}>
+                  🎲 休閒廳
+                </button>
+              )}
               {!invisible && isMember && roomConfig.new_section && (
                 <button className="announce-btn" title="賣場" onClick={() => { setShopTitle("賣場"); setShowShop(true); }}>
                   <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} /> 賣場
@@ -978,6 +985,14 @@ export default function ChatApp() {
                 token={token} apples={apples} onApplesChange={setApples}
                 open={showPlayground} onClose={() => setShowPlayground(false)}
                 variant="playground"
+              />
+            </DeferredPanel>
+          )}
+          {showLounge && (
+            <DeferredPanel>
+              <LoungePanel
+                socket={socket} room={room} name={name} apples={apples}
+                open={showLounge} onClose={() => setShowLounge(false)}
               />
             </DeferredPanel>
           )}
@@ -1161,21 +1176,23 @@ export default function ChatApp() {
                       <input type="checkbox" checked={convertTC} onChange={(e) => setConvertTC(e.target.checked)} /> 簡-繁
                     </label>
                     <span className="legacy-label legacy-label-green">對象:</span>
-                    <select
-                      className="legacy-select-green"
-                      value={target}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setTarget(val);
-                        if (chatMode !== "private") setChatMode(val ? "publicTarget" : "public");
-                        focusInput();
-                      }}
-                    >
-                      <option value="">選擇對象</option>
-                      {userList
-                        .filter((u) => u.name !== name && contactedNames.has(u.name))
-                        .map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
-                    </select>
+                    {chatMode !== "public" && (
+                      <select
+                        className="legacy-select-green"
+                        value={target}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setTarget(val);
+                          if (chatMode !== "private") setChatMode(val ? "publicTarget" : "public");
+                          focusInput();
+                        }}
+                      >
+                        <option value="">選擇對象</option>
+                        {userList
+                          .filter((u) => u.name !== name && contactedNames.has(u.name))
+                          .map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
+                      </select>
+                    )}
                     <button
                       className="legacy-btn legacy-btn-green"
                       onClick={() => {
@@ -1484,17 +1501,6 @@ export default function ChatApp() {
             token={token}
             name={name}
             setApples={setApples}
-          />
-        )}
-      </DeferredPanel>
-
-      {/* 跑馬燈抽獎遊戲（管理員手動觸發） */}
-      <DeferredPanel>
-        {NF && (
-          <MarqueeGame
-            socket={socket}
-            name={name}
-            userList={userList}
           />
         )}
       </DeferredPanel>

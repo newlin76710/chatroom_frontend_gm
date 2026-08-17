@@ -193,8 +193,13 @@ export default class PusherGameScene extends Phaser.Scene {
 
   createStaticPhysics() {
     const opts = { isStatic: true, restitution: 0.08, friction: 0.22 };
-    this.matter.add.rectangle(TABLE.left - 18, (TABLE.back + TABLE.front) / 2, 36, TABLE.front - TABLE.back + 220, opts);
-    this.matter.add.rectangle(TABLE.right + 18, (TABLE.back + TABLE.front) / 2, 36, TABLE.front - TABLE.back + 220, opts);
+    // 側邊護欄只擋到桌面前緣（TABLE.front）為止，前緣以下刻意留空缺口，
+    // 讓被推得太偏兩側的代幣可以直接從側邊滑落台面（視為輸掉，不返還）
+    const sideWallTop = TABLE.back - 130;
+    const sideWallHeight = TABLE.front - sideWallTop;
+    const sideWallCenterY = (sideWallTop + TABLE.front) / 2;
+    this.matter.add.rectangle(TABLE.left - 18, sideWallCenterY, 36, sideWallHeight, opts);
+    this.matter.add.rectangle(TABLE.right + 18, sideWallCenterY, 36, sideWallHeight, opts);
     this.matter.add.rectangle(GAME_WIDTH / 2, TABLE.back - 22, TABLE.right - TABLE.left + 86, 44, opts);
 
     this.leftLip = this.matter.add.rectangle(TABLE.left + 40, TABLE.drop - 24, 82, 24, {
@@ -210,6 +215,18 @@ export default class PusherGameScene extends Phaser.Scene {
       isStatic: true,
       isSensor: true,
       label: "drop-sensor",
+    });
+
+    // 側邊缺口下方的感應區：從這裡掉出去的代幣直接銷毀、不列入結算
+    this.leftDropSensor = this.matter.add.rectangle(TABLE.left - 18, TABLE.front + 250, 70, 500, {
+      isStatic: true,
+      isSensor: true,
+      label: "left-drop-sensor",
+    });
+    this.rightDropSensor = this.matter.add.rectangle(TABLE.right + 18, TABLE.front + 250, 70, 500, {
+      isStatic: true,
+      isSensor: true,
+      label: "right-drop-sensor",
     });
   }
 
@@ -298,6 +315,12 @@ export default class PusherGameScene extends Phaser.Scene {
         const sensorHit = a === this.dropSensor || b === this.dropSensor;
         if (sensorHit && sprite?.pusherMeta) {
           this.markDropped(sprite);
+          continue;
+        }
+        const sideSensorHit = a === this.leftDropSensor || b === this.leftDropSensor
+          || a === this.rightDropSensor || b === this.rightDropSensor;
+        if (sideSensorHit && sprite?.pusherMeta) {
+          this.markLost(sprite);
           continue;
         }
         if (sprite?.pusherMeta) {
@@ -393,6 +416,19 @@ export default class PusherGameScene extends Phaser.Scene {
     // Jackpot 幣在 spawnToken 裡掛了一個 repeat:-1 的無限縮放 tween；
     // 沒先停掉就 destroy() 會讓 tween manager 下一幀繼續嘗試操作已銷毀的
     // sprite 而丟例外，導致整個 Phaser 更新迴圈卡死（中獎後遊戲停住）。
+    this.tweens.killTweensOf(sprite);
+    sprite.destroy();
+  }
+
+  // 從左右兩側缺口掉出去：直接銷毀，不送去結算，等於這顆代幣完全輸掉
+  markLost(sprite) {
+    if (sprite.pusherMeta.dropped) return;
+    sprite.pusherMeta.dropped = true;
+    const big = sprite.pusherMeta.kind !== "coin";
+    this.dropParticles.emitParticleAt(sprite.x, Math.min(sprite.y, TABLE.drop + 36), big ? 34 : 16);
+    playCoinDropSound(big);
+    this.floatText(sprite.x, TABLE.drop - 12, "掉出邊緣，未獲得", "#ff6b6b");
+    this.coinSprites.delete(sprite);
     this.tweens.killTweensOf(sprite);
     sprite.destroy();
   }
@@ -505,7 +541,8 @@ export default class PusherGameScene extends Phaser.Scene {
         sprite.clearTint();
       }
       if (sprite.y > GAME_HEIGHT + 120 || sprite.x < -120 || sprite.x > GAME_WIDTH + 120) {
-        this.markDropped(sprite);
+        // 沒有被正面落幣感應區或側邊感應區明確判定就跑出場外，一律視為輸掉、不予結算
+        this.markLost(sprite);
       }
     }
   }
@@ -533,7 +570,7 @@ export default class PusherGameScene extends Phaser.Scene {
   cleanupEscaped() {
     for (const sprite of Array.from(this.coinSprites)) {
       if (!sprite.body || sprite.y > GAME_HEIGHT + 180) {
-        this.markDropped(sprite);
+        this.markLost(sprite);
       }
     }
   }

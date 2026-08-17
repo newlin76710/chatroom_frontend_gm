@@ -7,10 +7,12 @@ const HEIGHT = 640;
 const PLAYER_RADIUS = 18;
 const MAX_LEVELS = 3;
 
+const BASE_MONSTER_SPEED = 0.72;
+
 const LEVELS = [
-  { name: "第一關", duration: 28, spawnEvery: 980, monsterHp: 18, monsterSpeed: 0.72, monsterDamage: 7, maxMonsters: 28 },
-  { name: "第二關", duration: 34, spawnEvery: 760, monsterHp: 28, monsterSpeed: 0.94, monsterDamage: 9, maxMonsters: 38 },
-  { name: "第三關", duration: 42, spawnEvery: 560, monsterHp: 42, monsterSpeed: 1.16, monsterDamage: 12, maxMonsters: 52 },
+  { name: "第一關", duration: 28, spawnEvery: 980, monsterHp: 18, monsterSpeed: BASE_MONSTER_SPEED * 1, monsterDamage: 7, maxMonsters: 28 },
+  { name: "第二關", duration: 34, spawnEvery: 760, monsterHp: 28, monsterSpeed: BASE_MONSTER_SPEED * 2, monsterDamage: 9, maxMonsters: 38 },
+  { name: "第三關", duration: 42, spawnEvery: 560, monsterHp: 42, monsterSpeed: BASE_MONSTER_SPEED * 3, monsterDamage: 12, maxMonsters: 52 },
 ];
 
 const rand = (min, max) => min + Math.random() * (max - min);
@@ -67,7 +69,6 @@ function makePickup(x, y) {
   const roll = Math.random();
   if (roll < 0.42) return { id: makeId(), x, y, type: "power", label: "攻擊+", color: "#ffd166", radius: 11 };
   if (roll < 0.72) return { id: makeId(), x, y, type: "speed", label: "攻速+", color: "#7bf1ff", radius: 11 };
-  if (roll < 0.9) return { id: makeId(), x, y, type: "heal", label: "治療", color: "#7dff91", radius: 11 };
   return { id: makeId(), x, y, type: "burst", label: "散射", color: "#ff80df", radius: 11 };
 }
 
@@ -97,7 +98,7 @@ function initialGame() {
   };
 }
 
-export default function ZombieSurvivalGame({ token, apples, onApplesChange }) {
+export default function ZombieSurvivalGame({ token, apples, onApplesChange, demo = false }) {
   const canvasRef = useRef(null);
   const gameRef = useRef(initialGame());
   const rafRef = useRef(0);
@@ -111,6 +112,10 @@ export default function ZombieSurvivalGame({ token, apples, onApplesChange }) {
   const currencyIcon = `/gifts/${roomConfig.currency_icon}`;
 
   useEffect(() => {
+    if (demo) {
+      setSettings({ zombie_enabled: true, zombie_entry_cost: 0, zombie_level_reward: 15, zombie_daily_limit: Infinity, attemptsUsedToday: 0 });
+      return;
+    }
     if (!token) return;
     fetch(`${BACKEND}/api/zombie/settings?room=${RN}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -118,7 +123,7 @@ export default function ZombieSurvivalGame({ token, apples, onApplesChange }) {
       .then(r => r.json())
       .then(setSettings)
       .catch(() => setSettings({ zombie_enabled: true, zombie_entry_cost: 10, zombie_level_reward: 15, zombie_daily_limit: 3, attemptsUsedToday: 0 }));
-  }, [token]);
+  }, [demo, token]);
 
   const syncHud = useCallback(() => {
     const g = gameRef.current;
@@ -151,38 +156,43 @@ export default function ZombieSurvivalGame({ token, apples, onApplesChange }) {
 
     if (restarting) {
       if (!settings?.zombie_enabled) return;
-      if ((settings.attemptsUsedToday ?? 0) >= (settings.zombie_daily_limit ?? 3)) {
-        setError(`今日挑戰次數已用完（${settings.zombie_daily_limit}/${settings.zombie_daily_limit}）`);
-        return;
-      }
-      if ((apples ?? 0) < (settings.zombie_entry_cost ?? 0)) {
-        setError(`${roomConfig.currency_name}不足`);
-        return;
-      }
-      startingRef.current = true;
-      try {
-        const res = await fetch(`${BACKEND}/api/zombie/start`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ room: RN }),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          setError(data.error || "開始失敗");
+      if (!demo) {
+        if ((settings.attemptsUsedToday ?? 0) >= (settings.zombie_daily_limit ?? 3)) {
+          setError(`今日挑戰次數已用完（${settings.zombie_daily_limit}/${settings.zombie_daily_limit}）`);
+          return;
+        }
+        if ((apples ?? 0) < (settings.zombie_entry_cost ?? 0)) {
+          setError(`${roomConfig.currency_name}不足`);
+          return;
+        }
+        startingRef.current = true;
+        try {
+          const res = await fetch(`${BACKEND}/api/zombie/start`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ room: RN }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            setError(data.error || "開始失敗");
+            startingRef.current = false;
+            return;
+          }
+          setError("");
+          runIdRef.current = data.runId;
+          finishSentRef.current = false;
+          if (onApplesChange) onApplesChange(data.newApples);
+          setSettings(s => ({ ...s, attemptsUsedToday: data.attemptsUsedToday }));
+        } catch {
+          setError("連線失敗，請重試");
           startingRef.current = false;
           return;
         }
-        setError("");
-        runIdRef.current = data.runId;
-        finishSentRef.current = false;
-        if (onApplesChange) onApplesChange(data.newApples);
-        setSettings(s => ({ ...s, attemptsUsedToday: data.attemptsUsedToday }));
-      } catch {
-        setError("連線失敗，請重試");
         startingRef.current = false;
-        return;
+      } else {
+        runIdRef.current = null;
+        finishSentRef.current = true;
       }
-      startingRef.current = false;
     }
 
     const base = restarting ? initialGame() : current;
@@ -208,7 +218,7 @@ export default function ZombieSurvivalGame({ token, apples, onApplesChange }) {
       message: `${LEVELS[nextLevel].name} 開始`,
     };
     syncHud();
-  }, [settings, apples, token, onApplesChange, syncHud]);
+  }, [settings, apples, token, onApplesChange, syncHud, demo]);
 
   // 挑戰結束（過關三次或死亡）時，回報通關關卡數領取獎勵，一場只送一次
   useEffect(() => {
@@ -341,11 +351,8 @@ export default function ZombieSurvivalGame({ token, apples, onApplesChange }) {
         monster.x += Math.cos(angle) * monster.speed * (dt / 16.6667);
         monster.y += Math.sin(angle) * monster.speed * (dt / 16.6667);
         if (distance(monster, g.player) < monster.radius + g.player.radius && g.invulnerable <= 0) {
-          g.hp = clamp(g.hp - monster.damage, 0, g.maxHp);
-          g.invulnerable = 420;
-          g.effects.push({ x: g.player.x, y: g.player.y, text: `-${Math.round(monster.damage)}`, life: 42, color: "#ff6b6b" });
-          monster.x -= Math.cos(angle) * 22;
-          monster.y -= Math.sin(angle) * 22;
+          g.hp = 0;
+          g.effects.push({ x: g.player.x, y: g.player.y, text: "死亡", life: 42, color: "#ff6b6b" });
         }
       }
 
@@ -389,7 +396,6 @@ export default function ZombieSurvivalGame({ token, apples, onApplesChange }) {
         if (distance(pickup, g.player) < g.player.radius + pickup.radius + 6) {
           if (pickup.type === "power") g.power += 4;
           if (pickup.type === "speed") g.fireDelay = Math.max(180, g.fireDelay - 42);
-          if (pickup.type === "heal") g.hp = clamp(g.hp + 18, 0, g.maxHp);
           if (pickup.type === "burst") g.burst = Math.min(3, g.burst + 1);
           g.effects.push({ x: pickup.x, y: pickup.y, text: pickup.label, life: 52, color: pickup.color });
         } else {
@@ -560,13 +566,14 @@ export default function ZombieSurvivalGame({ token, apples, onApplesChange }) {
   const attemptsLeft = Math.max(0, (settings.zombie_daily_limit ?? 3) - (settings.attemptsUsedToday ?? 0));
   const entryCost = settings.zombie_entry_cost ?? 10;
   const canStartFresh = attemptsLeft > 0 && (apples ?? 0) >= entryCost;
+  const costSuffix = demo ? "" : ` -${entryCost}`;
   const startLabel = hud.running
     ? "戰鬥中"
     : hud.waitingNextLevel
       ? `開始${LEVELS[hud.level]?.name || "下一關"}`
       : hud.gameOver || hud.won
-        ? `重新挑戰第一關 -${entryCost}`
-        : `開始第一關 -${entryCost}`;
+        ? `重新挑戰第一關${costSuffix}`
+        : `開始第一關${costSuffix}`;
   const startDisabled = hud.running || (!hud.waitingNextLevel && !canStartFresh);
 
   return (
@@ -577,8 +584,14 @@ export default function ZombieSurvivalGame({ token, apples, onApplesChange }) {
           <p>點擊場地移動角色，人物會自動攻擊最近怪物。走到道具上才能拾取升級。</p>
         </div>
         <div className="zombie-wallet">
-          <span><img src={currencyIcon} alt="" className="zombie-apple-icon" />{apples ?? 0}</span>
-          <small>今日剩餘次數：{attemptsLeft} / {settings.zombie_daily_limit ?? 3}</small>
+          {demo ? (
+            <small>🎮 試玩模式（不扣款、不限次數）</small>
+          ) : (
+            <>
+              <span><img src={currencyIcon} alt="" className="zombie-apple-icon" />{apples ?? 0}</span>
+              <small>今日剩餘次數：{attemptsLeft} / {settings.zombie_daily_limit ?? 3}</small>
+            </>
+          )}
         </div>
       </div>
 

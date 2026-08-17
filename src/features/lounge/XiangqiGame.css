@@ -1,0 +1,164 @@
+.xq-lobby {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.xq-hint {
+  color: #b7d9bb;
+  font-size: 0.85rem;
+  margin: 0;
+}
+.xq-create-btn {
+  align-self: flex-start;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #7fbf8a;
+  background: rgba(127, 191, 138, 0.2);
+  color: #e8fbe9;
+  font-weight: 700;
+  cursor: pointer;
+}
+.xq-create-btn:hover { background: rgba(127, 191, 138, 0.35); }
+
+.xq-table-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.xq-empty {
+  color: #7fa384;
+  font-style: italic;
+  padding: 10px 0;
+}
+.xq-table-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(127, 191, 138, 0.2);
+  color: #e8fbe9;
+}
+.xq-join-btn, .xq-cancel-btn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid #7fbf8a;
+  background: rgba(127, 191, 138, 0.18);
+  color: #fff;
+  cursor: pointer;
+}
+.xq-cancel-btn { border-color: #d97a5a; background: rgba(217, 122, 90, 0.18); }
+
+.xq-waiting-seats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #e8fbe9;
+  font-size: 0.9rem;
+}
+.xq-waiting-seats li {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(127, 191, 138, 0.2);
+}
+
+.xq-game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+.xq-players {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 440px;
+  color: #dfeee0;
+  font-weight: 600;
+}
+.xq-turn-active {
+  color: #ffd76a;
+  text-shadow: 0 0 6px rgba(255, 215, 106, 0.7);
+}
+.xq-timer {
+  color: #ff9f6a;
+  font-variant-numeric: tabular-nums;
+}
+.xq-canvas {
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  cursor: pointer;
+  max-width: 100%;
+}
+.xq-check-banner {
+  color: #ff5c5c;
+  font-weight: 900;
+  font-size: 1.05rem;
+}
+.xq-actions {
+  display: flex;
+  gap: 10px;
+}
+.xq-actions button {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(127, 191, 138, 0.5);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e8fbe9;
+  cursor: pointer;
+}
+.xq-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.xq-toast {
+  position: absolute;
+  top: -6px;
+  right: 0;
+  background: rgba(200, 60, 60, 0.9);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  z-index: 10;
+  max-width: 260px;
+}
+.xq-result-toast {
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid #d4af37;
+  color: #ffe9a8;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.xq-request-modal {
+  position: absolute;
+  bottom: 60px;
+  background: #0f2a15;
+  border: 1.5px solid #7fbf8a;
+  border-radius: 10px;
+  padding: 14px 18px;
+  text-align: center;
+  color: #e8fbe9;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+  z-index: 20;
+}
+.xq-request-modal p { margin: 0 0 10px; }
+.xq-request-modal button {
+  margin: 0 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid #7fbf8a;
+  background: rgba(127, 191, 138, 0.2);
+  color: #fff;
+  cursor: pointer;
+}

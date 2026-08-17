@@ -65,7 +65,8 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
   const currencyIcon = `/gifts/${roomConfig.currency_icon}`;
   const currencyName = roomConfig.currency_name || "金蘋果";
   const open = isOpenNow(settings);
-  const capReached = !!dailyCapInfo && dailyCapInfo.netProfit >= dailyCapInfo.cap;
+  // 每日淨賺上限只影響「入帳金額」（見後端 /pusher/collect），達到上限後仍可以繼續投幣、繼續輸，
+  // 不會整台機器被鎖住——賺錢封頂，輸錢不封頂。
 
   useEffect(() => {
     applesRef.current = apples ?? 0;
@@ -127,13 +128,13 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
     if (!settings) return;
     sceneRef.current?.setExternalState({
       plateSpeed: settings.plate_speed || "normal",
-      enabled: settings.enabled && open && !capReached,
+      enabled: settings.enabled && open,
     });
     controlsRef.current?.setState({
       plateSpeed: settings.plate_speed || "normal",
-      enabled: settings.enabled && open && !capReached,
+      enabled: settings.enabled && open,
     });
-  }, [settings, open, capReached]);
+  }, [settings, open]);
 
   useEffect(() => {
     const onPool = ({ jackpotPool: nextPool }) => setJackpotPool(Number(nextPool || 0));
@@ -152,12 +153,13 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
   const insertCoin = useCallback(async () => {
     if (demo) {
       if ((applesRef.current || 0) < BET) throw new Error("試玩餘額不足");
+      // 試玩機率跟正式後端 pusherMachine.js 的 special_chance_pct=4% 對齊，方便測手感
       const kinds = [
-        { kind: "coin", multiplier: 1, weight: 72 },
-        { kind: "diamond", multiplier: 2, weight: 10 },
-        { kind: "car", multiplier: 3, weight: 7 },
-        { kind: "plane", multiplier: 4, weight: 7 },
-        { kind: "jackpot", multiplier: 0, weight: 4 },
+        { kind: "coin", multiplier: 1, weight: 960 },
+        { kind: "diamond", multiplier: 2, weight: 16 },
+        { kind: "car", multiplier: 3, weight: 12 },
+        { kind: "plane", multiplier: 4, weight: 11 },
+        { kind: "jackpot", multiplier: 0, weight: 1 },
       ];
       const total = kinds.reduce((sum, item) => sum + item.weight, 0);
       let roll = Math.random() * total;
@@ -250,8 +252,6 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
   settingsRef.current = settings;
   const openRef = useRef(open);
   openRef.current = open;
-  const capReachedRef = useRef(capReached);
-  capReachedRef.current = capReached;
 
   const services = useMemo(() => ({
     insertCoin: (...args) => insertCoinRef.current(...args),
@@ -267,7 +267,7 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
         position: positionRef.current,
         balance: applesRef.current,
         plateSpeed: settingsRef.current?.plate_speed || "normal",
-        enabled: settingsRef.current?.enabled && openRef.current && !capReachedRef.current,
+        enabled: settingsRef.current?.enabled && openRef.current,
       });
     },
   }), []);
@@ -305,7 +305,7 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
         position: positionRef.current,
         balance: applesRef.current,
         plateSpeed: settings.plate_speed || "normal",
-        enabled: settings.enabled && open && !capReached,
+        enabled: settings.enabled && open,
       },
     });
     const scene = game.scene.getScene("PusherGameScene");
@@ -325,16 +325,16 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
       position,
       balance: apples ?? 0,
       plateSpeed: settings?.plate_speed || "normal",
-      enabled: settings?.enabled && open && !capReached,
+      enabled: settings?.enabled && open,
     });
     controlsRef.current?.setState({
       bet: BET,
       position,
       balance: apples ?? 0,
       plateSpeed: settings?.plate_speed || "normal",
-      enabled: settings?.enabled && open && !capReached,
+      enabled: settings?.enabled && open,
     });
-  }, [apples, open, position, settings, capReached]);
+  }, [apples, open, position, settings]);
 
   const quickDrop = () => {
     unlockPusherAudio();
@@ -400,9 +400,12 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
             />
           </div>
 
-          <button type="button" className="pusher-launch" onClick={quickDrop} disabled={!open || (!token && !demo) || capReached}>
-            {capReached ? "已達本日賺取上限" : "投幣 (每次 1 顆)"}
+          <button type="button" className="pusher-launch" onClick={quickDrop} disabled={!open || (!token && !demo)}>
+            投幣 (每次 1 顆)
           </button>
+          {dailyCapInfo && dailyCapInfo.netProfit >= dailyCapInfo.cap && (
+            <div className="pusher-tips">今日淨賺已達上限，之後掉落的獎品不會再入帳，但仍可以繼續投幣。</div>
+          )}
 
           <div className="pusher-tips">
             用左右滑桿選擇出幣位置後按「投幣」直線落下；也可以直接拖曳台面瞄準方向與力度。推板前慢後快，硬幣會因靜摩擦卡住後連鎖滑落。

@@ -22,6 +22,8 @@ const _cfg = {
   speech_reward_threshold: 100,
   snowball_cooldown_minutes: 10,
   room_capacity:       100,
+  currency_enabled:    true,
+  lounge_enabled:      true,
 };
 
 export const roomConfig = _cfg;

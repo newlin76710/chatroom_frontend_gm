@@ -4,6 +4,8 @@ import ChatApp from "./features/chat/ChatApp";
 import Login from "./features/auth/Login";
 
 const PusherDemo = lazy(() => import("./features/casino/PusherDemo"));
+const ZombieDemo = lazy(() => import("./features/casino/ZombieDemo"));
+const LoungeDemo = lazy(() => import("./features/lounge/LoungeDemo"));
 
 export default function App() {
   return (
@@ -13,6 +15,8 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/chat" element={<ChatApp />} />
         <Route path="/pusher-demo" element={<Suspense fallback={null}><PusherDemo /></Suspense>} />
+        <Route path="/zombie-demo" element={<Suspense fallback={null}><ZombieDemo /></Suspense>} />
+        <Route path="/lounge-demo" element={<Suspense fallback={null}><LoungeDemo /></Suspense>} />
       </Routes>
     </BrowserRouter>
   );
