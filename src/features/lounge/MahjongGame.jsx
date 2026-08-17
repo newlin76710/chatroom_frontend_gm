@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from "react";
 import { roomConfig } from "../../shared/roomConfig";
 import "./MahjongGame.css";
 
@@ -270,7 +270,7 @@ function draw(ctx, st, now) {
   }
 }
 
-export default function MahjongGame({ socket, room, name, apples }) {
+function MahjongGame({ socket, room, name, apples, onActiveChange }, ref) {
   const canvasRef = useRef(null);
   const [view, setView] = useState("lobby");
   const [tables, setTables] = useState([]);
@@ -286,6 +286,19 @@ export default function MahjongGame({ socket, room, name, apples }) {
     setToast(msg);
     setTimeout(() => setToast(t => (t === msg ? null : t)), 3500);
   }, []);
+
+  // 讓父層（休閒廳）在切分頁前可以判斷「這一局還在打」，以及在使用者確認要中離時強制中離
+  useEffect(() => {
+    onActiveChange?.(view === "game" && st?.status === "playing");
+  }, [view, st?.status, onActiveChange]);
+
+  useImperativeHandle(ref, () => ({
+    forfeitIfPlaying() {
+      if (view === "game" && st?.status === "playing" && tableId) {
+        socket.emit("mahjongForfeit", { tableId });
+      }
+    },
+  }), [view, st?.status, tableId, socket]);
 
   useEffect(() => {
     if (!socket) return;
@@ -520,3 +533,5 @@ export default function MahjongGame({ socket, room, name, apples }) {
     </div>
   );
 }
+
+export default forwardRef(MahjongGame);

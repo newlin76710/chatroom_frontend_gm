@@ -928,12 +928,6 @@ export default function ChatApp() {
                   🎰 娛樂城
                 </button>
               )}
-              {!invisible && isMember && roomConfig.lounge_enabled && (
-                <button className="announce-btn" title="休閒廳" onClick={() => setShowLounge(true)}
-                  style={{ background: "linear-gradient(135deg,#102316,#1a3d22)", border: "1px solid #7fbf8a", color: "#b7e8bd" }}>
-                  🎲 休閒廳
-                </button>
-              )}
               {!invisible && isMember && roomConfig.new_section && (
                 <button className="announce-btn" title="賣場" onClick={() => { setShopTitle("賣場"); setShowShop(true); }}>
                   <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} /> 賣場
@@ -943,6 +937,12 @@ export default function ChatApp() {
                 <button className="announce-btn" title="遊樂場" onClick={() => setShowPlayground(true)}
                   style={{ background: "linear-gradient(135deg,#003a2a,#005a45)", border: "1px solid #4fd0c8", color: "#7fffe8" }}>
                   🎡 遊樂場
+                </button>
+              )}
+              {!invisible && isMember && roomConfig.lounge_enabled && (
+                <button className="announce-btn" title="休閒廳" onClick={() => setShowLounge(true)}
+                  style={{ background: "linear-gradient(135deg,#102316,#1a3d22)", border: "1px solid #7fbf8a", color: "#b7e8bd" }}>
+                  🎲 休閒廳
                 </button>
               )}
               {offline && !invalidTokenCountdown && <div className="offline-banner">⚠️ 網路不穩，重新連線中...</div>}

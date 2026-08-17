@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from "react";
 import { roomConfig } from "../../shared/roomConfig";
 import "./XiangqiGame.css";
 
@@ -105,7 +105,7 @@ function drawBoard(ctx, { board, selected, lastMove, check, flip }) {
   }
 }
 
-export default function XiangqiGame({ socket, room, name, apples }) {
+function XiangqiGame({ socket, room, name, apples, onActiveChange }, ref) {
   const canvasRef = useRef(null);
   const [view, setView] = useState("lobby");
   const [tables, setTables] = useState([]);
@@ -134,6 +134,19 @@ export default function XiangqiGame({ socket, room, name, apples }) {
     setToast(msg);
     setTimeout(() => setToast(t => (t === msg ? null : t)), 3500);
   }, []);
+
+  // 讓父層（休閒廳）在切分頁前可以判斷「這一局還在下」，以及在使用者確認要中離時強制投降
+  useEffect(() => {
+    onActiveChange?.(view === "game" && status === "playing");
+  }, [view, status, onActiveChange]);
+
+  useImperativeHandle(ref, () => ({
+    forfeitIfPlaying() {
+      if (view === "game" && status === "playing" && tableId) {
+        socket.emit("xiangqiResign", { tableId });
+      }
+    },
+  }), [view, status, tableId, socket]);
 
   useEffect(() => {
     if (!socket) return;
@@ -415,3 +428,5 @@ export default function XiangqiGame({ socket, room, name, apples }) {
     </div>
   );
 }
+
+export default forwardRef(XiangqiGame);
