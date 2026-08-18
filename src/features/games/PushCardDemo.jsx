@@ -7,8 +7,8 @@ function createFakeSocket(state) {
   return {
     on(event, cb) { (listeners[event] ||= []).push(cb); },
     off(event, cb) { listeners[event] = (listeners[event] || []).filter((f) => f !== cb); },
-    emit(event) {
-      if (event === "joinPushCard") state.onJoin();
+    emit(event, payload) {
+      if (event === "joinPushCard") state.onJoin(payload?.card);
     },
     _fire(event, payload) { (listeners[event] || []).forEach((cb) => cb(payload)); },
   };
@@ -22,24 +22,28 @@ export default function PushCardDemo() {
   const [duration, setDuration] = useState(10);
   const [reward, setReward] = useState(10);
 
-  const joinedRef = useRef(false);
+  const myCardRef = useRef(null);
   const socketRef = useRef(createFakeSocket({
-    onJoin: () => { joinedRef.current = true; },
+    onJoin: (card) => { myCardRef.current = card; },
   }));
 
   const start = () => {
     if (running) return;
     setRunning(true);
-    joinedRef.current = false;
+    myCardRef.current = null;
 
     socketRef.current._fire("pushCardStart", { durationMs: duration * 1000, hostName: HOST_NAME });
 
     setTimeout(() => {
       const hostCard = 1 + Math.floor(Math.random() * 10);
       const results = [];
-      if (joinedRef.current) {
-        const myCard = 1 + Math.floor(Math.random() * 10);
-        results.push({ username: MY_NAME, card: myCard, win: myCard > hostCard });
+      if (myCardRef.current != null) {
+        results.push({
+          username: MY_NAME,
+          card: myCardRef.current,
+          win: myCardRef.current > hostCard,
+          tie: myCardRef.current === hostCard,
+        });
       }
       socketRef.current._fire("pushCardEnd", { hostName: HOST_NAME, hostCard, reward, results });
       setRunning(false);

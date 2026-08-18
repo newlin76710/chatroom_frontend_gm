@@ -91,6 +91,7 @@ export default function PushCardGame({ socket, token, name }) {
         hostCard,
         myCard: mine?.card ?? null,
         win: !!mine?.win,
+        tie: !!mine?.tie,
         reward,
       });
       setPhase("result");
@@ -112,7 +113,8 @@ export default function PushCardGame({ socket, token, name }) {
 
   const handleJoin = useCallback(() => {
     joinedRef.current = true;
-    socket.emit("joinPushCard", { token: tokenRef.current, room: RN });
+    const myCard = 1 + Math.floor(Math.random() * 10); // 前端擲牌，送給後端比對
+    socket.emit("joinPushCard", { token: tokenRef.current, room: RN, card: myCard });
     setPhase("waiting");
   }, [socket]);
 
@@ -161,6 +163,8 @@ export default function PushCardGame({ socket, token, name }) {
           </div>
           {outcome.win ? (
             <p className="pcg-win">🎉 你比較大！獲得 {outcome.reward} 個{roomConfig.currency_name}</p>
+          ) : outcome.tie ? (
+            <p className="pcg-lose">跟站長平手（平手算站長贏），這次沒有獲得{roomConfig.currency_name}</p>
           ) : (
             <p className="pcg-lose">沒有比站長大，這次沒有獲得{roomConfig.currency_name}</p>
           )}
