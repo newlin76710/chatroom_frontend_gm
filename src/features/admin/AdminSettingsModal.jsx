@@ -20,6 +20,8 @@ const DEFAULT = {
   daily_receive_limit:  0,
   marquee_reward:       10,
   marquee_duration:     30,
+  pushcard_reward:      10,
+  pushcard_duration:    10,
   surprise_reward:      10,
   game1_enabled:        true,
   game1_hour:           20,
@@ -294,6 +296,16 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
               <Row label="跑馬燈時長(秒)">
                 <input type="number" value={settings.marquee_duration}
                   onChange={e => setInt("marquee_duration", e.target.value)} />
+              </Row>
+              <Row label="推牌遊戲獎勵">
+                <input type="number" value={settings.pushcard_reward}
+                  onChange={e => setInt("pushcard_reward", e.target.value)} />
+                <span className="field-note">個{currencyName}（比站長的牌大就獲得）</span>
+              </Row>
+              <Row label="推牌遊戲秒數">
+                <input type="number" min={5} value={settings.pushcard_duration}
+                  onChange={e => setInt("pushcard_duration", e.target.value)} />
+                <span className="field-note">秒（參加者選擇時間，時間到自動發牌）</span>
               </Row>
               {!settings.new_section && (
                 <Row label="每日樂透獎勵">
@@ -876,11 +888,11 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             </section>
             )}
 
-            {/* ─── 遊樂場：挖寶（遊樂場關閉時取代接櫻桃） ─────────── */}
+            {/* ─── 遊樂場：挖寶 ─────────── */}
             {settings.new_section && !roomConfig.playground_enabled && (
             <section className="settings-section">
               <h4>
-                ⛏️ 挖寶（每日排程活動，遊樂場關閉時取代接櫻桃）
+                ⛏️ 挖寶（每日排程活動）
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={!!settings.dig_enabled}
                     onChange={e => setBool("dig_enabled", e.target.checked)} />

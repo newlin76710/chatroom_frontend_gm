@@ -1,0 +1,148 @@
+/* 右下角小卡片，跟跑馬燈同一個位置、同一種「不擋畫面、不強制點掉」風格 */
+.pcg-corner {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2500;
+  background: linear-gradient(150deg, #2a0a12 0%, #1a0209 100%);
+  border: 2px solid #ff4d6d;
+  border-radius: 12px;
+  padding: 10px 14px 12px;
+  width: 240px;
+  color: #fff;
+  text-align: center;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 0 24px rgba(255, 77, 109, 0.3);
+  animation: pcg-corner-in 0.25s ease;
+}
+
+@keyframes pcg-corner-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.pcg-close {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  background: transparent;
+  border: none;
+  color: #999;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+}
+.pcg-close:hover { color: #fff; }
+
+.pcg-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.pcg-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ff4d6d;
+}
+
+.pcg-timer {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ffb3c1;
+  font-variant-numeric: tabular-nums;
+}
+
+.pcg-body {
+  animation: pcg-appear 0.3s ease;
+}
+
+@keyframes pcg-appear {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.pcg-desc {
+  font-size: 0.82rem;
+  color: #ddd;
+  margin: 0 0 10px;
+  line-height: 1.4;
+}
+
+.pcg-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.pcg-btn {
+  flex: 1;
+  padding: 7px 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.pcg-btn:active { transform: translateY(1px); }
+
+.pcg-btn-join {
+  color: #2a0208;
+  background: linear-gradient(180deg, #ff8fa3 0%, #ff4d6d 100%);
+  box-shadow: 0 3px 0 #b0002a;
+}
+
+.pcg-btn-decline {
+  color: #ccc;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* ─── 結果 ─── */
+.pcg-cards {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.pcg-card-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.pcg-card-label {
+  font-size: 0.68rem;
+  color: #aaa;
+}
+
+.pcg-card-value {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ff4d6d;
+  white-space: nowrap;
+}
+
+.pcg-vs {
+  font-size: 0.75rem;
+  color: #888;
+  font-weight: 700;
+}
+
+.pcg-win {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ffd166;
+  margin: 4px 0 0;
+  text-shadow: 0 0 8px rgba(255, 209, 102, 0.5);
+}
+
+.pcg-lose {
+  font-size: 0.8rem;
+  color: #bbb;
+  margin: 4px 0 0;
+}

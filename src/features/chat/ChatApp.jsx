@@ -80,6 +80,7 @@ const ClawMachineGame = lazy(() => import("../games/ClawMachineGame"));
 const CherryTreeGame = lazy(() => import("../games/CherryTreeGame"));
 const DigTreasureGame = lazy(() => import("../games/DigTreasureGame"));
 const MarqueeGame = lazy(() => import("../games/MarqueeGame"));
+const PushCardGame = lazy(() => import("../games/PushCardGame"));
 const AdminToolPanel = lazy(() => import("../admin/AdminToolPanel"));
 const ShopPanel = lazy(() => import("./ShopPanel"));
 const CasinoPanel = lazy(() => import("../casino/CasinoPanel"));
@@ -192,6 +193,7 @@ export default function ChatApp() {
   const [pingpongActive, setPingpongActive] = useState(false);
   const gamesBusy = rpsActive || pingpongActive;
   const [marqueeActive, setMarqueeActive] = useState(false);
+  const [pushCardActive, setPushCardActive] = useState(false);
 
   const [invalidTokenCountdown, setInvalidTokenCountdown] = useState(null);
   const invalidTokenTimerRef = useRef(null);
@@ -463,6 +465,17 @@ export default function ChatApp() {
     return () => {
       socket.off("marqueeStart", onStart);
       socket.off("marqueeEnd",   onEnd);
+    };
+  }, [socket]);
+
+  useEffect(() => {
+    const onStart = () => setPushCardActive(true);
+    const onEnd   = () => setPushCardActive(false);
+    socket.on("pushCardStart", onStart);
+    socket.on("pushCardEnd",   onEnd);
+    return () => {
+      socket.off("pushCardStart", onStart);
+      socket.off("pushCardEnd",   onEnd);
     };
   }, [socket]);
 
@@ -1341,6 +1354,16 @@ export default function ChatApp() {
                         {marqueeActive ? "🎰 進行中…" : "🎰 跑馬燈"}
                       </button>
                     )}
+                    {level >= AML && (
+                      <button
+                        className="admin-btn"
+                        disabled={pushCardActive || invisible}
+                        onClick={() => socket.emit("startPushCard", { token, room: RN })}
+                        title={invisible ? "隱身模式下無法開始推牌遊戲" : pushCardActive ? "推牌遊戲進行中" : "開始推牌遊戲"}
+                      >
+                        {pushCardActive ? "🃏 進行中…" : "🃏 推牌"}
+                      </button>
+                    )}
                     {!roomConfig.new_section && <SurpriseHistoryPanel token={token} />}
                     {roomConfig.currency_name === "金幣" && <>{roomConfig.currency_name}樂園{" "}</>}
                     <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} />{" "}
@@ -1531,6 +1554,17 @@ export default function ChatApp() {
             socket={socket}
             name={name}
             userList={userList}
+          />
+        )}
+      </DeferredPanel>
+
+      {/* 推牌遊戲（管理員手動觸發），右下角小卡片顯示狀態，不擋畫面；玩法/版面參考跑馬燈 */}
+      <DeferredPanel>
+        {(NF || roomConfig.new_section) && (
+          <PushCardGame
+            socket={socket}
+            token={token}
+            name={name}
           />
         )}
       </DeferredPanel>
