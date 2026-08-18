@@ -7,6 +7,7 @@ const PusherDemo = lazy(() => import("./features/casino/PusherDemo"));
 const ZombieDemo = lazy(() => import("./features/casino/ZombieDemo"));
 const LoungeDemo = lazy(() => import("./features/lounge/LoungeDemo"));
 const MarqueeDemo = lazy(() => import("./features/games/MarqueeDemo"));
+const DigTreasureDemo = lazy(() => import("./features/games/DigTreasureDemo"));
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/zombie-demo" element={<Suspense fallback={null}><ZombieDemo /></Suspense>} />
         <Route path="/lounge-demo" element={<Suspense fallback={null}><LoungeDemo /></Suspense>} />
         <Route path="/marquee-demo" element={<Suspense fallback={null}><MarqueeDemo /></Suspense>} />
+        <Route path="/dig-demo" element={<Suspense fallback={null}><DigTreasureDemo /></Suspense>} />
       </Routes>
     </BrowserRouter>
   );

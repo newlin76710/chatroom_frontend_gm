@@ -78,6 +78,7 @@ const GoldAppleGame = lazy(() => import("../games/GoldAppleGame"));
 const WhackAppleGame = lazy(() => import("../games/WhackAppleGame"));
 const ClawMachineGame = lazy(() => import("../games/ClawMachineGame"));
 const CherryTreeGame = lazy(() => import("../games/CherryTreeGame"));
+const DigTreasureGame = lazy(() => import("../games/DigTreasureGame"));
 const MarqueeGame = lazy(() => import("../games/MarqueeGame"));
 const AdminToolPanel = lazy(() => import("../admin/AdminToolPanel"));
 const ShopPanel = lazy(() => import("./ShopPanel"));
@@ -1497,10 +1498,23 @@ export default function ChatApp() {
         )}
       </DeferredPanel>
 
-      {/* 櫻桃樹接櫻桃遊戲（new_section 模式專用，取代舊版撈金蘋果遊戲一） */}
+      {/* 櫻桃樹接櫻桃遊戲（new_section 模式專用，取代舊版撈金蘋果遊戲一）；
+          遊樂場關閉時改由挖寶遊戲取代 */}
       <DeferredPanel>
-        {roomConfig.new_section && (
+        {roomConfig.new_section && roomConfig.playground_enabled && (
           <CherryTreeGame
+            socket={socket}
+            token={token}
+            name={name}
+            setApples={setApples}
+          />
+        )}
+      </DeferredPanel>
+
+      {/* 挖寶遊戲（new_section 模式且遊樂場關閉時取代接櫻桃） */}
+      <DeferredPanel>
+        {roomConfig.new_section && !roomConfig.playground_enabled && (
+          <DigTreasureGame
             socket={socket}
             token={token}
             name={name}

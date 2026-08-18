@@ -60,6 +60,13 @@ const DEFAULT = {
   cherry_reward:        1,
   cherry_spd_lo:        3,
   cherry_spd_hi:        6,
+  dig_enabled:          true,
+  dig_hour:             21,
+  dig_minute:           0,
+  dig_duration:         60,
+  dig_max_digs:         5,
+  dig_reward_min:       1,
+  dig_reward_max:       10,
   roulette_enabled:          true,
   roulette_open_hour:        13,
   roulette_open_minute:      0,
@@ -812,8 +819,8 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             </section>
             )}
 
-            {/* ─── 遊樂場：接櫻桃 ──────────────────────────────── */}
-            {settings.new_section && (
+            {/* ─── 遊樂場：接櫻桃（遊樂場開啟時使用） ─────────────── */}
+            {settings.new_section && roomConfig.playground_enabled && (
             <section className="settings-section">
               <h4>
                 🍒 遊樂場：接櫻桃（每日排程活動）
@@ -869,8 +876,61 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             </section>
             )}
 
+            {/* ─── 遊樂場：挖寶（遊樂場關閉時取代接櫻桃） ─────────── */}
+            {settings.new_section && !roomConfig.playground_enabled && (
+            <section className="settings-section">
+              <h4>
+                ⛏️ 挖寶（每日排程活動，遊樂場關閉時取代接櫻桃）
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.dig_enabled}
+                    onChange={e => setBool("dig_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+
+              <Row label="每日開始時間（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <input type="number" min={0} max={23} style={{ width: 64 }}
+                    value={settings.dig_hour}
+                    onChange={e => setInt("dig_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 64 }}
+                    value={settings.dig_minute}
+                    onChange={e => setInt("dig_minute", e.target.value)} />
+                  <span>分</span>
+                  <span style={{ color: "#aaa", fontSize: "0.85rem" }}>
+                    → {fmtTime(settings.dig_hour, settings.dig_minute)}
+                  </span>
+                </div>
+              </Row>
+              <Row label="持續時間">
+                <input type="number" min={10} max={300} value={settings.dig_duration}
+                  onChange={e => setInt("dig_duration", e.target.value)} />
+                <span className="field-note">秒</span>
+              </Row>
+              <Row label="挖寶次數">
+                <input type="number" min={1} max={50} value={settings.dig_max_digs}
+                  onChange={e => setInt("dig_max_digs", e.target.value)} />
+                <span className="field-note">次（每人本場最多可以挖幾次）</span>
+              </Row>
+              <Row label="隨機獎勵範圍">
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <span>最少</span>
+                  <input type="number" min={1} style={{ width: 64 }}
+                    value={settings.dig_reward_min}
+                    onChange={e => setInt("dig_reward_min", e.target.value)} />
+                  <span>最多</span>
+                  <input type="number" min={1} style={{ width: 64 }}
+                    value={settings.dig_reward_max}
+                    onChange={e => setInt("dig_reward_max", e.target.value)} />
+                  <span className="field-note">個{currencyName}（每次挖寶隨機獲得）</span>
+                </div>
+              </Row>
+            </section>
+            )}
+
             {/* ─── 遊樂場：推幣機 ──────────────────────────────── */}
-            {settings.new_section && (
+            {settings.new_section && roomConfig.playground_enabled && (
             <section className="settings-section">
               <h4>
                 🎰 遊樂場：推幣機
@@ -932,7 +992,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             )}
 
             {/* ─── 遊樂場：賽車 ──────────────────────────────── */}
-            {settings.new_section && (
+            {settings.new_section && roomConfig.playground_enabled && (
             <section className="settings-section">
               <h4>
                 🏎️ 遊樂場：賽車
@@ -980,7 +1040,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             )}
 
             {/* ─── 遊樂場：殭屍生存戰 ──────────────────────────── */}
-            {settings.new_section && (
+            {settings.new_section && roomConfig.playground_enabled && (
             <section className="settings-section">
               <h4>
                 🧟 遊樂場：殭屍生存戰
