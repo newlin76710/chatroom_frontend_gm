@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { roomConfig } from "../../shared/roomConfig";
 import "./MarqueeGame.css";
 
 const VISIBLE_SIDES = 1; // 中心左右各顯示幾個名字（小尺寸角落卡片，只留中心+左右各一）
@@ -113,7 +114,7 @@ export default function MarqueeGame({ socket, name, userList }) {
       <button className="mq-close" onClick={close} title="關閉">✖</button>
       <div className="mq-header">
         <span className="mq-title">🎰 跑馬燈抽獎</span>
-        <span className="mq-prize">獎品 {reward} 顆金蘋果</span>
+        <span className="mq-prize">獎品 {reward} 顆{roomConfig.currency_name}</span>
       </div>
 
       {phase === "running" && n > 0 && (
@@ -142,7 +143,7 @@ export default function MarqueeGame({ socket, name, userList }) {
               <div className={`mq-winner-name${winner === name ? " is-me" : ""}`}>
                 🎉 {winner}
               </div>
-              <div className="mq-winner-reward">獲得 {reward} 顆金蘋果</div>
+              <div className="mq-winner-reward">獲得 {reward} 顆{roomConfig.currency_name}</div>
               {winner === name && (
                 <div className="mq-congrats">恭喜你中獎了！</div>
               )}

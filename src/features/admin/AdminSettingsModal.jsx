@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import "./AdminSettingsModal.css";
-import { RN } from "../../shared/roomConfig";
+import { RN, roomConfig } from "../../shared/roomConfig";
 
 const DEFAULT = {
   leaderboard_enabled:  false,
@@ -124,8 +124,8 @@ const DEFAULT = {
   online_reward_enabled:            true,
   online_reward_interval_minutes:   60,
   online_reward_amount:             5,
-  currency_name:             "金蘋果",
-  currency_emoji:            "🍎",
+  currency_name:             "",
+  currency_emoji:            "💰",
 };
 
 export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
@@ -189,8 +189,8 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
 
   const pad2 = n => String(n).padStart(2, "0");
   const fmtTime = (h, m) => `${pad2(h)}:${pad2(m)}`;
-  const currencyName = settings.currency_name || "金蘋果";
-  const currencyEmoji = settings.currency_emoji || "🍎";
+  const currencyName = settings.currency_name || roomConfig.currency_name || "";
+  const currencyEmoji = settings.currency_emoji || roomConfig.currency_emoji || "💰";
 
   return (
     <div className="apple-modal">

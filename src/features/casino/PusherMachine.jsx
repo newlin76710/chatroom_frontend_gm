@@ -63,7 +63,7 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
   const [dailyCapInfo, setDailyCapInfo] = useState(null);
 
   const currencyIcon = `/gifts/${roomConfig.currency_icon}`;
-  const currencyName = roomConfig.currency_name || "金蘋果";
+  const currencyName = roomConfig.currency_name || "金幣";
   const open = isOpenNow(settings);
   // 每日淨賺上限只影響「入帳金額」（見後端 /pusher/collect），達到上限後仍可以繼續投幣、繼續輸，
   // 不會整台機器被鎖住——賺錢封頂，輸錢不封頂。

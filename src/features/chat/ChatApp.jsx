@@ -1341,7 +1341,7 @@ export default function ChatApp() {
                       </button>
                     )}
                     {!roomConfig.new_section && <SurpriseHistoryPanel token={token} />}
-                    {roomConfig.currency_name === "金蘋果" && <>{roomConfig.currency_name}樂園{" "}</>}
+                    {roomConfig.currency_name === "金幣" && <>{roomConfig.currency_name}樂園{" "}</>}
                     <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} />{" "}
                     當前{roomConfig.currency_name}數量：{apples}
                   </div>
