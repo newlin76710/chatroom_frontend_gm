@@ -42,6 +42,7 @@ export function useMessages() {
   const addSystemMessage = useCallback((m) => {
     if (!m) return;
     const text = typeof m === "string" ? m : (m?.message ?? "");
+    const type = typeof m === "object" ? m.type : undefined;
     if (!text) return;
 
     // 離開：先等 PENDING_LEAVE_DELAY，讓重連有機會取消
@@ -77,6 +78,7 @@ export function useMessages() {
         user: { name: "系統", avatar: SYSTEM_AVATAR, type: "system" },
         message: text,
         timestamp: new Date().toLocaleTimeString(),
+        ...(type ? { type } : {}),
       })
     );
   }, []);

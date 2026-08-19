@@ -104,6 +104,7 @@ function MessageList({
           const isGift = m.type === "gift";
           const isSurprise = m.type === "surprise";
           const isPeony = m.type === "peony";
+          const isCurrencyAward = m.type === "currencyAward";
           const isMarqueeWin = isSystem && /^🎉 恭喜 .+ 中了跑馬燈大獎/.test(messageText);
           const isRPS = isSystem && (messageText.includes("猜拳") || messageText.includes("✊") || messageText.includes("✌") || messageText.includes("🖐"));
           const isPingpong = isSystem && messageText.includes("🏓");
@@ -285,7 +286,15 @@ function MessageList({
                         </span>
                       </>
                     )}
-                    <span>：{messageText}</span>
+                    <span>
+                      ：{isCurrencyAward && (
+                        <img
+                          src={`/gifts/${roomConfig.currency_icon}`}
+                          alt={roomConfig.currency_name}
+                          style={{ width: 16, height: 16, verticalAlign: "middle", margin: "0 2px" }}
+                        />
+                      )} {messageText}
+                    </span>
                   </>
                 )}
 

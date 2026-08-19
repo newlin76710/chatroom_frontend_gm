@@ -515,7 +515,10 @@ export default function ChatApp() {
           : typeof balance === "number"
             ? balance - credited
             : "?";
-        addSystemMessage(`${roomConfig.currency_emoji} ${sourceLabel(source)} 獲得 ${credited} 顆，原本 ${before} 顆，入帳後 ${balance ?? "?"} 顆`);
+        addSystemMessage({
+          message: `${sourceLabel(source)} 獲得 ${credited} 顆，原本 ${before} 顆，入帳後 ${balance ?? "?"} 顆`,
+          type: "currencyAward",
+        });
       }
     };
 
