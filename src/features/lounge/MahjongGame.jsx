@@ -487,8 +487,8 @@ function MahjongGame({ socket, room, name, apples, onActiveChange }, ref) {
               <p>🀄 {result.reason}</p>
             ) : (
               <>
-                <p>🏆 {result.winnerName} 胡牌獲勝（{result.info?.zimo ? "自摸" : "榮和"}）</p>
-                <p>共 {result.tai?.total ?? 0} 台，贏得 {result.pot} 個{roomConfig.currency_name}</p>
+                <p>🏆 {result.winnerName} {result.forfeit ? "因其他玩家皆已離開，直接獲勝" : `胡牌獲勝（${result.info?.zimo ? "自摸" : "榮和"}）`}</p>
+                <p>{result.forfeit ? "贏得" : `共 ${result.tai?.total ?? 0} 台，贏得`} {result.pot} 個{roomConfig.currency_name}</p>
               </>
             )}
           </div>
@@ -522,9 +522,9 @@ function MahjongGame({ socket, room, name, apples, onActiveChange }, ref) {
             <p>🀄 {result.reason}</p>
           ) : (
             <>
-              <p>🏆 {result.winnerName} 胡牌獲勝（{result.info?.zimo ? "自摸" : "榮和"}）</p>
-              <p>共 {result.tai?.total ?? 0} 台，贏得 {result.pot} 個{roomConfig.currency_name}</p>
-              <p className="mj-tai-list">{(result.tai?.list || []).map(t => `${t.name}×${t.tai}`).join("　")}</p>
+              <p>🏆 {result.winnerName} {result.forfeit ? "因其他玩家皆已離開，直接獲勝" : `胡牌獲勝（${result.info?.zimo ? "自摸" : "榮和"}）`}</p>
+              <p>{result.forfeit ? "贏得" : `共 ${result.tai?.total ?? 0} 台，贏得`} {result.pot} 個{roomConfig.currency_name}</p>
+              {!result.forfeit && <p className="mj-tai-list">{(result.tai?.list || []).map(t => `${t.name}×${t.tai}`).join("　")}</p>}
             </>
           )}
         </div>

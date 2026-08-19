@@ -320,7 +320,7 @@ function BigTwoGame({ socket, room, name, apples, onActiveChange }, ref) {
             {result.draw ? (
               <p>🃏 {result.reason}</p>
             ) : (
-              <p>🏆 {result.winnerName} 出完牌獲勝，贏得 {result.pot} 個{roomConfig.currency_name}</p>
+              <p>🏆 {result.winnerName} {result.forfeit ? "因其他玩家皆已離開，直接獲勝" : "出完牌獲勝"}，贏得 {result.pot} 個{roomConfig.currency_name}</p>
             )}
           </div>
         )}
@@ -353,7 +353,7 @@ function BigTwoGame({ socket, room, name, apples, onActiveChange }, ref) {
             <p>🃏 {result.reason}</p>
           ) : (
             <>
-              <p>🏆 {result.winnerName} 出完牌獲勝，贏得 {result.pot} 個{roomConfig.currency_name}</p>
+              <p>🏆 {result.winnerName} {result.forfeit ? "因其他玩家皆已離開，直接獲勝" : "出完牌獲勝"}，贏得 {result.pot} 個{roomConfig.currency_name}</p>
               <p className="bt-remain-list">{(result.remain || []).map((n, i) => `第${i + 1}家剩${n}張`).join("　")}</p>
             </>
           )}
