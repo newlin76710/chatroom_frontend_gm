@@ -5,6 +5,8 @@ import { safeText } from "../../shared/utils";
 import { roomConfig } from "../../shared/roomConfig";
 import { countryZh } from "../../shared/countryZh";
 
+const FONT_SIZE_REM = { small: 0.85, medium: 1, large: 1.15, xlarge: 1.35 };
+
 const countryFlag = code =>
   code?.length === 2
     ? String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
@@ -96,6 +98,7 @@ function MessageList({
           const targetName = safeText(m.target);
           const emotionText = safeText(m.emotion);
           let messageText = safeText(m.message);
+          const msgFontSizeRem = FONT_SIZE_REM[m.fontSize] ?? FONT_SIZE_REM.medium;
           const timestamp = m.timestamp || new Date().toLocaleTimeString();
           const isSelf = userName === name;
           const alignRight = isSelf && !ownMessageLeft;
@@ -207,7 +210,7 @@ function MessageList({
                 />
               )}
 
-              <div style={{ maxWidth: legacyUI ? "92%" : "75%", color, background: bgColor, padding: isRelatedToMe ? "6px 10px" : 0, borderRadius: isRelatedToMe ? 8 : 0, fontSize: legacyUI ? ((isRPS || isPingpong) ? "1rem" : "1rem") : ((isRPS || isPingpong) ? "1.15rem" : "1rem"), whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: legacyUI ? 1.2 : 1.4 }}>
+              <div style={{ maxWidth: legacyUI ? "92%" : "75%", color, background: bgColor, padding: isRelatedToMe ? "6px 10px" : 0, borderRadius: isRelatedToMe ? 8 : 0, fontSize: `${msgFontSizeRem + ((isRPS || isPingpong) && !legacyUI ? 0.15 : 0)}rem`, whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: legacyUI ? 1.2 : 1.4 }}>
                 {tag && <span style={{ fontSize: "0.7rem", color: "#e60909", marginRight: 4 }}>{tag}</span>}
 
                 {(isTransaction || isGift) ? (

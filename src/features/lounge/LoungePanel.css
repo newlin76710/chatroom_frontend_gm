@@ -1,3 +1,10 @@
+.lounge-panel button {
+  /* 手機上點按鈕預設會閃一下藍灰色高亮、且首次點擊有約 300ms 延遲判斷是否雙擊縮放，
+     休閒廳裡按鈕多、操作又講求手感，這兩個預設行為拿掉比較順手 */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 .lounge-panel {
   position: fixed;
   left: 50%;

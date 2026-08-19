@@ -95,6 +95,10 @@
   box-shadow: 0 4px 20px rgba(0,0,0,0.4);
   cursor: pointer;
   max-width: 100%;
+  /* 手機上沒有這行，連續點兩下選子/落子容易被瀏覽器判定成雙擊縮放，
+     且點擊會延遲約 300ms 才觸發，手感會覺得「卡、不順」 */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 .xq-check-banner {
   color: #ff5c5c;

@@ -311,7 +311,10 @@ function XiangqiGame({ socket, room, name, apples, onActiveChange }, ref) {
   function handleCanvasClick(e) {
     if (status !== "playing" || turn !== mySide || pendingConfirm) return;
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left, y = e.clientY - rect.top;
+    // 手機上 .xq-canvas 會被 CSS 縮小（max-width: 100%），顯示尺寸跟畫布內部座標
+    // （BOARD_W/BOARD_H）不一致，點擊座標要先換算回內部座標系，不然點的格子會對不上
+    const scaleX = BOARD_W / rect.width, scaleY = BOARD_H / rect.height;
+    const x = (e.clientX - rect.left) * scaleX, y = (e.clientY - rect.top) * scaleY;
     let col = Math.round((x - MARGIN) / CELL);
     let row = Math.round((y - MARGIN) / CELL);
     if (flip) { col = 8 - col; row = 9 - row; }

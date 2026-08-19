@@ -341,6 +341,16 @@ body {
   font-size: 0.8rem;
 }
 
+.chat-input--legacy .legacy-select-blue {
+  flex: 0 0 auto;
+  background: #a0d0f5;
+  color: #111;
+  border: 1px solid #3366cc;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 0.8rem;
+}
+
 .chat-input--legacy .legacy-btn {
   flex: 0 0 auto;
   border: 1px solid #555;

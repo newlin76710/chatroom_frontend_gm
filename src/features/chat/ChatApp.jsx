@@ -167,6 +167,9 @@ export default function ChatApp() {
   const [chatColor, setChatColor] = useState(
     () => sessionStorage.getItem("chatColor") || "#ffffff"
   );
+  const [messageFontSize, setMessageFontSize] = useState(
+    () => sessionStorage.getItem("messageFontSize") || "medium"
+  );
   const [textEmotion, setTextEmotion] = useState(""); // 舊版介面文字表情（例如「深情款款」）
   const [showAnnouncement, setShowAnnouncement] = useState(false);
   const [showSongRequestModal, setShowSongRequestModal] = useState(false);
@@ -748,6 +751,7 @@ export default function ChatApp() {
       room,
       message: convertTC ? toTraditional(text) : text,
       color: chatColor,
+      fontSize: messageFontSize,
       user: { name },
       target: target || "",
       mode: chatMode,
@@ -785,7 +789,7 @@ export default function ChatApp() {
         setPlaceholder("輸入訊息...");
       }, cooldownSeconds * 1000);
     }
-  }, [socket, cooldown, text, chatMode, target, room, convertTC, chatColor, name, textEmotion]);
+  }, [socket, cooldown, text, chatMode, target, room, convertTC, chatColor, messageFontSize, name, textEmotion]);
 
   // ─── 發言紀錄瀏覽（舊版介面 < > 按鈕）────────────────────────────────────
   const recallOlderMessage = useCallback(() => {
@@ -1140,6 +1144,22 @@ export default function ChatApp() {
                         ] : []),
                       ]}
                     />
+                    {level >= ANL && (
+                      <select
+                        className="legacy-select-blue"
+                        value={messageFontSize}
+                        title="我發送的訊息文字大小（其他人也會看到這個大小）"
+                        onChange={(e) => {
+                          setMessageFontSize(e.target.value);
+                          sessionStorage.setItem("messageFontSize", e.target.value);
+                        }}
+                      >
+                        <option value="small">文字：小</option>
+                        <option value="medium">文字：中</option>
+                        <option value="large">文字：大</option>
+                        <option value="xlarge">文字：特大</option>
+                      </select>
+                    )}
                     <TextEmotionPicker value={textEmotion} onChange={setTextEmotion} />
                     <ColorSwatchPicker
                       value={chatColor}
