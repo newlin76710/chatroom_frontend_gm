@@ -70,6 +70,33 @@
   line-height: 1.4;
 }
 
+.pcg-bet-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: #ddd;
+  margin: 0 0 8px;
+}
+
+.pcg-bet-input {
+  width: 56px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  border: 1px solid #ff4d6d;
+  background: #1a0209;
+  color: #fff;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.pcg-error {
+  font-size: 0.75rem;
+  color: #ff8fa3;
+  margin: 0 0 8px;
+}
+
 .pcg-actions {
   display: flex;
   gap: 8px;
@@ -86,6 +113,7 @@
   transition: transform 0.1s, box-shadow 0.1s;
 }
 .pcg-btn:active { transform: translateY(1px); }
+.pcg-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .pcg-btn-join {
   color: #2a0208;

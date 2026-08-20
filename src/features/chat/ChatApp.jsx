@@ -1367,7 +1367,7 @@ export default function ChatApp() {
                     {level >= AML && (
                       <button className="admin-btn" onClick={() => setShowAppleSetting(true)}>⚙️ 設定</button>
                     )}
-                    {level >= AML && (
+                    {level >= ANL && (
                       <button
                         className="admin-btn"
                         disabled={marqueeActive || invisible}
@@ -1377,7 +1377,7 @@ export default function ChatApp() {
                         {marqueeActive ? "🎰 進行中…" : "🎰 跑馬燈"}
                       </button>
                     )}
-                    {level >= AML && (
+                    {level >= ANL && (
                       <button
                         className="admin-btn"
                         disabled={pushCardActive || invisible}
@@ -1588,6 +1588,7 @@ export default function ChatApp() {
             socket={socket}
             token={token}
             name={name}
+            apples={apples}
           />
         )}
       </DeferredPanel>

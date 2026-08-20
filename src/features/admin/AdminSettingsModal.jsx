@@ -20,7 +20,7 @@ const DEFAULT = {
   daily_receive_limit:  0,
   marquee_reward:       10,
   marquee_duration:     30,
-  pushcard_reward:      10,
+  pushcard_max_bet:     50,
   pushcard_duration:    10,
   surprise_reward:      10,
   game1_enabled:        true,
@@ -65,6 +65,10 @@ const DEFAULT = {
   dig_enabled:          true,
   dig_hour:             21,
   dig_minute:           0,
+  dig_hour2:            13,
+  dig_minute2:          0,
+  dig_hour3:            18,
+  dig_minute3:          0,
   dig_duration:         60,
   dig_max_digs:         5,
   dig_reward_min:       1,
@@ -297,10 +301,10 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <input type="number" value={settings.marquee_duration}
                   onChange={e => setInt("marquee_duration", e.target.value)} />
               </Row>
-              <Row label="推牌遊戲獎勵">
-                <input type="number" value={settings.pushcard_reward}
-                  onChange={e => setInt("pushcard_reward", e.target.value)} />
-                <span className="field-note">個{currencyName}（比站長的牌大就獲得）</span>
+              <Row label="推牌遊戲最高下注">
+                <input type="number" min={1} value={settings.pushcard_max_bet}
+                  onChange={e => setInt("pushcard_max_bet", e.target.value)} />
+                <span className="field-note">個{currencyName}（玩家參加時可下注 1~此上限；贏了 1 賠 1，平手算站長贏）</span>
               </Row>
               <Row label="推牌遊戲秒數">
                 <input type="number" min={5} value={settings.pushcard_duration}
@@ -900,7 +904,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 </label>
               </h4>
 
-              <Row label="每日開始時間（台灣時間）">
+              <Row label="第 1 場開始時間（台灣時間）">
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                   <input type="number" min={0} max={23} style={{ width: 64 }}
                     value={settings.dig_hour}
@@ -912,6 +916,36 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   <span>分</span>
                   <span style={{ color: "#aaa", fontSize: "0.85rem" }}>
                     → {fmtTime(settings.dig_hour, settings.dig_minute)}
+                  </span>
+                </div>
+              </Row>
+              <Row label="第 2 場開始時間（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <input type="number" min={0} max={23} style={{ width: 64 }}
+                    value={settings.dig_hour2}
+                    onChange={e => setInt("dig_hour2", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 64 }}
+                    value={settings.dig_minute2}
+                    onChange={e => setInt("dig_minute2", e.target.value)} />
+                  <span>分</span>
+                  <span style={{ color: "#aaa", fontSize: "0.85rem" }}>
+                    → {fmtTime(settings.dig_hour2, settings.dig_minute2)}
+                  </span>
+                </div>
+              </Row>
+              <Row label="第 3 場開始時間（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <input type="number" min={0} max={23} style={{ width: 64 }}
+                    value={settings.dig_hour3}
+                    onChange={e => setInt("dig_hour3", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 64 }}
+                    value={settings.dig_minute3}
+                    onChange={e => setInt("dig_minute3", e.target.value)} />
+                  <span>分</span>
+                  <span style={{ color: "#aaa", fontSize: "0.85rem" }}>
+                    → {fmtTime(settings.dig_hour3, settings.dig_minute3)}
                   </span>
                 </div>
               </Row>
