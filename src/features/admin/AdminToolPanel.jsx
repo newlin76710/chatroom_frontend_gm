@@ -3,6 +3,7 @@ import AdminLoginLogPanel from "./AdminLoginLogPanel";
 import MessageLogPanel from "../chat/MessageLogPanel";
 import AdminLevelPanel from "./AdminLevelPanel";
 import AdminIPPanel from "./AdminIPPanel";
+import AdminOnlineIPPanel from "./AdminOnlineIPPanel";
 import AdminNicknamePanel from "./AdminNicknamePanel";
 import AdminAdjustmentLogPanel from "./AdminAdjustmentLogPanel";
 import AdminRoomSettingsPanel from "./AdminRoomSettingsPanel";
@@ -87,6 +88,15 @@ export default function AdminToolPanel({ myName, myLevel, token, userList, initi
                 IP 管制
               </button>
             )}
+
+            {myLevel >= (roomConfig.admin_max_level || 99) && (
+              <button
+                className={tab === "onlineip" ? "active" : ""}
+                onClick={() => setTab("onlineip")}
+              >
+                線上 IP
+              </button>
+            )}
           </div>
 
           {/* Content */}
@@ -96,6 +106,7 @@ export default function AdminToolPanel({ myName, myLevel, token, userList, initi
             {tab === "message" && <MessageLogPanel myName={myName} myLevel={myLevel} token={token} userList={userList}/>}
             {tab === "level" && <AdminLevelPanel token={token} myLevel={myLevel} />}
             {tab === "ip" && <AdminIPPanel token={token} myLevel={myLevel} />}
+            {tab === "onlineip" && <AdminOnlineIPPanel token={token} myLevel={myLevel} />}
             {tab === "adjustment" && <AdminAdjustmentLogPanel token={token} />}
             {tab === "nickname" && <AdminNicknamePanel myLevel={myLevel} token={token} myName={myName} />}
           </div>
