@@ -14,7 +14,7 @@ export default function AdminOnlineIPPanel({ myLevel, token }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  if (myLevel < (roomConfig.admin_max_level || 99)) return null;
+  if (myLevel < (roomConfig.admin_min_level || 91)) return null;
 
   const load = async () => {
     setLoading(true);

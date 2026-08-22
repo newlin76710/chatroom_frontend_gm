@@ -80,7 +80,7 @@ export default function AdminToolPanel({ myName, myLevel, token, userList, initi
               </button>
             )}
 
-            {myLevel >= (roomConfig.admin_max_level || 99) && (
+            {myLevel >= (roomConfig.admin_min_level || 91) && (
               <button
                 className={tab === "ip" ? "active" : ""}
                 onClick={() => setTab("ip")}
@@ -89,7 +89,7 @@ export default function AdminToolPanel({ myName, myLevel, token, userList, initi
               </button>
             )}
 
-            {myLevel >= (roomConfig.admin_max_level || 99) && (
+            {myLevel >= (roomConfig.admin_min_level || 91) && (
               <button
                 className={tab === "onlineip" ? "active" : ""}
                 onClick={() => setTab("onlineip")}

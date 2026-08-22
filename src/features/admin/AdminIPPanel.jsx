@@ -19,7 +19,7 @@ export default function AdminIPPanel({ myLevel, token }) {
   const [reason, setReason] = useState("");
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  if (myLevel < (roomConfig.admin_max_level || 99)) return null;
+  if (myLevel < (roomConfig.admin_min_level || 91)) return null;
 
   const headers = {
     "Content-Type": "application/json",
