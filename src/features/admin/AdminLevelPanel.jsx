@@ -315,7 +315,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                                     type="number"
                                                     min="0"
                                                     value={u.editExp}
-                                                    style={{ width: "70px", marginRight: "6px" }}
+                                                    style={{ width: "100px", marginRight: "6px" }}
                                                     onChange={e =>
                                                         setUsers(prev =>
                                                             prev.map(x =>
@@ -340,7 +340,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                                     min="0"
                                                     max={roomConfig.max_gold_apples ?? 999999999}
                                                     value={u.editGold}
-                                                    style={{ width: "60px", marginRight: "6px" }}
+                                                    style={{ width: "100px", marginRight: "6px" }}
                                                     onChange={e =>
                                                         setUsers(prev =>
                                                             prev.map(x =>
@@ -363,7 +363,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                                     type="number"
                                                     min="0"
                                                     value={u.editPeony}
-                                                    style={{ width: "60px", marginRight: "6px" }}
+                                                    style={{ width: "100px", marginRight: "6px" }}
                                                     onChange={e =>
                                                         setUsers(prev =>
                                                             prev.map(x =>
