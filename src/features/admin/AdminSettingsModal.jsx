@@ -4,8 +4,7 @@ import { RN, roomConfig } from "../../shared/roomConfig";
 
 const DEFAULT = {
   leaderboard_enabled:  false,
-  new_section:          false,
-  new_function:         false,
+  open_game:            true,
   show_ip:              true,
   daily_login_reward:   1,
   singing_reward:       2,
@@ -239,6 +238,11 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
   const fmtTime = (h, m) => `${pad2(h)}:${pad2(m)}`;
   const currencyName = settings.currency_name || roomConfig.currency_name || "";
   const currencyEmoji = settings.currency_emoji || roomConfig.currency_emoji || "💰";
+  // 撿寶類小遊戲跟貨幣名稱一一對應：金蘋果→4 個蘋果小遊戲、紅櫻桃→接櫻桃、金幣→挖寶，
+  // 其他自訂貨幣名稱則都不顯示（避免房間裡出現跟貨幣名稱不相關的撿寶小遊戲設定）
+  const isApple = currencyName === "金蘋果";
+  const isCherry = currencyName === "紅櫻桃";
+  const isCoin = currencyName === "金幣";
 
   return (
     <div ref={panelRef} className="apple-modal-floating" style={{ left: pos.current.x, top: pos.current.y }}>
@@ -250,7 +254,6 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
         {loading ? <div>讀取中…</div> : (
           <>
             {/* ─── 功能顯示 ──────────────────────────────────────── */}
-            {!settings.new_section && (
             <section className="settings-section">
               <h4>功能顯示</h4>
                 <Row label="排行榜按鈕">
@@ -260,7 +263,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                     {" "}啟用排行榜
                   </label>
                 </Row>
-            </section>)}
+            </section>
 
             {/* ─── 基本獎勵 ──────────────────────────────────────── */}
             <section className="settings-section">
@@ -355,22 +358,18 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   </div>
                 </Row>
               )}
-              {!settings.new_section && (
-                <>
-                  <Row label="單筆轉帳上限">
-                    <input type="number" value={settings.per_transfer_limit}
-                      onChange={e => setInt("per_transfer_limit", e.target.value)} />
-                  </Row>
-                  <Row label="每日轉帳上限">
-                    <input type="number" value={settings.daily_transfer_limit}
-                      onChange={e => setInt("daily_transfer_limit", e.target.value)} />
-                  </Row>
-                  <Row label="每日收禮上限">
-                    <input type="number" value={settings.daily_receive_limit}
-                      onChange={e => setInt("daily_receive_limit", e.target.value)} />
-                  </Row>
-                </>
-              )}
+              <Row label="單筆轉帳上限">
+                <input type="number" value={settings.per_transfer_limit}
+                  onChange={e => setInt("per_transfer_limit", e.target.value)} />
+              </Row>
+              <Row label="每日轉帳上限">
+                <input type="number" value={settings.daily_transfer_limit}
+                  onChange={e => setInt("daily_transfer_limit", e.target.value)} />
+              </Row>
+              <Row label="每日收禮上限">
+                <input type="number" value={settings.daily_receive_limit}
+                  onChange={e => setInt("daily_receive_limit", e.target.value)} />
+              </Row>
               <Row label="跑馬燈獎勵">
                 <input type="number" value={settings.marquee_reward}
                   onChange={e => setInt("marquee_reward", e.target.value)} />
@@ -389,15 +388,13 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   onChange={e => setInt("pushcard_duration", e.target.value)} />
                 <span className="field-note">秒（參加者選擇時間，時間到自動發牌）</span>
               </Row>
-              {!settings.new_section && (
+              {isApple && (
                 <Row label="每日樂透獎勵">
                   <input type="number" value={settings.surprise_reward}
                     onChange={e => setInt("surprise_reward", e.target.value)} />
                 </Row>
               )}
-              {(settings.new_function || settings.new_section) && (
-                <>
-                  <Row label="發話獎勵">
+              <Row label="發話獎勵">
                     <label className="toggle-label">
                       <input type="checkbox" checked={!!settings.speech_reward_enabled}
                         onChange={e => setBool("speech_reward_enabled", e.target.checked)} />
@@ -439,12 +436,10 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                       </Row>
                     </>
                   )}
-                </>
-              )}
             </section>
 
             {/* ─── 遊戲一：多顆金蘋果 ────────────────────────────── */}
-            {!settings.new_section && (
+            {isApple && (
             <section className="settings-section">
               <h4>
                 {currencyEmoji} 遊戲一：撈{currencyName}（多顆模式）
@@ -496,7 +491,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             )}
 
             {/* ─── 遊戲二：一顆大金蘋果 ──────────────────────────── */}
-            {!settings.new_section && (
+            {isApple && (
             <section className="settings-section">
               <h4>
                 🔥 遊戲二：搶{currencyName}（第一個點到即結束）
@@ -543,7 +538,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             )}
 
             {/* ─── 遊戲三：打金蘋果（打地鼠） ────────────────────── */}
-            {!settings.new_section && (
+            {isApple && (
             <section className="settings-section">
               <h4>
                 🔨 遊戲三：打{currencyName}（打地鼠風格）
@@ -609,7 +604,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             )}
 
             {/* ─── 遊戲四：夾蘋果機 ───────────────────────────────── */}
-            {!settings.new_section && (
+            {isApple && (
             <section className="settings-section">
               <h4>
                 🎰 遊戲四：夾{currencyName}機（夾娃娃機風格）
@@ -674,11 +669,10 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             </section>
             )}
 
-            {/* ─── 娛樂城：金蘋果輪盤 ──────────────────────────── */}
-            {!settings.new_section && (
+            {/* ─── 遊戲廳：輪盤 ──────────────────────────── */}
             <section className="settings-section">
               <h4>
-                🎰 娛樂城：{currencyName}輪盤
+                🎰 遊戲廳：{currencyName}輪盤
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={!!settings.roulette_enabled}
                     onChange={e => setBool("roulette_enabled", e.target.checked)} />
@@ -720,13 +714,11 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
               </Row>
             </section>
-            )}
 
-            {/* ─── 娛樂城：21點 ────────────────────────────────── */}
-            {!settings.new_section && (
+            {/* ─── 遊戲廳：21點 ────────────────────────────────── */}
             <section className="settings-section">
               <h4>
-                🃏 娛樂城：21點
+                🃏 遊戲廳：21點
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={!!settings.blackjack_enabled}
                     onChange={e => setBool("blackjack_enabled", e.target.checked)} />
@@ -768,13 +760,11 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
               </Row>
             </section>
-            )}
 
-            {/* ─── 娛樂城：骰寶 ────────────────────────────────── */}
-            {!settings.new_section && (
+            {/* ─── 遊戲廳：骰寶 ────────────────────────────────── */}
             <section className="settings-section">
               <h4>
-                🎲 娛樂城：骰寶
+                🎲 遊戲廳：骰寶
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={!!settings.sicbo_enabled}
                     onChange={e => setBool("sicbo_enabled", e.target.checked)} />
@@ -816,13 +806,11 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
               </Row>
             </section>
-            )}
 
-            {/* ─── 娛樂城：老虎機 ──────────────────────────────── */}
-            {!settings.new_section && (
+            {/* ─── 遊戲廳：老虎機 ──────────────────────────────── */}
             <section className="settings-section">
               <h4>
-                🎰 娛樂城：老虎機
+                🎰 遊戲廳：老虎機
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={!!settings.slot_enabled}
                     onChange={e => setBool("slot_enabled", e.target.checked)} />
@@ -864,12 +852,11 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
               </Row>
             </section>
-            )}
 
-            {!settings.new_section && (
+            {/* ─── 遊戲廳：百家樂 ──────────────────────────────── */}
             <section className="settings-section">
               <h4>
-                🀄 娛樂城：百家樂
+                🀄 遊戲廳：百家樂
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={!!settings.baccarat_enabled}
                     onChange={e => setBool("baccarat_enabled", e.target.checked)} />
@@ -911,13 +898,12 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
               </Row>
             </section>
-            )}
 
-            {/* ─── 遊樂場：接櫻桃（遊樂場開啟時使用） ─────────────── */}
-            {settings.new_section && roomConfig.playground_enabled && (
+            {/* ─── 接櫻桃（貨幣為「紅櫻桃」時使用） ─────────────── */}
+            {isCherry && (
             <section className="settings-section">
               <h4>
-                🍒 遊樂場：接櫻桃（每日排程活動）
+                🍒 接櫻桃（每日排程活動）
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={!!settings.cherry_enabled}
                     onChange={e => setBool("cherry_enabled", e.target.checked)} />
@@ -970,8 +956,8 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             </section>
             )}
 
-            {/* ─── 遊樂場：挖寶 ─────────── */}
-            {settings.new_section && !roomConfig.playground_enabled && (
+            {/* ─── 挖寶（貨幣為「金幣」時使用） ─────────── */}
+            {isCoin && (
             <section className="settings-section">
               <h4>
                 ⛏️ 挖寶（每日排程活動）
@@ -1053,11 +1039,10 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             </section>
             )}
 
-            {/* ─── 遊樂場：推幣機 ──────────────────────────────── */}
-            {settings.new_section && roomConfig.playground_enabled && (
+            {/* ─── 遊戲廳：推幣機 ──────────────────────────────── */}
             <section className="settings-section">
               <h4>
-                🎰 遊樂場：推幣機
+                🎰 遊戲廳：推幣機
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={!!settings.pusher_enabled}
                     onChange={e => setBool("pusher_enabled", e.target.checked)} />
@@ -1113,13 +1098,11 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 </select>
               </Row>
             </section>
-            )}
 
-            {/* ─── 遊樂場：賽車 ──────────────────────────────── */}
-            {settings.new_section && roomConfig.playground_enabled && (
+            {/* ─── 遊戲廳：賽車 ──────────────────────────────── */}
             <section className="settings-section">
               <h4>
-                🏎️ 遊樂場：賽車
+                🏎️ 遊戲廳：賽車
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={!!settings.race_enabled}
                     onChange={e => setBool("race_enabled", e.target.checked)} />
@@ -1161,13 +1144,11 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
               </Row>
             </section>
-            )}
 
-            {/* ─── 遊樂場：殭屍生存戰 ──────────────────────────── */}
-            {settings.new_section && roomConfig.playground_enabled && (
+            {/* ─── 遊戲廳：殭屍生存戰 ──────────────────────────── */}
             <section className="settings-section">
               <h4>
-                🧟 遊樂場：殭屍生存戰
+                🧟 遊戲廳：殭屍生存戰
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={!!settings.zombie_enabled}
                     onChange={e => setBool("zombie_enabled", e.target.checked)} />
@@ -1194,7 +1175,6 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <span className="field-note">次（不論成功或失敗都算一次）</span>
               </Row>
             </section>
-            )}
 
             <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
               <button onClick={handleSave} disabled={saving} style={{ flex: 1 }}>

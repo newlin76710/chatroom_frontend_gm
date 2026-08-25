@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import "./AdminLevelPanel.css";
 
 import { roomConfig, BACKEND, RN } from "../../shared/roomConfig";
+import DraggablePanel from "../../shared/DraggablePanel";
 const PAGE_SIZE = 20;
 
 export default function AdminLevelPanel({ token, myLevel, minLevel }) {
@@ -246,17 +247,11 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
     return (
         <>
             <button className="admin-btn" onClick={() => { setOpen(true); loadUsers(1); }}>
-                🛡 管理使用者等級 {(roomConfig.new_function || roomConfig.new_section) && `& ${roomConfig.currency_name}`}{roomConfig.new_function && roomConfig.open_peony && ` & 金牡丹`}
+                🛡 管理使用者等級 {roomConfig.currency_enabled && `& ${roomConfig.currency_name}`}{roomConfig.open_peony && ` & 金牡丹`}
             </button>
 
             {open && (
-                <div className="admin-overlay" onClick={() => setOpen(false)}>
-                    <div className="admin-modal" onClick={e => e.stopPropagation()}>
-                        <div className="admin-header">
-                            <h3>使用者管理</h3>
-                            <button onClick={() => setOpen(false)}>✖</button>
-                        </div>
-
+                <DraggablePanel title="使用者管理" onClose={() => setOpen(false)}>
                         <div style={{ marginBottom: "10px" }}>
                             <input
                                 placeholder="搜尋使用者"
@@ -275,8 +270,8 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                         <th>帳號</th>
                                         <th>等級</th>
                                         <th>積分</th>
-                                        {(roomConfig.new_function || roomConfig.new_section) && <th>{roomConfig.currency_name}</th>}
-                                        {roomConfig.new_function && roomConfig.open_peony && <th>金牡丹</th>}
+                                        {roomConfig.currency_enabled && <th>{roomConfig.currency_name}</th>}
+                                        {roomConfig.open_peony && <th>金牡丹</th>}
                                         <th>建立時間</th>
                                         <th>最近登入</th>
                                     </tr>
@@ -334,7 +329,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                                     修改
                                                 </button>
                                             </td>
-                                            {(roomConfig.new_function || roomConfig.new_section) && (<td>
+                                            {roomConfig.currency_enabled && (<td>
                                                 <input
                                                     type="number"
                                                     min="0"
@@ -358,7 +353,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                                     修改
                                                 </button>
                                             </td>)}
-                                            {roomConfig.new_function && roomConfig.open_peony && (<td>
+                                            {roomConfig.open_peony && (<td>
                                                 <input
                                                     type="number"
                                                     min="0"
@@ -386,7 +381,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                         </tr>
                                     )) : (
                                         <tr>
-                                            <td colSpan={5 + ((roomConfig.new_function || roomConfig.new_section) ? 1 : 0) + ((roomConfig.new_function && roomConfig.open_peony) ? 1 : 0)} style={{ textAlign: "center" }}>無資料</td>
+                                            <td colSpan={5 + (roomConfig.currency_enabled ? 1 : 0) + ((roomConfig.open_peony) ? 1 : 0)} style={{ textAlign: "center" }}>無資料</td>
                                         </tr>
                                     )}
                                 </tbody>
@@ -402,8 +397,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
                                 下一頁
                             </button>
                         </div>
-                    </div>
-                </div>
+                </DraggablePanel>
             )}
         </>
     );

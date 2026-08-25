@@ -4,6 +4,7 @@ import "./AdminLoginLogPanel.css";
 
 import { roomConfig, BACKEND, RN } from "../../shared/roomConfig";
 import { countryZh } from "../../shared/countryZh";
+import DraggablePanel from "../../shared/DraggablePanel";
 
 const countryFlag = code =>
   code?.length === 2
@@ -125,16 +126,7 @@ export default function AdminLoginLogPanel({
       </button>
 
       {open && (
-        <div className="admin-overlay" onClick={() => setOpen(false)}>
-          <div
-            className="admin-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="admin-header">
-              <h3>登入紀錄</h3>
-              <button onClick={() => setOpen(false)}>✖</button>
-            </div>
-
+        <DraggablePanel title="登入紀錄" onClose={() => setOpen(false)}>
             {/* ⭐ datetime-local 篩選 */}
             <div className="admin-filter-bar">
               <label>
@@ -230,8 +222,7 @@ export default function AdminLoginLogPanel({
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </DraggablePanel>
       )}
     </>
   );

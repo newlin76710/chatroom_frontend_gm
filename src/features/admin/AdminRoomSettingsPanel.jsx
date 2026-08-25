@@ -70,6 +70,17 @@ export default function AdminRoomSettingsPanel({ token }) {
         </label>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>開啟遊戲廳</span>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13 }}>
+          <input
+            type="checkbox"
+            checked={settings.open_game !== false}
+            onChange={e => setSettings(s => ({ ...s, open_game: e.target.checked }))}
+          />
+          啟用（推幣機/21點/輪盤/骰寶/老虎機/百家樂/賽車/殭屍生存戰/麻將/大老二/象棋）
+        </label>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>聊天室顯示 IP</span>
         <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13 }}>
           <input
@@ -150,7 +161,7 @@ export default function AdminRoomSettingsPanel({ token }) {
           （中文長度，中文最多 {Number(settings.nickname_max_length) || 10} 個字，英數字最多 {(Number(settings.nickname_max_length) || 10) * 2} 個字）
         </span>
       </div>
-      {roomConfig.new_function && (
+      {settings.currency_name === "金蘋果" && (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>開啟金牡丹</span>
           <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13 }}>
@@ -164,19 +175,17 @@ export default function AdminRoomSettingsPanel({ token }) {
         </div>
       )}
 
-      {(roomConfig.new_function || roomConfig.new_section) && (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>煙火冷卻分鐘數</span>
-          <input
-            type="number"
-            min={0}
-            value={settings.firework_cooldown_minutes ?? 0}
-            onChange={e => setSettings(s => ({ ...s, firework_cooldown_minutes: Number(e.target.value) }))}
-            style={{ width: 70, padding: "5px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }}
-          />
-          <span style={{ fontSize: 12, color: "#888" }}>分鐘（同一 IP 施放一次後要等幾分鐘才能再放；0 = 不限制）</span>
-        </div>
-      )}
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>煙火冷卻分鐘數</span>
+        <input
+          type="number"
+          min={0}
+          value={settings.firework_cooldown_minutes ?? 0}
+          onChange={e => setSettings(s => ({ ...s, firework_cooldown_minutes: Number(e.target.value) }))}
+          style={{ width: 70, padding: "5px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }}
+        />
+        <span style={{ fontSize: 12, color: "#888" }}>分鐘（同一 IP 施放一次後要等幾分鐘才能再放；0 = 不限制）</span>
+      </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>雪球冷卻分鐘數</span>
@@ -190,19 +199,17 @@ export default function AdminRoomSettingsPanel({ token }) {
         <span style={{ fontSize: 12, color: "#888" }}>分鐘（50 級以上互動「丟雪球」，同一使用者丟出後要等幾分鐘才能再丟；0 = 不限制）</span>
       </div>
 
-      {roomConfig.new_function && (
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>相同IP可贈送</span>
-          <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13 }}>
-            <input
-              type="checkbox"
-              checked={!!settings.same_ip_gift}
-              onChange={e => setSettings(s => ({ ...s, same_ip_gift: e.target.checked }))}
-            />
-            相同IP可互送{roomConfig.currency_name}與禮物
-          </label>
-        </div>
-      )}
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>相同IP可贈送</span>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13 }}>
+          <input
+            type="checkbox"
+            checked={!!settings.same_ip_gift}
+            onChange={e => setSettings(s => ({ ...s, same_ip_gift: e.target.checked }))}
+          />
+          相同IP可互送{roomConfig.currency_name}與禮物
+        </label>
+      </div>
 
       <button
         onClick={save}

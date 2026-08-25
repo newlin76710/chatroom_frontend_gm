@@ -83,8 +83,7 @@ const MarqueeGame = lazy(() => import("../games/MarqueeGame"));
 const PushCardGame = lazy(() => import("../games/PushCardGame"));
 const AdminToolPanel = lazy(() => import("../admin/AdminToolPanel"));
 const ShopPanel = lazy(() => import("./ShopPanel"));
-const CasinoPanel = lazy(() => import("../casino/CasinoPanel"));
-const LoungePanel = lazy(() => import("../lounge/LoungePanel"));
+const GameHallPanel = lazy(() => import("../gamehall/GameHallPanel"));
 const MessageBoard = lazy(() => import("./MessageBoard"));
 const Leaderboard = lazy(() => import("./Leaderboard"));
 
@@ -129,7 +128,6 @@ export default function ChatApp() {
   const AML    = roomConfig.admin_max_level || 99;
   const ANL    = roomConfig.admin_min_level || 91;
   const OPENAI = roomConfig.openai;
-  const NF     = roomConfig.new_function;
   const LB     = roomConfig.leaderboard_enabled;
 
   // ── 自訂 Hooks ──
@@ -176,9 +174,7 @@ export default function ChatApp() {
   const [showMessageBoard, setShowMessageBoard] = useState(false);
   const [showShop, setShowShop] = useState(false);
   const [shopTitle, setShopTitle] = useState("商城");
-  const [showCasino, setShowCasino] = useState(false);
-  const [showPlayground, setShowPlayground] = useState(false);
-  const [showLounge, setShowLounge] = useState(false);
+  const [showGameHall, setShowGameHall] = useState(false);
   const [showAdminTools, setShowAdminTools] = useState(false);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [currentSinger, setCurrentSinger] = useState(null);
@@ -413,7 +409,6 @@ export default function ChatApp() {
       }
     };
     const handleSystemMessage = (m) => {
-      if (!roomConfig.new_function && !roomConfig.new_section && m?.message?.includes('唱歌獲得') && m?.message?.includes(roomConfig.currency_name)) return;
       addSystemMessage(m);
     };
     const handleVideoUpdate = (v) => {
@@ -647,7 +642,6 @@ export default function ChatApp() {
   // socket.data.room/name 設好之前送達；改成等第一次 updateUsers（join 完成後
   // 伺服器一定會 broadcastUserList）才校正一次，確保當下讀到的一定是正確身分。
   useEffect(() => {
-    if (!(roomConfig.new_section || roomConfig.new_function)) return;
     let calibrated = false;
     const handleFirstUpdateUsers = () => {
       if (calibrated) return;
@@ -668,7 +662,6 @@ export default function ChatApp() {
   // 全部由後端用 login_logs（最近一次成功登入時間）現算，不用前端自己計時累積，
   // 這樣重新整理頁面也不會讓在線時長歸零重算。
   useEffect(() => {
-    if (!(roomConfig.new_section || roomConfig.new_function)) return;
     let cancelled = false;
 
     const scheduleNext = (delaySeconds) => {
@@ -761,20 +754,18 @@ export default function ChatApp() {
     });
 
     // 發話獎勵：累計次數達門檻才請後端雙重驗證並發放
-    if (roomConfig.new_section || roomConfig.new_function) {
-      const threshold = Math.max(1, Number(roomConfig.speech_reward_threshold) || 100);
-      speechCountRef.current += 1;
-      if (speechCountRef.current >= threshold) {
-        speechCountRef.current = 0; // 先樂觀歸零避免連續觸發，等後端回覆權威值再校正
-        socket.emit("claimSpeechReward", { room }, (res) => {
-          // 後端用 message_logs 當日總數算出的 remainder 才是準的：
-          // 若前端計數器因重新整理/多分頁而跟後端總數有落差，用這個值校正回來，
-          // 否則落差會一直存在，200、300…之後的門檻永遠對不上而不會再發放。
-          if (res && Number.isFinite(res.remainder)) {
-            speechCountRef.current = res.remainder;
-          }
-        });
-      }
+    const threshold = Math.max(1, Number(roomConfig.speech_reward_threshold) || 100);
+    speechCountRef.current += 1;
+    if (speechCountRef.current >= threshold) {
+      speechCountRef.current = 0; // 先樂觀歸零避免連續觸發，等後端回覆權威值再校正
+      socket.emit("claimSpeechReward", { room }, (res) => {
+        // 後端用 message_logs 當日總數算出的 remainder 才是準的：
+        // 若前端計數器因重新整理/多分頁而跟後端總數有落差，用這個值校正回來，
+        // 否則落差會一直存在，200、300…之後的門檻永遠對不上而不會再發放。
+        if (res && Number.isFinite(res.remainder)) {
+          speechCountRef.current = res.remainder;
+        }
+      });
     }
 
     setMessageHistory((prev) => [text, ...prev]);
@@ -941,34 +932,22 @@ export default function ChatApp() {
               </button>
               {isMember && <MyMessageLogPanel token={token} />}
               <DeferredPanel>
-                {NF && <Leaderboard room={room} token={token} enabled={!!LB} />}
+                <Leaderboard room={room} token={token} enabled={!!LB} />
               </DeferredPanel>
-              {!invisible && NF && isMember && (
-                <button className="announce-btn" title="商城" onClick={() => { setShopTitle("商城"); setShowShop(true); }}>
-                  <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} /> 商城
+              {!invisible && isMember && (
+                <button
+                  className="announce-btn"
+                  title={roomConfig.currency_name === "金蘋果" ? "商城" : "賣場"}
+                  onClick={() => { setShopTitle(roomConfig.currency_name === "金蘋果" ? "商城" : "賣場"); setShowShop(true); }}
+                >
+                  <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} />
+                  {" "}{roomConfig.currency_name === "金蘋果" ? "商城" : "賣場"}
                 </button>
               )}
-              {!invisible && NF && isMember && (
-                <button className="announce-btn" title="娛樂城" onClick={() => setShowCasino(true)}
+              {!invisible && isMember && roomConfig.open_game && (
+                <button className="announce-btn" title="遊戲廳" onClick={() => setShowGameHall(true)}
                   style={{ background: "linear-gradient(135deg,#2a1500,#4a2800)", border: "1px solid #d4af37", color: "#ffd700" }}>
-                  🎰 娛樂城
-                </button>
-              )}
-              {!invisible && isMember && roomConfig.new_section && (
-                <button className="announce-btn" title="賣場" onClick={() => { setShopTitle("賣場"); setShowShop(true); }}>
-                  <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} /> 賣場
-                </button>
-              )}
-              {!invisible && isMember && roomConfig.new_section && roomConfig.playground_enabled && (
-                <button className="announce-btn" title="遊樂場" onClick={() => setShowPlayground(true)}
-                  style={{ background: "linear-gradient(135deg,#003a2a,#005a45)", border: "1px solid #4fd0c8", color: "#7fffe8" }}>
-                  🎡 遊樂場
-                </button>
-              )}
-              {!invisible && isMember && roomConfig.lounge_enabled && (
-                <button className="announce-btn" title="休閒廳" onClick={() => setShowLounge(true)}
-                  style={{ background: "linear-gradient(135deg,#102316,#1a3d22)", border: "1px solid #7fbf8a", color: "#b7e8bd" }}>
-                  🎲 休閒廳
+                  🎮 遊戲廳
                 </button>
               )}
               {offline && !invalidTokenCountdown && <div className="offline-banner">⚠️ 網路不穩，重新連線中...</div>}
@@ -996,29 +975,12 @@ export default function ChatApp() {
               <ShopPanel token={token} myName={name} myLevel={level} targetName={target} open={showShop} onClose={() => setShowShop(false)} title={shopTitle} />
             </DeferredPanel>
           )}
-          {NF && showCasino && (
+          {roomConfig.open_game && (
             <DeferredPanel>
-              <CasinoPanel
+              <GameHallPanel
                 token={token} apples={apples} onApplesChange={setApples}
-                open={showCasino} onClose={() => setShowCasino(false)}
-                variant="casino" includePusher={false}
-              />
-            </DeferredPanel>
-          )}
-          {roomConfig.new_section && roomConfig.playground_enabled && (
-            <DeferredPanel>
-              <CasinoPanel
-                token={token} apples={apples} onApplesChange={setApples}
-                open={showPlayground} onClose={() => setShowPlayground(false)}
-                variant="playground"
-              />
-            </DeferredPanel>
-          )}
-          {showLounge && (
-            <DeferredPanel>
-              <LoungePanel
-                socket={socket} room={room} name={name} apples={apples}
-                open={showLounge} onClose={() => setShowLounge(false)}
+                socket={socket} room={room} name={name}
+                open={showGameHall} onClose={() => setShowGameHall(false)}
               />
             </DeferredPanel>
           )}
@@ -1362,7 +1324,7 @@ export default function ChatApp() {
                 </div>
               )}
 
-              {(NF || roomConfig.new_section) && isMember && (
+              {isMember && (
                 <div className="trade-apple">
                   <div className="trade-apple-label" style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     {level >= AML && (
@@ -1388,13 +1350,13 @@ export default function ChatApp() {
                         {pushCardActive ? "🃏 進行中…" : "🃏 推牌"}
                       </button>
                     )}
-                    {!roomConfig.new_section && <SurpriseHistoryPanel token={token} />}
-                    {roomConfig.currency_name === "金幣" && <>{roomConfig.currency_name}樂園{" "}</>}
+                    {roomConfig.currency_name === "金蘋果" && <SurpriseHistoryPanel token={token} />}
+                    {roomConfig.currency_name === "金蘋果" && <>{roomConfig.currency_name}樂園{" "}</>}
                     <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} />{" "}
                     當前{roomConfig.currency_name}數量：{apples}
                   </div>
 
-                  {!invisible && !roomConfig.new_section && (
+                  {!invisible && (
                     <>
                       <select value={target} onChange={(e) => setTarget(e.target.value)}>
                         <option value="">選擇對象</option>
@@ -1509,9 +1471,9 @@ export default function ChatApp() {
         </DeferredPanel>
       )}
 
-      {/* 撈金蘋果遊戲覆蓋層（全螢幕，有遊戲時才渲染） */}
+      {/* 撈金蘋果遊戲覆蓋層（全螢幕，有遊戲時才渲染；貨幣為「金蘋果」時才會出現） */}
       <DeferredPanel>
-        {NF && !roomConfig.new_section && (
+        {roomConfig.currency_name === "金蘋果" && (
           <GoldAppleGame
             socket={socket}
             token={token}
@@ -1521,9 +1483,9 @@ export default function ChatApp() {
         )}
       </DeferredPanel>
 
-      {/* 打金蘋果遊戲（打地鼠風格，有遊戲時才渲染） */}
+      {/* 打金蘋果遊戲（打地鼠風格，有遊戲時才渲染；貨幣為「金蘋果」時才會出現） */}
       <DeferredPanel>
-        {NF && !roomConfig.new_section && (
+        {roomConfig.currency_name === "金蘋果" && (
           <WhackAppleGame
             socket={socket}
             token={token}
@@ -1533,9 +1495,9 @@ export default function ChatApp() {
         )}
       </DeferredPanel>
 
-      {/* 夾蘋果機遊戲（夾娃娃機風格，有遊戲時才渲染） */}
+      {/* 夾蘋果機遊戲（夾娃娃機風格，有遊戲時才渲染；貨幣為「金蘋果」時才會出現） */}
       <DeferredPanel>
-        {NF && !roomConfig.new_section && (
+        {roomConfig.currency_name === "金蘋果" && (
           <ClawMachineGame
             socket={socket}
             token={token}
@@ -1545,10 +1507,9 @@ export default function ChatApp() {
         )}
       </DeferredPanel>
 
-      {/* 櫻桃樹接櫻桃遊戲（new_section 模式專用，取代舊版撈金蘋果遊戲一）；
-          遊樂場關閉時改由挖寶遊戲取代 */}
+      {/* 櫻桃樹接櫻桃遊戲（貨幣為「紅櫻桃」時才會出現） */}
       <DeferredPanel>
-        {roomConfig.new_section && roomConfig.playground_enabled && (
+        {roomConfig.currency_name === "紅櫻桃" && (
           <CherryTreeGame
             socket={socket}
             token={token}
@@ -1558,9 +1519,9 @@ export default function ChatApp() {
         )}
       </DeferredPanel>
 
-      {/* 挖寶遊戲（new_section 模式且遊樂場關閉時取代接櫻桃） */}
+      {/* 挖寶遊戲（貨幣為「金幣」時才會出現） */}
       <DeferredPanel>
-        {roomConfig.new_section && !roomConfig.playground_enabled && (
+        {roomConfig.currency_name === "金幣" && (
           <DigTreasureGame
             socket={socket}
             token={token}
@@ -1570,28 +1531,23 @@ export default function ChatApp() {
         )}
       </DeferredPanel>
 
-      {/* 跑馬燈抽獎遊戲（管理員手動觸發），右下角小卡片顯示狀態，不擋畫面；
-          跟觸發按鈕（trade-apple 那段）用同一個條件，new_section 房間也要看得到 */}
+      {/* 跑馬燈抽獎遊戲（管理員手動觸發），右下角小卡片顯示狀態，不擋畫面 */}
       <DeferredPanel>
-        {(NF || roomConfig.new_section) && (
-          <MarqueeGame
-            socket={socket}
-            name={name}
-            userList={userList}
-          />
-        )}
+        <MarqueeGame
+          socket={socket}
+          name={name}
+          userList={userList}
+        />
       </DeferredPanel>
 
       {/* 推牌遊戲（管理員手動觸發），右下角小卡片顯示狀態，不擋畫面；玩法/版面參考跑馬燈 */}
       <DeferredPanel>
-        {(NF || roomConfig.new_section) && (
-          <PushCardGame
-            socket={socket}
-            token={token}
-            name={name}
-            apples={apples}
-          />
-        )}
+        <PushCardGame
+          socket={socket}
+          token={token}
+          name={name}
+          apples={apples}
+        />
       </DeferredPanel>
     </>
   );

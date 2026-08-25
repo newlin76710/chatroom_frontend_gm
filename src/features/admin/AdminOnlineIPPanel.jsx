@@ -3,6 +3,7 @@ import "./AdminLoginLogPanel.css"; // 直接沿用樣式
 
 import { BACKEND } from "../../shared/roomConfig";
 import { countryZh } from "../../shared/countryZh";
+import DraggablePanel from "../../shared/DraggablePanel";
 
 const countryFlag = code =>
   code?.length === 2
@@ -44,59 +45,55 @@ export default function AdminOnlineIPPanel({ myLevel, token }) {
       <button className="admin-btn" onClick={openPanel}>🌐 線上 IP</button>
 
       {open && (
-        <div className="admin-overlay" onClick={() => setOpen(false)}>
-          <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="admin-header">
-              <h3>目前線上使用者 IP（{rows.length} 個 IP / {totalUsers} 人）</h3>
-              <button onClick={() => setOpen(false)}>✖</button>
-            </div>
+        <DraggablePanel
+          title={`目前線上使用者 IP（${rows.length} 個 IP / ${totalUsers} 人）`}
+          onClose={() => setOpen(false)}
+        >
+          <div style={{ paddingBottom: 10 }}>
+            <button className="admin-btn" onClick={load} disabled={loading}>
+              {loading ? "載入中…" : "重新整理"}
+            </button>
+          </div>
 
-            <div style={{ padding: "10px 16px 0" }}>
-              <button className="admin-btn" onClick={load} disabled={loading}>
-                {loading ? "載入中…" : "重新整理"}
-              </button>
-            </div>
-
-            <div className="admin-table-wrapper">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>IP</th>
-                    <th>國家</th>
-                    <th>人數</th>
-                    <th>使用者</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.length > 0 ? (
-                    rows.map((r) => (
-                      <tr key={r.ip}>
-                        <td>{r.ip}</td>
-                        <td>{r.country ? `${countryFlag(r.country.countryCode)} ${countryZh(r.country.countryCode) ?? r.country.country}` : "-"}</td>
-                        <td style={{ color: r.users.length > 1 ? "#d32f2f" : undefined, fontWeight: r.users.length > 1 ? 600 : undefined }}>
-                          {r.users.length}
-                        </td>
-                        <td style={{ whiteSpace: "normal" }}>
-                          {r.users.map((u, i) => (
-                            <span key={i} style={{ marginRight: 8 }}>
-                              {u.name}（{u.type === "account" ? "帳號" : "訪客"} Lv.{u.level ?? "-"}）
-                            </span>
-                          ))}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={4} style={{ textAlign: "center" }}>
-                        {loading ? "載入中…" : "目前無線上使用者"}
+          <div className="admin-table-wrapper">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>IP</th>
+                  <th>國家</th>
+                  <th>人數</th>
+                  <th>使用者</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.length > 0 ? (
+                  rows.map((r) => (
+                    <tr key={r.ip}>
+                      <td>{r.ip}</td>
+                      <td>{r.country ? `${countryFlag(r.country.countryCode)} ${countryZh(r.country.countryCode) ?? r.country.country}` : "-"}</td>
+                      <td style={{ color: r.users.length > 1 ? "#d32f2f" : undefined, fontWeight: r.users.length > 1 ? 600 : undefined }}>
+                        {r.users.length}
+                      </td>
+                      <td style={{ whiteSpace: "normal" }}>
+                        {r.users.map((u, i) => (
+                          <span key={i} style={{ marginRight: 8 }}>
+                            {u.name}（{u.type === "account" ? "帳號" : "訪客"} Lv.{u.level ?? "-"}）
+                          </span>
+                        ))}
                       </td>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} style={{ textAlign: "center" }}>
+                      {loading ? "載入中…" : "目前無線上使用者"}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-        </div>
+        </DraggablePanel>
       )}
     </>
   );

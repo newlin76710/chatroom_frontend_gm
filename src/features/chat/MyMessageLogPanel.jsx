@@ -3,6 +3,7 @@ import { useState } from "react";
 import "./MessageLogPanel.css";
 
 import { BACKEND, RN } from "../../shared/roomConfig";
+import DraggablePanel from "../../shared/DraggablePanel";
 
 const PAGE_SIZE = 20;
 
@@ -121,16 +122,7 @@ export default function MyMessageLogPanel({ token }) {
             </button>
 
             {open && (
-                <div className="admin-overlay" onClick={() => setOpen(false)}>
-                    <div
-                        className="admin-modal"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="admin-header">
-                            <h3>我的發言紀錄</h3>
-                            <button onClick={() => setOpen(false)}>✖</button>
-                        </div>
-
+                <DraggablePanel title="我的發言紀錄" onClose={() => setOpen(false)}>
                         {/* 搜尋 */}
                         <div className="admin-search">
                             <input
@@ -226,8 +218,7 @@ export default function MyMessageLogPanel({ token }) {
                                 </button>
                             </div>
                         </div>
-                    </div>
-                </div>
+                </DraggablePanel>
             )}
         </>
     );

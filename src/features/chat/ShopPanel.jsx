@@ -114,7 +114,7 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
               checked={isPrivate}
               onChange={(e) => setIsPrivate(e.target.checked)}
             />
-            🔒 私下贈送（僅雙方與管理員看得到）
+            🔒 私下贈送
           </label>
         )}
 

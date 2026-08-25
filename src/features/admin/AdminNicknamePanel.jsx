@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "./AdminLoginLogPanel.css";
 
 import { roomConfig, BACKEND, RN } from "../../shared/roomConfig";
+import DraggablePanel from "../../shared/DraggablePanel";
 const PAGE_SIZE = 20;
 
 export default function AdminNicknamePanel({ myLevel, token, myName }) {
@@ -120,13 +121,7 @@ export default function AdminNicknamePanel({ myLevel, token, myName }) {
       </button>
 
       {open && (
-        <div className="admin-overlay" onClick={() => setOpen(false)}>
-          <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="admin-header">
-              <h3>暱稱黑名單管理</h3>
-              <button onClick={() => setOpen(false)}>✖</button>
-            </div>
-
+        <DraggablePanel title="暱稱黑名單管理" onClose={() => setOpen(false)}>
             {/* 新增黑名單 */}
             <div style={{ marginBottom: 8 }}>
               <input
@@ -208,8 +203,7 @@ export default function AdminNicknamePanel({ myLevel, token, myName }) {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </DraggablePanel>
       )}
     </>
   );

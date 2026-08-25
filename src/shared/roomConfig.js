@@ -4,8 +4,6 @@ const _cfg = {
   admin_min_level:     91,
   openai:              false,
   show_ip:             true,
-  new_function:        false,
-  new_section:         false,
   open_peony:          false,
   livekit_url:         "",
   room_setting:        "prod",
@@ -23,8 +21,7 @@ const _cfg = {
   snowball_cooldown_minutes: 10,
   room_capacity:       100,
   currency_enabled:    true,
-  lounge_enabled:      true,
-  playground_enabled:  true,
+  open_game:           true,
 };
 
 export const roomConfig = _cfg;

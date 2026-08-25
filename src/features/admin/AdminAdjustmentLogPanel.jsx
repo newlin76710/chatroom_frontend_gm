@@ -3,6 +3,7 @@ import { useState } from "react";
 import "./AdminLoginLogPanel.css";
 
 import { BACKEND, RN, roomConfig } from "../../shared/roomConfig";
+import DraggablePanel from "../../shared/DraggablePanel";
 const PAGE_SIZE = 50;
 
 const toUtc = (localDatetime) => {
@@ -140,31 +141,30 @@ export default function AdminAdjustmentLogPanel({ token }) {
       </button>
 
       {open && (
-        <div className="admin-overlay" onClick={() => setOpen(false)}>
-          <div className="admin-modal" onClick={e => e.stopPropagation()}>
-            <div className="admin-header">
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <h3 style={{ margin: 0 }}>調整紀錄</h3>
+        <DraggablePanel
+          title={
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <h3 style={{ margin: 0 }}>調整紀錄</h3>
+              <button
+                className="admin-btn"
+                style={{ fontSize: 12, padding: "2px 10px", background: logType === "adj" ? "#1565c0" : "#1976d2" }}
+                onClick={() => handleTabSwitch("adj")}
+              >
+                等級 / {roomConfig.currency_name}
+              </button>
+              {roomConfig.open_peony && (
                 <button
                   className="admin-btn"
-                  style={{ fontSize: 12, padding: "2px 10px", background: logType === "adj" ? "#1565c0" : "#1976d2" }}
-                  onClick={() => handleTabSwitch("adj")}
+                  style={{ fontSize: 12, padding: "2px 10px", background: logType === "peony" ? "#1565c0" : "#1976d2" }}
+                  onClick={() => handleTabSwitch("peony")}
                 >
-                  等級 / {roomConfig.currency_name}
+                  🌸 金牡丹
                 </button>
-                {roomConfig.open_peony && (
-                  <button
-                    className="admin-btn"
-                    style={{ fontSize: 12, padding: "2px 10px", background: logType === "peony" ? "#1565c0" : "#1976d2" }}
-                    onClick={() => handleTabSwitch("peony")}
-                  >
-                    🌸 金牡丹
-                  </button>
-                )}
-              </div>
-              <button onClick={() => setOpen(false)}>✖</button>
+              )}
             </div>
-
+          }
+          onClose={() => setOpen(false)}
+        >
             {logType === "adj" && (
               <>
                 <div className="admin-filter-bar">
@@ -296,8 +296,7 @@ export default function AdminAdjustmentLogPanel({ token }) {
                 </div>
               </>
             )}
-          </div>
-        </div>
+        </DraggablePanel>
       )}
     </>
   );

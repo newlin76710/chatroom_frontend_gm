@@ -3,6 +3,7 @@ import "./AdminLoginLogPanel.css"; // 直接沿用樣式
 
 import { roomConfig, BACKEND, RN } from "../../shared/roomConfig";
 import { countryZh } from "../../shared/countryZh";
+import DraggablePanel from "../../shared/DraggablePanel";
 
 const countryFlag = code =>
   code?.length === 2
@@ -111,13 +112,7 @@ export default function AdminIPPanel({ myLevel, token }) {
       <button className="admin-btn" onClick={() => setOpen(true)}>🛡 IP 黑名單</button>
 
       {open && (
-        <div className="admin-overlay" onClick={() => setOpen(false)}>
-          <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="admin-header">
-              <h3>IP 黑名單管理</h3>
-              <button onClick={() => setOpen(false)}>✖</button>
-            </div>
-
+        <DraggablePanel title="IP 黑名單管理" onClose={() => setOpen(false)}>
             <div style={{ marginBottom: "8px" }}>
               <input
                 placeholder="輸入 IP"
@@ -173,8 +168,7 @@ export default function AdminIPPanel({ myLevel, token }) {
                 <button className="admin-btn" onClick={() => handlePage(page + 1)} disabled={page >= totalPages}>下一頁</button>
               </div>
             </div>
-          </div>
-        </div>
+        </DraggablePanel>
       )}
     </>
   );

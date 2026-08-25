@@ -1,0 +1,99 @@
+.gamehall-panel button {
+  /* 手機上點按鈕預設會閃一下藍灰色高亮、且首次點擊有約 300ms 延遲判斷是否雙擊縮放，
+     遊戲廳裡按鈕多、操作又講求手感，這兩個預設行為拿掉比較順手 */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gamehall-panel {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1200;
+  background: linear-gradient(160deg, #1a0d00 0%, #0d0600 40%, #10201a 100%);
+  border: 2px solid #d4af37;
+  border-radius: 14px;
+  width: min(860px, 97vw);
+  max-height: 94vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow:
+    0 0 40px rgba(212, 175, 55, 0.25),
+    inset 0 0 60px rgba(0, 0, 0, 0.5);
+  color: #f0e6c8;
+}
+
+.gamehall-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.35);
+  cursor: move;
+  touch-action: none;
+}
+
+.gamehall-title {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #ffe9a8;
+  letter-spacing: 0.08em;
+}
+
+.gamehall-apples {
+  flex: 1;
+  font-size: 0.9rem;
+  color: #d8e8da;
+}
+
+.gamehall-close-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.15);
+  border: 1.5px solid #d4af37;
+  color: #ffe9a8;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.gamehall-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 14px 0;
+  flex-shrink: 0;
+}
+
+.gamehall-tab {
+  padding: 6px 10px;
+  border-radius: 8px 8px 0 0;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-bottom: none;
+  background: rgba(255, 255, 255, 0.03);
+  color: #e7d9b0;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.gamehall-tab.active {
+  background: rgba(212, 175, 55, 0.22);
+  color: #ffffff;
+}
+.gamehall-tab:hover { background: rgba(212, 175, 55, 0.15); }
+
+.gamehall-body {
+  padding: 14px 16px;
+  overflow-y: auto;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: #d4af37 #1a0800;
+}
+.gamehall-body::-webkit-scrollbar       { width: 6px; }
+.gamehall-body::-webkit-scrollbar-track { background: #1a0800; }
+.gamehall-body::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 3px; }

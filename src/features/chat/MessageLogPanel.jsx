@@ -4,6 +4,7 @@ import "./MessageLogPanel.css";
 
 import { roomConfig, BACKEND, RN } from "../../shared/roomConfig";
 import { countryZh } from "../../shared/countryZh";
+import DraggablePanel from "../../shared/DraggablePanel";
 const PAGE_SIZE = 20;
 
 const countryFlag = code =>
@@ -136,16 +137,7 @@ export default function MessageLogPanel({
       </button>
 
       {open && (
-        <div className="admin-overlay" onClick={() => setOpen(false)}>
-          <div
-            className="admin-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="admin-header">
-              <h3>發言紀錄</h3>
-              <button onClick={() => setOpen(false)}>✖</button>
-            </div>
-
+        <DraggablePanel title="發言紀錄" onClose={() => setOpen(false)}>
             {/* 搜尋區 */}
             <div className="admin-search">
               <input
@@ -286,8 +278,7 @@ export default function MessageLogPanel({
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+        </DraggablePanel>
       )}
     </>
   );
