@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import "./AdminSettingsModal.css";
 import { RN, roomConfig } from "../../shared/roomConfig";
 
@@ -15,6 +15,12 @@ const DEFAULT = {
   singing_double_start_minute:  0,
   singing_double_end_hour:      22,
   singing_double_end_minute:    0,
+  singing_double2_enabled:      false,
+  singing_double2_multiplier:   2,
+  singing_double2_start_hour:   20,
+  singing_double2_start_minute: 0,
+  singing_double2_end_hour:     22,
+  singing_double2_end_minute:   0,
   per_transfer_limit:   0,
   daily_transfer_limit: 0,
   daily_receive_limit:  0,
@@ -146,6 +152,35 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
   const [loading,  setLoading]  = useState(true);
   const [saving,   setSaving]   = useState(false);
 
+  // ─── 可自由拖曳（不再用全螢幕遮罩蓋住聊天室） ───────────────────────────
+  const panelRef = useRef(null);
+  const pos = useRef({ x: 60, y: 40, offsetX: 0, offsetY: 0, dragging: false });
+
+  const onDragMouseDown = (e) => {
+    if (e.target.closest("button")) return;
+    e.preventDefault();
+    pos.current.dragging = true;
+    pos.current.offsetX = e.clientX - pos.current.x;
+    pos.current.offsetY = e.clientY - pos.current.y;
+    document.addEventListener("mousemove", onDragMouseMove);
+    document.addEventListener("mouseup", onDragMouseUp);
+  };
+  const onDragMouseMove = (e) => {
+    if (!pos.current.dragging) return;
+    e.preventDefault();
+    pos.current.x = e.clientX - pos.current.offsetX;
+    pos.current.y = e.clientY - pos.current.offsetY;
+    if (panelRef.current) {
+      panelRef.current.style.left = pos.current.x + "px";
+      panelRef.current.style.top = pos.current.y + "px";
+    }
+  };
+  const onDragMouseUp = () => {
+    pos.current.dragging = false;
+    document.removeEventListener("mousemove", onDragMouseMove);
+    document.removeEventListener("mouseup", onDragMouseUp);
+  };
+
   /* ─── 讀取設定 ───────────────────────────────────────────────── */
   const fetchSettings = async () => {
     try {
@@ -206,10 +241,12 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
   const currencyEmoji = settings.currency_emoji || roomConfig.currency_emoji || "💰";
 
   return (
-    <div className="apple-modal">
-      <div className="apple-modal-content" style={{ width: 460, maxHeight: "90vh", overflowY: "auto" }}>
+    <div ref={panelRef} className="apple-modal-floating" style={{ left: pos.current.x, top: pos.current.y }}>
+      <div className="apple-modal-header" onMouseDown={onDragMouseDown}>
         <h3>⚙️ {currencyName}設定</h3>
-
+        <button onClick={onClose}>✖</button>
+      </div>
+      <div className="apple-modal-content" style={{ width: 460, maxHeight: "80vh", overflowY: "auto" }}>
         {loading ? <div>讀取中…</div> : (
           <>
             {/* ─── 功能顯示 ──────────────────────────────────────── */}
@@ -273,6 +310,47 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                     <span style={{ color: "#aaa", fontSize: "0.8rem" }}>
                       （{fmtTime(settings.singing_double_start_hour, settings.singing_double_start_minute)}
                       ～{fmtTime(settings.singing_double_end_hour, settings.singing_double_end_minute)}）
+                    </span>
+                  </div>
+                </Row>
+              )}
+              <Row label="唱歌雙倍獎勵（第二時段）">
+                <label className="toggle-label">
+                  <input type="checkbox" checked={!!settings.singing_double2_enabled}
+                    onChange={e => setBool("singing_double2_enabled", e.target.checked)} />
+                  {" "}額外啟用第二組指定時段加倍{currencyName}
+                </label>
+              </Row>
+              {settings.singing_double2_enabled && (
+                <Row label="獎勵倍數">
+                  <input type="number" min={2} max={10} style={{ width: 64 }}
+                    value={settings.singing_double2_multiplier}
+                    onChange={e => setInt("singing_double2_multiplier", e.target.value)} />
+                  <span className="field-note">倍（最少 2，最多 10）</span>
+                </Row>
+              )}
+              {settings.singing_double2_enabled && (
+                <Row label="時段（台灣時間）">
+                  <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                    <input type="number" min={0} max={23} style={{ width: 56 }}
+                      value={settings.singing_double2_start_hour}
+                      onChange={e => setInt("singing_double2_start_hour", e.target.value)} />
+                    <span>時</span>
+                    <input type="number" min={0} max={59} style={{ width: 56 }}
+                      value={settings.singing_double2_start_minute}
+                      onChange={e => setInt("singing_double2_start_minute", e.target.value)} />
+                    <span>分 ～</span>
+                    <input type="number" min={0} max={23} style={{ width: 56 }}
+                      value={settings.singing_double2_end_hour}
+                      onChange={e => setInt("singing_double2_end_hour", e.target.value)} />
+                    <span>時</span>
+                    <input type="number" min={0} max={59} style={{ width: 56 }}
+                      value={settings.singing_double2_end_minute}
+                      onChange={e => setInt("singing_double2_end_minute", e.target.value)} />
+                    <span>分</span>
+                    <span style={{ color: "#aaa", fontSize: "0.8rem" }}>
+                      （{fmtTime(settings.singing_double2_start_hour, settings.singing_double2_start_minute)}
+                      ～{fmtTime(settings.singing_double2_end_hour, settings.singing_double2_end_minute)}）
                     </span>
                   </div>
                 </Row>

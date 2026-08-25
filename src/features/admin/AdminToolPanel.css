@@ -21,11 +21,9 @@
   background-color: #1565c0; /* 深藍 hover */
 }
 
-/* 小浮窗內容 */
+/* 小浮窗內容：可自由拖曳，不再固定鎖在按鈕旁，避免蓋住聊天畫面又無法移開 */
 .admin-tool .admin-popup {
-  position: absolute;
-  bottom: 36px;
-  left: 0;
+  position: fixed;
   width: 650px;
   max-height: 480px;
   background: #fff;
@@ -34,12 +32,35 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  z-index: 999;
+  z-index: 999999;
 }
 
 /* 91~98 管理員專用寬度 */
 .admin-tool .admin-popup.small {
-  width: 150px;
+  width: 220px;
+}
+
+/* 拖曳把手 */
+.admin-tool .admin-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: #1976d2;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: move;
+  user-select: none;
+}
+
+.admin-tool .admin-popup-header button {
+  border: none;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
 }
 
 /* 小浮窗 Tabs */

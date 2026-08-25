@@ -116,6 +116,8 @@ export function useMessages() {
         message: msg.message,
         timestamp: new Date().toLocaleTimeString(),
         type: "gift",
+        isPrivate: !!msg.isPrivate,
+        monitored: !!msg.monitored,
       })
     );
   }, []);

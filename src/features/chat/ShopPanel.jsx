@@ -20,6 +20,7 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
   const [buying, setBuying] = useState(null);
   const [showCakePicker, setShowCakePicker] = useState(false);
   const [quantities, setQuantities] = useState({});
+  const [isPrivate, setIsPrivate] = useState(false);
 
   if (!open) return null;
 
@@ -68,6 +69,7 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
       const body = { itemId: item.id, targetName, room: RN };
       if (cakeVariant) body.cakeVariant = cakeVariant;
       if (quantity > 1) body.quantity = quantity;
+      if (GIFT_IDS.includes(item.id)) body.isPrivate = isPrivate;
 
       const res = await fetch(`${BACKEND}/api/shop/buy`, {
         method: "POST",
@@ -104,6 +106,17 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
         <div className="shop-user">
           玩家：{myName} ｜ 等級：Lv.{myLevel} | 🎯 送給：{targetName}
         </div>
+
+        {targetName && (
+          <label className="shop-private-toggle" style={{ display: "flex", alignItems: "center", gap: 6, margin: "4px 0 8px", fontSize: "0.85rem" }}>
+            <input
+              type="checkbox"
+              checked={isPrivate}
+              onChange={(e) => setIsPrivate(e.target.checked)}
+            />
+            🔒 私下贈送（僅雙方與管理員看得到）
+          </label>
+        )}
 
         <div className="shop-items">
           {items.map((item) => (

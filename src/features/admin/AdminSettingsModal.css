@@ -1,20 +1,40 @@
-.apple-modal {
+/* 可自由拖曳的浮動視窗，不再用全螢幕遮罩擋住聊天室 */
+.apple-modal-floating {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0,0,0,0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background: white;
+  color: black;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  overflow: hidden;
   z-index: 999999;
 }
 
+.apple-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: #1976d2;
+  color: #fff;
+  cursor: move;
+  user-select: none;
+}
+
+.apple-modal-header h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.apple-modal-header button {
+  border: none;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+}
+
 .apple-modal-content {
-  background: white;
   padding: 20px;
-  border-radius: 10px;
   color: black;
 }
 

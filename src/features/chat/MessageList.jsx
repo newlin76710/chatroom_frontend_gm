@@ -162,7 +162,9 @@ function MessageList({
           }
 
           const bgColor = isRelatedToMe ? "#004477" : "transparent";
-          const tag = m.mode === "private" ? (legacyUI ? "(密)" : "(私聊)") : "";
+          const tag = m.mode === "private" || m.isPrivate
+            ? (legacyUI ? "(密)" : "(私聊)")
+            : "";
 
           if (isSurprise) {
             return (
