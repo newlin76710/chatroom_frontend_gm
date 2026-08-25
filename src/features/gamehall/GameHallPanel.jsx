@@ -76,7 +76,9 @@ export default function GameHallPanel({ token, apples, onApplesChange, socket, r
       style={open ? undefined : { display: "none" }}
     >
       <div className="gamehall-header" onPointerDown={onPointerDown}>
-        <span className="gamehall-title">🎮 遊戲廳</span>
+        <span className="gamehall-title">
+          {roomConfig.currency_name === "金蘋果" ? "🎰 娛樂城" : "🎮 遊戲廳"}
+        </span>
         <div className="gamehall-apples">
           <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 16, height: 16, verticalAlign: "middle" }} />
           {" "}{apples != null ? apples : "–"}

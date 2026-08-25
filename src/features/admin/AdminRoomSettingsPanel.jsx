@@ -70,7 +70,9 @@ export default function AdminRoomSettingsPanel({ token }) {
         </label>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>開啟遊戲廳</span>
+        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>
+          開啟{settings.currency_name === "金蘋果" ? "娛樂城" : "遊戲廳"}
+        </span>
         <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13 }}>
           <input
             type="checkbox"

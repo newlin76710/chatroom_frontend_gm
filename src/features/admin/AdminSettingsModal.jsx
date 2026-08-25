@@ -669,236 +669,6 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             </section>
             )}
 
-            {/* ─── 遊戲廳：輪盤 ──────────────────────────── */}
-            <section className="settings-section">
-              <h4>
-                🎰 遊戲廳：{currencyName}輪盤
-                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
-                  <input type="checkbox" checked={!!settings.roulette_enabled}
-                    onChange={e => setBool("roulette_enabled", e.target.checked)} />
-                  {" "}啟用
-                </label>
-              </h4>
-
-              <Row label="開放時間（台灣時間）">
-                <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-                  <input type="number" min={0} max={23} style={{ width: 56 }}
-                    value={settings.roulette_open_hour}
-                    onChange={e => setInt("roulette_open_hour", e.target.value)} />
-                  <span>時</span>
-                  <input type="number" min={0} max={59} style={{ width: 56 }}
-                    value={settings.roulette_open_minute}
-                    onChange={e => setInt("roulette_open_minute", e.target.value)} />
-                  <span>分 ～</span>
-                  <input type="number" min={0} max={24} style={{ width: 56 }}
-                    value={settings.roulette_close_hour}
-                    onChange={e => setInt("roulette_close_hour", e.target.value)} />
-                  <span>時</span>
-                  <input type="number" min={0} max={59} style={{ width: 56 }}
-                    value={settings.roulette_close_minute}
-                    onChange={e => setInt("roulette_close_minute", e.target.value)} />
-                  <span>分</span>
-                  <span style={{ color: "#aaa", fontSize: "0.8rem" }}>（24時 = 午夜）</span>
-                </div>
-              </Row>
-              <Row label="單次最高下注">
-                <input type="number" min={1} max={1000} style={{ width: 80 }}
-                  value={settings.roulette_max_bet}
-                  onChange={e => setInt("roulette_max_bet", e.target.value)} />
-                <span className="field-note">個{currencyName}（最多可下注）</span>
-              </Row>
-              <Row label="勝率偏向設定">
-                <input type="number" min={1} max={200} style={{ width: 80 }}
-                  value={settings.roulette_house_edge}
-                  onChange={e => setInt("roulette_house_edge", e.target.value)} />
-                <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
-              </Row>
-            </section>
-
-            {/* ─── 遊戲廳：21點 ────────────────────────────────── */}
-            <section className="settings-section">
-              <h4>
-                🃏 遊戲廳：21點
-                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
-                  <input type="checkbox" checked={!!settings.blackjack_enabled}
-                    onChange={e => setBool("blackjack_enabled", e.target.checked)} />
-                  {" "}啟用
-                </label>
-              </h4>
-
-              <Row label="開放時間（台灣時間）">
-                <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-                  <input type="number" min={0} max={23} style={{ width: 56 }}
-                    value={settings.blackjack_open_hour}
-                    onChange={e => setInt("blackjack_open_hour", e.target.value)} />
-                  <span>時</span>
-                  <input type="number" min={0} max={59} style={{ width: 56 }}
-                    value={settings.blackjack_open_minute}
-                    onChange={e => setInt("blackjack_open_minute", e.target.value)} />
-                  <span>分 ～</span>
-                  <input type="number" min={0} max={24} style={{ width: 56 }}
-                    value={settings.blackjack_close_hour}
-                    onChange={e => setInt("blackjack_close_hour", e.target.value)} />
-                  <span>時</span>
-                  <input type="number" min={0} max={59} style={{ width: 56 }}
-                    value={settings.blackjack_close_minute}
-                    onChange={e => setInt("blackjack_close_minute", e.target.value)} />
-                  <span>分</span>
-                  <span style={{ color: "#aaa", fontSize: "0.8rem" }}>（24時 = 午夜）</span>
-                </div>
-              </Row>
-              <Row label="下注上限">
-                <input type="number" min={200} max={9999} style={{ width: 80 }}
-                  value={settings.blackjack_max_bet}
-                  onChange={e => setInt("blackjack_max_bet", e.target.value)} />
-                <span className="field-note">個{currencyName}（最少 200）</span>
-              </Row>
-              <Row label="勝率偏向設定">
-                <input type="number" min={1} max={200} style={{ width: 80 }}
-                  value={settings.blackjack_house_edge}
-                  onChange={e => setInt("blackjack_house_edge", e.target.value)} />
-                <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
-              </Row>
-            </section>
-
-            {/* ─── 遊戲廳：骰寶 ────────────────────────────────── */}
-            <section className="settings-section">
-              <h4>
-                🎲 遊戲廳：骰寶
-                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
-                  <input type="checkbox" checked={!!settings.sicbo_enabled}
-                    onChange={e => setBool("sicbo_enabled", e.target.checked)} />
-                  {" "}啟用
-                </label>
-              </h4>
-
-              <Row label="開放時間（台灣時間）">
-                <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-                  <input type="number" min={0} max={23} style={{ width: 56 }}
-                    value={settings.sicbo_open_hour}
-                    onChange={e => setInt("sicbo_open_hour", e.target.value)} />
-                  <span>時</span>
-                  <input type="number" min={0} max={59} style={{ width: 56 }}
-                    value={settings.sicbo_open_minute}
-                    onChange={e => setInt("sicbo_open_minute", e.target.value)} />
-                  <span>分 ～</span>
-                  <input type="number" min={0} max={24} style={{ width: 56 }}
-                    value={settings.sicbo_close_hour}
-                    onChange={e => setInt("sicbo_close_hour", e.target.value)} />
-                  <span>時</span>
-                  <input type="number" min={0} max={59} style={{ width: 56 }}
-                    value={settings.sicbo_close_minute}
-                    onChange={e => setInt("sicbo_close_minute", e.target.value)} />
-                  <span>分</span>
-                  <span style={{ color: "#aaa", fontSize: "0.8rem" }}>（24時 = 午夜）</span>
-                </div>
-              </Row>
-              <Row label="單注上限">
-                <input type="number" min={1} max={9999} style={{ width: 80 }}
-                  value={settings.sicbo_max_bet}
-                  onChange={e => setInt("sicbo_max_bet", e.target.value)} />
-                <span className="field-note">個{currencyName}（每種投注類型最多可下注）</span>
-              </Row>
-              <Row label="勝率偏向設定">
-                <input type="number" min={1} max={200} style={{ width: 80 }}
-                  value={settings.sicbo_house_edge}
-                  onChange={e => setInt("sicbo_house_edge", e.target.value)} />
-                <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
-              </Row>
-            </section>
-
-            {/* ─── 遊戲廳：老虎機 ──────────────────────────────── */}
-            <section className="settings-section">
-              <h4>
-                🎰 遊戲廳：老虎機
-                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
-                  <input type="checkbox" checked={!!settings.slot_enabled}
-                    onChange={e => setBool("slot_enabled", e.target.checked)} />
-                  {" "}啟用
-                </label>
-              </h4>
-
-              <Row label="開放時間（台灣時間）">
-                <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-                  <input type="number" min={0} max={23} style={{ width: 56 }}
-                    value={settings.slot_open_hour}
-                    onChange={e => setInt("slot_open_hour", e.target.value)} />
-                  <span>時</span>
-                  <input type="number" min={0} max={59} style={{ width: 56 }}
-                    value={settings.slot_open_minute}
-                    onChange={e => setInt("slot_open_minute", e.target.value)} />
-                  <span>分 ～</span>
-                  <input type="number" min={0} max={24} style={{ width: 56 }}
-                    value={settings.slot_close_hour}
-                    onChange={e => setInt("slot_close_hour", e.target.value)} />
-                  <span>時</span>
-                  <input type="number" min={0} max={59} style={{ width: 56 }}
-                    value={settings.slot_close_minute}
-                    onChange={e => setInt("slot_close_minute", e.target.value)} />
-                  <span>分</span>
-                  <span style={{ color: "#aaa", fontSize: "0.8rem" }}>（24時 = 午夜）</span>
-                </div>
-              </Row>
-              <Row label="單注上限">
-                <input type="number" min={1} max={9999} style={{ width: 80 }}
-                  value={settings.slot_max_bet}
-                  onChange={e => setInt("slot_max_bet", e.target.value)} />
-                <span className="field-note">個{currencyName}</span>
-              </Row>
-              <Row label="勝率偏向設定">
-                <input type="number" min={1} max={200} style={{ width: 80 }}
-                  value={settings.slot_house_edge}
-                  onChange={e => setInt("slot_house_edge", e.target.value)} />
-                <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
-              </Row>
-            </section>
-
-            {/* ─── 遊戲廳：百家樂 ──────────────────────────────── */}
-            <section className="settings-section">
-              <h4>
-                🀄 遊戲廳：百家樂
-                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
-                  <input type="checkbox" checked={!!settings.baccarat_enabled}
-                    onChange={e => setBool("baccarat_enabled", e.target.checked)} />
-                  {" "}啟用
-                </label>
-              </h4>
-
-              <Row label="開放時間（台灣時間）">
-                <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-                  <input type="number" min={0} max={23} style={{ width: 56 }}
-                    value={settings.baccarat_open_hour}
-                    onChange={e => setInt("baccarat_open_hour", e.target.value)} />
-                  <span>時</span>
-                  <input type="number" min={0} max={59} style={{ width: 56 }}
-                    value={settings.baccarat_open_minute}
-                    onChange={e => setInt("baccarat_open_minute", e.target.value)} />
-                  <span>分 ～</span>
-                  <input type="number" min={0} max={24} style={{ width: 56 }}
-                    value={settings.baccarat_close_hour}
-                    onChange={e => setInt("baccarat_close_hour", e.target.value)} />
-                  <span>時</span>
-                  <input type="number" min={0} max={59} style={{ width: 56 }}
-                    value={settings.baccarat_close_minute}
-                    onChange={e => setInt("baccarat_close_minute", e.target.value)} />
-                  <span>分</span>
-                  <span style={{ color: "#aaa", fontSize: "0.8rem" }}>（24時 = 午夜）</span>
-                </div>
-              </Row>
-              <Row label="單注上限">
-                <input type="number" min={1} max={9999} style={{ width: 80 }}
-                  value={settings.baccarat_max_bet}
-                  onChange={e => setInt("baccarat_max_bet", e.target.value)} />
-                <span className="field-note">個{currencyName}</span>
-              </Row>
-              <Row label="勝率偏向設定">
-                <input type="number" min={1} max={200} style={{ width: 80 }}
-                  value={settings.baccarat_house_edge}
-                  onChange={e => setInt("baccarat_house_edge", e.target.value)} />
-                <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
-              </Row>
-            </section>
-
             {/* ─── 接櫻桃（貨幣為「紅櫻桃」時使用） ─────────────── */}
             {isCherry && (
             <section className="settings-section">
@@ -1042,7 +812,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             {/* ─── 遊戲廳：推幣機 ──────────────────────────────── */}
             <section className="settings-section">
               <h4>
-                🎰 遊戲廳：推幣機
+                🎰 {isApple ? "娛樂城" : "遊戲廳"}：推幣機
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={!!settings.pusher_enabled}
                     onChange={e => setBool("pusher_enabled", e.target.checked)} />
@@ -1099,10 +869,240 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
               </Row>
             </section>
 
+            {/* ─── 遊戲廳：21點 ────────────────────────────────── */}
+            <section className="settings-section">
+              <h4>
+                🃏 {isApple ? "娛樂城" : "遊戲廳"}：21點
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.blackjack_enabled}
+                    onChange={e => setBool("blackjack_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+
+              <Row label="開放時間（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                  <input type="number" min={0} max={23} style={{ width: 56 }}
+                    value={settings.blackjack_open_hour}
+                    onChange={e => setInt("blackjack_open_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.blackjack_open_minute}
+                    onChange={e => setInt("blackjack_open_minute", e.target.value)} />
+                  <span>分 ～</span>
+                  <input type="number" min={0} max={24} style={{ width: 56 }}
+                    value={settings.blackjack_close_hour}
+                    onChange={e => setInt("blackjack_close_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.blackjack_close_minute}
+                    onChange={e => setInt("blackjack_close_minute", e.target.value)} />
+                  <span>分</span>
+                  <span style={{ color: "#aaa", fontSize: "0.8rem" }}>（24時 = 午夜）</span>
+                </div>
+              </Row>
+              <Row label="下注上限">
+                <input type="number" min={200} max={9999} style={{ width: 80 }}
+                  value={settings.blackjack_max_bet}
+                  onChange={e => setInt("blackjack_max_bet", e.target.value)} />
+                <span className="field-note">個{currencyName}（最少 200）</span>
+              </Row>
+              <Row label="勝率偏向設定">
+                <input type="number" min={1} max={200} style={{ width: 80 }}
+                  value={settings.blackjack_house_edge}
+                  onChange={e => setInt("blackjack_house_edge", e.target.value)} />
+                <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
+              </Row>
+            </section>
+
+            {/* ─── 遊戲廳：輪盤 ──────────────────────────── */}
+            <section className="settings-section">
+              <h4>
+                🎰 {isApple ? "娛樂城" : "遊戲廳"}：{currencyName}輪盤
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.roulette_enabled}
+                    onChange={e => setBool("roulette_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+
+              <Row label="開放時間（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                  <input type="number" min={0} max={23} style={{ width: 56 }}
+                    value={settings.roulette_open_hour}
+                    onChange={e => setInt("roulette_open_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.roulette_open_minute}
+                    onChange={e => setInt("roulette_open_minute", e.target.value)} />
+                  <span>分 ～</span>
+                  <input type="number" min={0} max={24} style={{ width: 56 }}
+                    value={settings.roulette_close_hour}
+                    onChange={e => setInt("roulette_close_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.roulette_close_minute}
+                    onChange={e => setInt("roulette_close_minute", e.target.value)} />
+                  <span>分</span>
+                  <span style={{ color: "#aaa", fontSize: "0.8rem" }}>（24時 = 午夜）</span>
+                </div>
+              </Row>
+              <Row label="單次最高下注">
+                <input type="number" min={1} max={1000} style={{ width: 80 }}
+                  value={settings.roulette_max_bet}
+                  onChange={e => setInt("roulette_max_bet", e.target.value)} />
+                <span className="field-note">個{currencyName}（最多可下注）</span>
+              </Row>
+              <Row label="勝率偏向設定">
+                <input type="number" min={1} max={200} style={{ width: 80 }}
+                  value={settings.roulette_house_edge}
+                  onChange={e => setInt("roulette_house_edge", e.target.value)} />
+                <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
+              </Row>
+            </section>
+
+            {/* ─── 遊戲廳：骰寶 ────────────────────────────────── */}
+            <section className="settings-section">
+              <h4>
+                🎲 {isApple ? "娛樂城" : "遊戲廳"}：骰寶
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.sicbo_enabled}
+                    onChange={e => setBool("sicbo_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+
+              <Row label="開放時間（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                  <input type="number" min={0} max={23} style={{ width: 56 }}
+                    value={settings.sicbo_open_hour}
+                    onChange={e => setInt("sicbo_open_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.sicbo_open_minute}
+                    onChange={e => setInt("sicbo_open_minute", e.target.value)} />
+                  <span>分 ～</span>
+                  <input type="number" min={0} max={24} style={{ width: 56 }}
+                    value={settings.sicbo_close_hour}
+                    onChange={e => setInt("sicbo_close_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.sicbo_close_minute}
+                    onChange={e => setInt("sicbo_close_minute", e.target.value)} />
+                  <span>分</span>
+                  <span style={{ color: "#aaa", fontSize: "0.8rem" }}>（24時 = 午夜）</span>
+                </div>
+              </Row>
+              <Row label="單注上限">
+                <input type="number" min={1} max={9999} style={{ width: 80 }}
+                  value={settings.sicbo_max_bet}
+                  onChange={e => setInt("sicbo_max_bet", e.target.value)} />
+                <span className="field-note">個{currencyName}（每種投注類型最多可下注）</span>
+              </Row>
+              <Row label="勝率偏向設定">
+                <input type="number" min={1} max={200} style={{ width: 80 }}
+                  value={settings.sicbo_house_edge}
+                  onChange={e => setInt("sicbo_house_edge", e.target.value)} />
+                <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
+              </Row>
+            </section>
+
+            {/* ─── 遊戲廳：老虎機 ──────────────────────────────── */}
+            <section className="settings-section">
+              <h4>
+                🎰 {isApple ? "娛樂城" : "遊戲廳"}：老虎機
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.slot_enabled}
+                    onChange={e => setBool("slot_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+
+              <Row label="開放時間（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                  <input type="number" min={0} max={23} style={{ width: 56 }}
+                    value={settings.slot_open_hour}
+                    onChange={e => setInt("slot_open_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.slot_open_minute}
+                    onChange={e => setInt("slot_open_minute", e.target.value)} />
+                  <span>分 ～</span>
+                  <input type="number" min={0} max={24} style={{ width: 56 }}
+                    value={settings.slot_close_hour}
+                    onChange={e => setInt("slot_close_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.slot_close_minute}
+                    onChange={e => setInt("slot_close_minute", e.target.value)} />
+                  <span>分</span>
+                  <span style={{ color: "#aaa", fontSize: "0.8rem" }}>（24時 = 午夜）</span>
+                </div>
+              </Row>
+              <Row label="單注上限">
+                <input type="number" min={1} max={9999} style={{ width: 80 }}
+                  value={settings.slot_max_bet}
+                  onChange={e => setInt("slot_max_bet", e.target.value)} />
+                <span className="field-note">個{currencyName}</span>
+              </Row>
+              <Row label="勝率偏向設定">
+                <input type="number" min={1} max={200} style={{ width: 80 }}
+                  value={settings.slot_house_edge}
+                  onChange={e => setInt("slot_house_edge", e.target.value)} />
+                <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
+              </Row>
+            </section>
+
+            {/* ─── 遊戲廳：百家樂 ──────────────────────────────── */}
+            <section className="settings-section">
+              <h4>
+                🀄 {isApple ? "娛樂城" : "遊戲廳"}：百家樂
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.baccarat_enabled}
+                    onChange={e => setBool("baccarat_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+
+              <Row label="開放時間（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                  <input type="number" min={0} max={23} style={{ width: 56 }}
+                    value={settings.baccarat_open_hour}
+                    onChange={e => setInt("baccarat_open_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.baccarat_open_minute}
+                    onChange={e => setInt("baccarat_open_minute", e.target.value)} />
+                  <span>分 ～</span>
+                  <input type="number" min={0} max={24} style={{ width: 56 }}
+                    value={settings.baccarat_close_hour}
+                    onChange={e => setInt("baccarat_close_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.baccarat_close_minute}
+                    onChange={e => setInt("baccarat_close_minute", e.target.value)} />
+                  <span>分</span>
+                  <span style={{ color: "#aaa", fontSize: "0.8rem" }}>（24時 = 午夜）</span>
+                </div>
+              </Row>
+              <Row label="單注上限">
+                <input type="number" min={1} max={9999} style={{ width: 80 }}
+                  value={settings.baccarat_max_bet}
+                  onChange={e => setInt("baccarat_max_bet", e.target.value)} />
+                <span className="field-note">個{currencyName}</span>
+              </Row>
+              <Row label="勝率偏向設定">
+                <input type="number" min={1} max={200} style={{ width: 80 }}
+                  value={settings.baccarat_house_edge}
+                  onChange={e => setInt("baccarat_house_edge", e.target.value)} />
+                <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
+              </Row>
+            </section>
+
             {/* ─── 遊戲廳：賽車 ──────────────────────────────── */}
             <section className="settings-section">
               <h4>
-                🏎️ 遊戲廳：賽車
+                🏎️ {isApple ? "娛樂城" : "遊戲廳"}：賽車
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={!!settings.race_enabled}
                     onChange={e => setBool("race_enabled", e.target.checked)} />
@@ -1148,7 +1148,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
             {/* ─── 遊戲廳：殭屍生存戰 ──────────────────────────── */}
             <section className="settings-section">
               <h4>
-                🧟 遊戲廳：殭屍生存戰
+                🧟 {isApple ? "娛樂城" : "遊戲廳"}：殭屍生存戰
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={!!settings.zombie_enabled}
                     onChange={e => setBool("zombie_enabled", e.target.checked)} />

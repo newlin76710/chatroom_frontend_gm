@@ -945,9 +945,9 @@ export default function ChatApp() {
                 </button>
               )}
               {!invisible && isMember && roomConfig.open_game && (
-                <button className="announce-btn" title="遊戲廳" onClick={() => setShowGameHall(true)}
+                <button className="announce-btn" title={roomConfig.currency_name === "金蘋果" ? "娛樂城" : "遊戲廳"} onClick={() => setShowGameHall(true)}
                   style={{ background: "linear-gradient(135deg,#2a1500,#4a2800)", border: "1px solid #d4af37", color: "#ffd700" }}>
-                  🎮 遊戲廳
+                  {roomConfig.currency_name === "金蘋果" ? "🎰 娛樂城" : "🎮 遊戲廳"}
                 </button>
               )}
               {offline && !invalidTokenCountdown && <div className="offline-banner">⚠️ 網路不穩，重新連線中...</div>}
