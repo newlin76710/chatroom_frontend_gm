@@ -126,7 +126,7 @@ export default function AdminToolPanel({ myName, myLevel, token, userList, initi
               </button>
             )}
 
-            {myLevel >= 98 && (
+            {myLevel >= (roomConfig.mini_admin_level || 98) && (
               <button
                 className={tab === "onlineip" ? "active" : ""}
                 onClick={() => setTab("onlineip")}

@@ -30,6 +30,7 @@ function UserList({
 }) {
   const ANL = roomConfig.admin_min_level || 91;
   const AML = roomConfig.admin_max_level || 99;
+  const MINI_AML = roomConfig.mini_admin_level || 98;
   const OPENAI = roomConfig.openai;
   const [openMenu, setOpenMenu] = React.useState(null);
   const [peonyPopup, setPeonyPopup] = React.useState(null); // { x, y }
@@ -111,7 +112,10 @@ function UserList({
               {!isAI && u.level >= AML && (
                 <span className="ul-owner-badge" title="大站長">👑</span>
               )}
-              {!isAI && u.level >= ANL && u.level < AML && (
+              {!isAI && u.level === MINI_AML && u.level < AML && (
+                <span className="ul-mini-owner-badge" title="小站長">🥈</span>
+              )}
+              {!isAI && u.level >= ANL && u.level < AML && u.level !== MINI_AML && (
                 <span className="ul-admin-badge" title="管理員">🔱</span>
               )}
               &nbsp;

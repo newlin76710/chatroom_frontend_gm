@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./AdminLoginLogPanel.css"; // 直接沿用樣式
 
-import { BACKEND } from "../../shared/roomConfig";
+import { BACKEND, roomConfig } from "../../shared/roomConfig";
 import { countryZh } from "../../shared/countryZh";
 import DraggablePanel from "../../shared/DraggablePanel";
 
@@ -15,7 +15,7 @@ export default function AdminOnlineIPPanel({ myLevel, token }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  if (myLevel < 98) return null;
+  if (myLevel < (roomConfig.mini_admin_level || 98)) return null;
 
   const load = async () => {
     setLoading(true);

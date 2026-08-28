@@ -2,6 +2,7 @@ const _cfg = {
   room_name:           null,
   admin_max_level:     99,
   admin_min_level:     91,
+  mini_admin_level:    98,
   openai:              false,
   show_ip:             true,
   open_peony:          false,

@@ -1327,7 +1327,7 @@ export default function ChatApp() {
               {isMember && (
                 <div className="trade-apple">
                   <div className="trade-apple-label" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    {level >= AML && (
+                    {level >= (roomConfig.mini_admin_level || 98) && (
                       <button className="admin-btn" onClick={() => setShowAppleSetting(true)}>⚙️ 設定</button>
                     )}
                     {level >= ANL && (

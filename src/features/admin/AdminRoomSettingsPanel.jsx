@@ -163,6 +163,20 @@ export default function AdminRoomSettingsPanel({ token }) {
           （中文長度，中文最多 {Number(settings.nickname_max_length) || 10} 個字，英數字最多 {(Number(settings.nickname_max_length) || 10) * 2} 個字）
         </span>
       </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>小站長等級門檻</span>
+        <input
+          type="number"
+          min={roomConfig.admin_min_level || 91}
+          max={roomConfig.admin_max_level || 99}
+          value={settings.mini_admin_level ?? 98}
+          onChange={e => setSettings(s => ({ ...s, mini_admin_level: Number(e.target.value) }))}
+          style={{ width: 70, padding: "5px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }}
+        />
+        <span style={{ fontSize: 12, color: "#888" }}>
+          （{roomConfig.admin_min_level || 91}-{roomConfig.admin_max_level || 99}，達此等級可設定遊戲/經濟類項目，但不可調整他人等級/金幣、不可更改聊天室設定、看不到發言紀錄）
+        </span>
+      </div>
       {settings.currency_name === "金蘋果" && (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>開啟金牡丹</span>

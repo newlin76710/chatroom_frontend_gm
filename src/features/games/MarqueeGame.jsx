@@ -7,12 +7,26 @@ const VISIBLE = VISIBLE_SIDES * 2 + 1; // 共 3 個
 const RESULT_DISPLAY_MS = 6000; // 結果畫面顯示多久後自動關閉
 const FALLBACK_BUFFER_MS = 3000; // 保底逾時的緩衝：房間設定的秒數到了再多等這麼久還沒收到 marqueeEnd 就強制關閉
 
+// 洗牌用（Fisher–Yates）：跑動名單原本是 userList 依帳號/等級排序後的順序，如果直接拿來當
+// 跑馬燈跑動順序，秒數不夠長、跑不完一輪時，畫面就會一直重複顯示排序最前面（帳號、高等級）
+// 的那幾個人，讓人誤以為「中獎的都是特定那幾個人」——實際中獎名單是後端另外抽的，跟這個
+// 顯示順序無關，但畫面觀感上很容易被誤解，所以開新一輪時洗牌一次，讓跑動順序跟等級脫鉤。
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 export default function MarqueeGame({ socket, name, userList }) {
   const [visible, setVisible] = useState(false);
   const [phase, setPhase] = useState("running"); // running | result（只有 visible 時才有意義）
   const [reward, setReward] = useState(0);
   const [winner, setWinner] = useState(null);
   const [tick, setTick] = useState(0);
+  const [reelOrder, setReelOrder] = useState([]); // 這一輪跑動順序（洗牌過，跟等級排序脫鉤）
 
   const tickIntervalRef = useRef(null);
   const closeTimerRef = useRef(null);
@@ -56,6 +70,7 @@ export default function MarqueeGame({ socket, name, userList }) {
     setReward(r);
     setWinner(null);
     setTick(0);
+    setReelOrder(shuffle(participantsRef.current));
     setVisible(true);
     tickIntervalRef.current = setInterval(() => setTick((t) => t + 1), tickMs);
     if (durationMs) {
@@ -97,7 +112,7 @@ export default function MarqueeGame({ socket, name, userList }) {
 
   if (!visible) return null;
 
-  const n = participants.length;
+  const n = reelOrder.length;
   const currentIdx = n > 0 ? tick % n : 0;
 
   const displayItems =
@@ -105,7 +120,7 @@ export default function MarqueeGame({ socket, name, userList }) {
       ? Array.from({ length: VISIBLE }, (_, i) => {
           const offset = i - VISIBLE_SIDES;
           const idx = ((currentIdx + offset) % n + n) % n;
-          return { name: participants[idx], isCenter: offset === 0 };
+          return { name: reelOrder[idx], isCenter: offset === 0 };
         })
       : [];
 
