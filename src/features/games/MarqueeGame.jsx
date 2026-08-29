@@ -129,7 +129,7 @@ export default function MarqueeGame({ socket, name, userList }) {
       <button className="mq-close" onClick={close} title="關閉">✖</button>
       <div className="mq-header">
         <span className="mq-title">🎰 跑馬燈抽獎</span>
-        <span className="mq-prize">獎品 {reward} 顆{roomConfig.currency_name}</span>
+        <span className="mq-prize">獎品 {reward} {roomConfig.currency_unit}{roomConfig.currency_name}</span>
       </div>
 
       {phase === "running" && n > 0 && (
@@ -158,7 +158,7 @@ export default function MarqueeGame({ socket, name, userList }) {
               <div className={`mq-winner-name${winner === name ? " is-me" : ""}`}>
                 🎉 {winner}
               </div>
-              <div className="mq-winner-reward">獲得 {reward} 顆{roomConfig.currency_name}</div>
+              <div className="mq-winner-reward">獲得 {reward} {roomConfig.currency_unit}{roomConfig.currency_name}</div>
               {winner === name && (
                 <div className="mq-congrats">恭喜你中獎了！</div>
               )}

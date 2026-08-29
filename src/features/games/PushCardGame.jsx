@@ -175,7 +175,7 @@ export default function PushCardGame({ socket, token, name, apples }) {
               value={betInput}
               onChange={(e) => setBetInput(e.target.value)}
             />
-            <span>顆（{minBet}~{maxBet}）</span>
+            <span>{roomConfig.currency_unit}（{minBet}~{maxBet}）</span>
           </div>
           {joinError && <p className="pcg-error">{joinError}</p>}
           <div className="pcg-actions">
@@ -205,11 +205,11 @@ export default function PushCardGame({ socket, token, name, apples }) {
             </div>
           </div>
           {outcome.win ? (
-            <p className="pcg-win">🎉 你比較大！下注 {outcome.myBet} 顆，1 賠 1 拿回 {outcome.myBet * 2} 個{roomConfig.currency_name}</p>
+            <p className="pcg-win">🎉 你比較大！下注 {outcome.myBet} {roomConfig.currency_unit}，1 賠 1 拿回 {outcome.myBet * 2} 個{roomConfig.currency_name}</p>
           ) : outcome.tie ? (
-            <p className="pcg-lose">跟站長平手（平手算站長贏），下注的 {outcome.myBet} 顆歸系統</p>
+            <p className="pcg-lose">跟站長平手（平手算站長贏），下注的 {outcome.myBet} {roomConfig.currency_unit}歸系統</p>
           ) : (
-            <p className="pcg-lose">沒有比站長大，下注的 {outcome.myBet} 顆歸系統</p>
+            <p className="pcg-lose">沒有比站長大，下注的 {outcome.myBet} {roomConfig.currency_unit}歸系統</p>
           )}
         </div>
       )}

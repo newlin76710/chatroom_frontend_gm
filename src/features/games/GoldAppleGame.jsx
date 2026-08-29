@@ -502,15 +502,15 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
           <ul className="gag-warn-rules">
             {isGame1 ? (
               <>
-                <li>{roomConfig.currency_emoji} 多顆{roomConfig.currency_name}在畫面中<strong>飛來飛去</strong></li>
+                <li>{roomConfig.currency_emoji} 多{roomConfig.currency_unit}{roomConfig.currency_name}在畫面中<strong>飛來飛去</strong></li>
                 <li>🕸 將網子<strong>移到{roomConfig.currency_name}上方</strong>按下撈起</li>
                 <li>👤 每位玩家<strong>各自撈自己的{roomConfig.currency_name}</strong></li>
-                <li>⏱ 60 秒內<strong>撈越多越好</strong>，上限依當場設定顆數</li>
-                <li>🏆 每顆{roomConfig.currency_name}獲得固定{roomConfig.currency_name}獎勵</li>
+                <li>⏱ 60 秒內<strong>撈越多越好</strong>，上限依當場設定{roomConfig.currency_unit}數</li>
+                <li>🏆 每{roomConfig.currency_unit}{roomConfig.currency_name}獲得固定{roomConfig.currency_name}獎勵</li>
               </>
             ) : (
               <>
-                <li>{roomConfig.currency_emoji} 一顆<strong>大{roomConfig.currency_name}</strong>在畫面中彈跳</li>
+                <li>{roomConfig.currency_emoji} 一{roomConfig.currency_unit}<strong>大{roomConfig.currency_name}</strong>在畫面中彈跳</li>
                 <li>👆 <strong>第一個點到</strong>的人獲得全部獎勵</li>
                 <li>⚡ 手速決定勝負，全力搶！</li>
               </>
@@ -542,7 +542,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
           {isSettling ? (
             <>
               <p>正在等待結算結果...</p>
-              <p>你撈到了 {localCaughtRef.current.size} 顆（最終以伺服器紀錄為準）</p>
+              <p>你撈到了 {localCaughtRef.current.size} {roomConfig.currency_unit}（最終以伺服器紀錄為準）</p>
             </>
           ) : entries.length > 0 ? (
             <>
@@ -550,7 +550,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
               <ul>
                 {entries.map(([uname, count]) => (
                   <li key={uname} className={uname === name ? "me" : ""}>
-                    {uname}：{count} 顆{uname === name ? " 🎉" : ""}
+                    {uname}：{count} {roomConfig.currency_unit}{uname === name ? " 🎉" : ""}
                   </li>
                 ))}
               </ul>
@@ -575,7 +575,7 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
               <h2>🎉 有人撈到大{roomConfig.currency_name}！</h2>
               <p>
                 <span className="gag-winner-name">{won}</span>
-                {" "}獲得 <strong style={{ color: "gold" }}>{g2Result.reward ?? g2Reward}</strong> 顆{roomConfig.currency_name}！
+                {" "}獲得 <strong style={{ color: "gold" }}>{g2Result.reward ?? g2Reward}</strong> {roomConfig.currency_unit}{roomConfig.currency_name}！
                 {won === name && <span style={{ display: "block", marginTop: 8, color: "#7fff7f" }}>恭喜你！</span>}
               </p>
             </>
@@ -606,8 +606,8 @@ export default function GoldAppleGame({ socket, token, name, setApples }) {
           <>
             <span className="gag-timer">{timeLeft}</span>
             <span className="gag-timer-unit">秒</span>
-            <span className="gag-hint">已撈 {g1CaughtCount} / {g1CatchLimit || g1AppleIds.length} 顆</span>
-            <span className="gag-hint">移動網子靠近{roomConfig.currency_name}來撈！每顆 {g1Reward} 個{roomConfig.currency_emoji}</span>
+            <span className="gag-hint">已撈 {g1CaughtCount} / {g1CatchLimit || g1AppleIds.length} {roomConfig.currency_unit}</span>
+            <span className="gag-hint">移動網子靠近{roomConfig.currency_name}來撈！每{roomConfig.currency_unit} {g1Reward} 個{roomConfig.currency_emoji}</span>
           </>
         )}
         {phase === "game2" && (

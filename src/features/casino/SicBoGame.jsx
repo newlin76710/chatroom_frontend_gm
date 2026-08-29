@@ -167,7 +167,7 @@ export default function SicBoGame({ token, apples, onApplesChange }) {
     if (rolling) return;
     if ((apples ?? 0) < selectedChip) return;
     const curBet = bets[type] || 0;
-    if (curBet + selectedChip > maxBet) { setError(`單注最高 ${maxBet} 顆`); return; }
+    if (curBet + selectedChip > maxBet) { setError(`單注最高 ${maxBet} ${roomConfig.currency_unit}`); return; }
     setError("");
     setBets(prev => ({ ...prev, [type]: curBet + selectedChip }));
   }

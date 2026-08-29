@@ -95,7 +95,7 @@ export function useMessages() {
           type: "system",
         },
         target: msg.target,
-        message: `${msg.amount} 顆${msg.item || roomConfig.currency_name} 以示獎勵`,
+        message: `${msg.amount} ${roomConfig.currency_unit}${msg.item || roomConfig.currency_name} 以示獎勵`,
         item: msg.item || roomConfig.currency_name,
         timestamp: new Date(msg.created_at).toLocaleTimeString(),
         mode: "reward",
@@ -127,7 +127,7 @@ export function useMessages() {
     if (!data) return;
     const { winner, amount } = data;
     const text = winner
-      ? `🎊 ${roomConfig.currency_name}樂透！${winner} 正在上麥，獲得 ${amount} 顆${roomConfig.currency_name}！`
+      ? `🎊 ${roomConfig.currency_name}樂透！${winner} 正在上麥，獲得 ${amount} ${roomConfig.currency_unit}${roomConfig.currency_name}！`
       : `🎊 ${roomConfig.currency_name}樂透時刻到！可惜無人上麥，本次樂透未能送出。`;
     setMessages((prev) =>
       appendMsg(prev, {

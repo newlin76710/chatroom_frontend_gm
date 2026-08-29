@@ -209,7 +209,7 @@ function ActionButtons({ game, onAction, loading, apples }) {
         <div className="bj-insurance-prompt">
           莊家亮出 A，是否投保？
           <strong className="bj-insurance-cost">
-            （花費 {insuranceCost} 顆{roomConfig.currency_name}，若莊家 BlackJack 賠付 {insuranceCost * 2} 顆）
+            （花費 {insuranceCost} {roomConfig.currency_unit}{roomConfig.currency_name}，若莊家 BlackJack 賠付 {insuranceCost * 2} {roomConfig.currency_unit}）
           </strong>
           {!canAffordInsurance && insuranceCost > 0 && (
             <span className="bj-insurance-warning"> ⚠️ {roomConfig.currency_name}不足</span>
@@ -310,10 +310,10 @@ function ResultSummary({ game, onReset }) {
       )}
       <div className={`bj-result-total ${net >= 0 ? "pos" : "neg"}`}>
         {net > 0
-          ? <span>🎉 淨贏 <strong>{net}</strong> 顆{roomConfig.currency_name}！</span>
+          ? <span>🎉 淨贏 <strong>{net}</strong> {roomConfig.currency_unit}{roomConfig.currency_name}！</span>
           : net === 0
           ? <span>持平，下次再試！</span>
-          : <span>😢 淨輸 <strong>{Math.abs(net)}</strong> 顆{roomConfig.currency_name}</span>
+          : <span>😢 淨輸 <strong>{Math.abs(net)}</strong> {roomConfig.currency_unit}{roomConfig.currency_name}</span>
         }
         {dealerHasBJ && <div className="bj-dealer-bj-note">莊家天牌 BlackJack！</div>}
       </div>
@@ -343,7 +343,7 @@ function HelpPanel({ onClose }) {
             <tr>
               <td>投保</td>
               <td>莊家亮A時可投保（花費原注一半），若莊家有BlackJack則 1賠2；若無則保險金沒收<br/>
-              <strong>※ 下注需至少 2 顆才能投保</strong></td>
+              <strong>※ 下注需至少 2 {roomConfig.currency_unit}才能投保</strong></td>
             </tr>
           </tbody>
         </table>
@@ -379,7 +379,7 @@ function HelpPanel({ onClose }) {
         <p className="bj-help-note">
           ⚠️ 莊家抽牌規則：點數 &lt;17 或軟17時補牌，其餘停牌。<br />
           ⚠️ 分牌後的A只各取一張，不可再補牌。<br />
-          ⚠️ 投保需下注至少 2 顆{roomConfig.currency_name}。
+          ⚠️ 投保需下注至少 2 {roomConfig.currency_unit}{roomConfig.currency_name}。
         </p>
       </div>
     </div>
@@ -606,7 +606,7 @@ export default function BlackjackGame({ token, apples, onApplesChange }) {
                 ? `未開放 (${oh} – ${ch})`
                 : loading
                 ? "⏳ 開局中…"
-                : `🃏 開始遊戲（下注 ${bet} 顆）`}
+                : `🃏 開始遊戲（下注 ${bet} ${roomConfig.currency_unit}）`}
             </button>
           </>
         )}
@@ -621,7 +621,7 @@ export default function BlackjackGame({ token, apples, onApplesChange }) {
           <div className="bj-current-bet">
             已下注：{(game.betAmounts || []).reduce((s,b)=>s+b,0)}
             {(game.insuranceBet || 0) > 0 && ` + 保險 ${game.insuranceBet}`}
-            &nbsp;顆{roomConfig.currency_name}
+            &nbsp;{roomConfig.currency_unit}{roomConfig.currency_name}
           </div>
         )}
 

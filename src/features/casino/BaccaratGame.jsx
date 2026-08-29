@@ -163,9 +163,9 @@ function ResultBadge({ result, net, totalWin, betType, betAmount, settling }) {
       <div className="bac-result-title">{title}</div>
       <div className={`bac-result-net ${net >= 0 ? "win" : "lose"}`}>{net >= 0 ? "+" : ""}{net ?? 0}</div>
       <div className="bac-result-meta">
-        押注 {area?.zh || "-"} {betAmount ?? 0} 顆
+        押注 {area?.zh || "-"} {betAmount ?? 0} {roomConfig.currency_unit}
         <br />
-        入帳 {totalWin ?? 0} 顆
+        入帳 {totalWin ?? 0} {roomConfig.currency_unit}
       </div>
     </div>
   );

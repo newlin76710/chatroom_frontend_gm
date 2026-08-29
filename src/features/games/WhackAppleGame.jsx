@@ -495,14 +495,14 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
               {myRank > 0 && (
                 <p className="wag-my-rank">
                   你排第 <strong>{myRank}</strong> 名，打到{" "}
-                  <strong style={{ color: "gold" }}>{myCount}</strong> 顆{roomConfig.currency_emoji}
+                  <strong style={{ color: "gold" }}>{myCount}</strong> {roomConfig.currency_unit}{roomConfig.currency_emoji}
                   {myCount > 0 && <span style={{ color: "#7fff7f" }}> 已入帳！</span>}
                 </p>
               )}
               <ul>
                 {entries.map(([uname, count], idx) => (
                   <li key={uname} className={uname === name ? "me" : ""}>
-                    {idx + 1}. {uname}：{count} 顆{uname === name ? " 🎉" : ""}
+                    {idx + 1}. {uname}：{count} {roomConfig.currency_unit}{uname === name ? " 🎉" : ""}
                   </li>
                 ))}
               </ul>
@@ -540,7 +540,7 @@ export default function WhackAppleGame({ socket, token, name, setApples }) {
         <span className={`wag-timer ${urgency}`}>{timeLeft}</span>
         <span className="wag-timer-unit">秒</span>
         <span className="wag-score">{roomConfig.currency_emoji} ×{myScore}</span>
-        <span className="wag-hint">移動槌子打{roomConfig.currency_name}！每顆得 {reward} 個{roomConfig.currency_emoji}</span>
+        <span className="wag-hint">移動槌子打{roomConfig.currency_name}！每{roomConfig.currency_unit}得 {reward} 個{roomConfig.currency_emoji}</span>
       </div>
 
       {/* Combo 計數器（連續 2 次以上顯示） */}

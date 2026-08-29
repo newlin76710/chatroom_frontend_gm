@@ -401,7 +401,7 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
           </div>
 
           <button type="button" className="pusher-launch" onClick={quickDrop} disabled={!open || (!token && !demo)}>
-            投幣 (每次 1 顆)
+            投幣 (每次 1 {roomConfig.currency_unit})
           </button>
           {dailyCapInfo && dailyCapInfo.netProfit >= dailyCapInfo.cap && (
             <div className="pusher-tips">今日淨賺已達上限，之後掉落的獎品不會再入帳，但仍可以繼續投幣。</div>

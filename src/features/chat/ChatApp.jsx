@@ -515,7 +515,7 @@ export default function ChatApp() {
             ? balance - credited
             : "?";
         addSystemMessage({
-          message: `${sourceLabel(source)} 獲得 ${credited} 顆，原本 ${before} 顆，入帳後 ${balance ?? "?"} 顆`,
+          message: `${sourceLabel(source)} 獲得 ${credited} ${roomConfig.currency_unit}，原本 ${before} ${roomConfig.currency_unit}，入帳後 ${balance ?? "?"} ${roomConfig.currency_unit}`,
           type: "currencyAward",
         });
       }

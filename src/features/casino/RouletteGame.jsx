@@ -611,19 +611,19 @@ export default function RouletteGame({ token, onApplesChange }) {
             </span>
             <button className="rlt-amt-btn" onClick={() => setBetAmount(a => Math.min(maxBet, a + 1))} disabled={phase !== "idle"}>＋</button>
           </div>
-          <span className="rlt-max-note">最多 {maxBet} 顆</span>
+          <span className="rlt-max-note">最多 {maxBet} {roomConfig.currency_unit}</span>
         </div>
 
         {phase === "idle" && selectedBets.length > 0 && (
           <div className="rlt-selection">
-            <span>已選 {selectedBets.length} 注 × {betAmount} = <strong>{totalCost}</strong> 顆</span>
+            <span>已選 {selectedBets.length} 注 × {betAmount} = <strong>{totalCost}</strong> {roomConfig.currency_unit}</span>
             <button className="rlt-clear-btn" onClick={() => { setSelectedKeys(new Set()); setSelectedBets([]); }}>清除</button>
           </div>
         )}
 
         {phase === "idle" && (
           <button className="rlt-spin-btn" onClick={placeBet} disabled={!open || selectedBets.length === 0}>
-            {!open ? `未開放 (${oh} – ${ch})` : `🎰 開始旋轉${selectedBets.length > 0 ? ` (共 ${totalCost} 顆)` : ""}`}
+            {!open ? `未開放 (${oh} – ${ch})` : `🎰 開始旋轉${selectedBets.length > 0 ? ` (共 ${totalCost} ${roomConfig.currency_unit})` : ""}`}
           </button>
         )}
         {phase === "spinning" && (

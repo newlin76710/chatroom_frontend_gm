@@ -543,12 +543,12 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
         <div className="clw-result">
           <h2>🎉 遊戲結束</h2>
           <p className="clw-my-rank">
-            你夾了 <strong>{myScore}</strong> 顆{roomConfig.currency_name}
+            你夾了 <strong>{myScore}</strong> {roomConfig.currency_unit}{roomConfig.currency_name}
           </p>
           <ul>
             {sortedScores.map(([n, s], i) => (
               <li key={n} className={n === name ? "me" : ""}>
-                {i + 1}. {n}：{s} 顆
+                {i + 1}. {n}：{s} {roomConfig.currency_unit}
               </li>
             ))}
           </ul>
@@ -568,7 +568,7 @@ export default function ClawMachineGame({ socket, token, name, setApples }) {
           {timeLeft}<span className="clw-timer-unit">秒</span>
         </span>
         <span className="clw-score">
-          <img src={APPLE_IMG} className="clw-score-icon" alt="" /> {myScore} 顆
+          <img src={APPLE_IMG} className="clw-score-icon" alt="" /> {myScore} {roomConfig.currency_unit}
         </span>
         <span className="clw-hint">按「抓！」或空白鍵落下爪子</span>
       </div>

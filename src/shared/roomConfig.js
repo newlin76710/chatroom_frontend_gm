@@ -27,6 +27,11 @@ const _cfg = {
 
 export const roomConfig = _cfg;
 
+Object.defineProperty(_cfg, "currency_unit", {
+  get() { return this.currency_name === "金幣" ? "枚" : "顆"; },
+  enumerable: true,
+});
+
 export const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:10000";
 export const RN      = import.meta.env.VITE_ROOM_NAME   || "windsong";
 

@@ -165,7 +165,7 @@ export default function AdminLevelPanel({ token, myLevel, minLevel }) {
     };
 
     const handleGoldChange = async (username, newGold) => {
-        if (!window.confirm(`確定將 ${username} 的${roomConfig.currency_name}設為 ${newGold} 顆嗎？`)) return;
+        if (!window.confirm(`確定將 ${username} 的${roomConfig.currency_name}設為 ${newGold} ${roomConfig.currency_unit}嗎？`)) return;
         const reason = window.prompt("請輸入調整原因（必填）", "");
         if (!reason || !reason.trim()) { alert("調整原因為必填，操作已取消"); return; }
 

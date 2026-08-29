@@ -147,7 +147,7 @@ export default function Login() {
 
       // ⭐ 首次登入獲得 1 顆金蘋果
       if (data.reward_apple > 0) {
-        alert(`🎉 本日首次登入獲得 ${data.reward_apple} 顆${roomConfig.currency_name}！`);
+        alert(`🎉 本日首次登入獲得 ${data.reward_apple} ${roomConfig.currency_unit}${roomConfig.currency_name}！`);
       }
       navigate("/chat");
     } catch (e) {
