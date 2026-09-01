@@ -328,7 +328,17 @@ function MahjongGame({ socket, room, name, apples, onActiveChange }, ref) {
     socket.emit("mahjongGetTables");
 
     const onTableList = (list) => setTables(list);
-    const onState = (payload) => { setSt(payload); setClaimAsk(null); setPostHand(null); setView("game"); };
+    // 後端出牌後會先對每個能吃碰槓胡的人各自 emit mahjongClaimAsk，再對全桌 emit
+    // mahjongState 廣播盤面；兩個事件送達順序不保證誰先誰後，若這裡無條件把 claimAsk
+    // 清空，會把剛設定好、甚至還沒設定的 claimAsk 洗掉，導致吃碰槓胡按鈕整個不見。
+    // payload.claim 非空代表這輪的吃碰槓胡尚未結算完，此時不動 claimAsk；等它變 null
+    // （已結算）才清掉，這樣不管兩個事件誰先到都能正確顯示。
+    const onState = (payload) => {
+      setSt(payload);
+      setClaimAsk(prev => (payload.claim ? prev : null));
+      setPostHand(null);
+      setView("game");
+    };
     const onClaimAsk = (payload) => setClaimAsk(payload);
     const onResult = (payload) => {
       setResult(payload);
