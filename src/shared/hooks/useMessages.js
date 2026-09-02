@@ -144,11 +144,12 @@ export function useMessages() {
   // 金牡丹贈送訊息
   const addPeonyMessage = useCallback((data) => {
     if (!data) return;
-    const { from, to } = data;
+    const { from, to, amount } = data;
+    const qty = amount || 1;
     setMessages((prev) =>
       appendMsg(prev, {
         user: { name: "系統", avatar: SYSTEM_AVATAR, type: "system" },
-        message: `🌸 ${from} 送給 ${to} 1 朵金牡丹！`,
+        message: `🌸 ${from} 送給 ${to} ${qty} 朵金牡丹！`,
         timestamp: new Date().toLocaleTimeString(),
         type: "peony",
         from,

@@ -859,6 +859,7 @@ export default function ChatApp() {
 
   const sendPeony = useCallback(async () => {
     if (!target) { alert("請選擇對象"); return; }
+    const amount = Math.max(1, Math.floor(appleAmount) || 1);
     setSendingPeony(true);
     try {
       const res = await fetch(`${BACKEND}/admin/send-peony`, {
@@ -867,7 +868,7 @@ export default function ChatApp() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ targetUsername: target }),
+        body: JSON.stringify({ targetUsername: target, amount }),
       });
       const data = await res.json();
       if (!res.ok || data.success === false) {
@@ -878,7 +879,7 @@ export default function ChatApp() {
     } finally {
       setSendingPeony(false);
     }
-  }, [target, token]);
+  }, [target, token, appleAmount]);
 
   const focusInput = useCallback(() => {
     requestAnimationFrame(() => inputRef.current?.focus());
@@ -1384,7 +1385,7 @@ export default function ChatApp() {
 
                       {level >= AML && roomConfig.open_peony && (
                         <button disabled={sendingPeony} onClick={sendPeony} className="apple-send-btn" style={{ backgroundColor: "#87CEEB" }}>
-                          送金牡丹{" "}
+                          送金牡丹{appleAmount > 1 ? ` ×${appleAmount}` : ""}{" "}
                           <img src="/gifts/peony.gif" alt="金牡丹" style={{ width: 20, height: 20, marginTop: -5 }} />
                         </button>
                       )}
