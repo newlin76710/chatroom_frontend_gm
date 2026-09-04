@@ -137,18 +137,33 @@ function MessageList({
             }
           }
 
+          // 處理系統訊息：【莊家：xxx】/【主持：xxx】標籤（推牌、跑馬燈開局公告）
+          let dealerLabel = null;
+          let dealerName = null;
+          let dealerRest = "";
+          if (isSystem && messageText) {
+            const dealerMatch = messageText.match(/^(.*?)【(莊家|主持)：(.+?)】(.*)$/s);
+            if (dealerMatch) {
+              const [, before, label, dName, after] = dealerMatch;
+              dealerLabel = label;
+              dealerName = dName;
+              dealerRest = after;
+              messageText = before; // 保留標籤前面的文字（例如表情符號），單獨渲染
+            }
+          }
+
           const isRelatedToMe =
             isSelf ||
             (m.mode === "private" && (userName === name || targetName === name)) ||
             (m.mode === "publicTarget" && (userName === name || targetName === name)) ||
-            (isSystem && relatedUser === name) ||
+            (isSystem && (relatedUser === name || dealerName === name)) ||
             ((isTransaction || isGift) && (userName === name || targetName === name));
 
           // 顏色
           let color = "#eee";
           if (m.color) color = m.color;
           else if (isRPS || isPingpong) color = "#ffd700";
-          else if (isSystem && relatedUser) color = "#ff9900";
+          else if (isSystem && (relatedUser || dealerName)) color = "#ff9900";
           else if (isTransaction || isGift) color = "#ff9900";
           else if (isSystem) color = "#BBECE2";
           else if (isSelf) color = "#fff";
@@ -251,6 +266,14 @@ function MessageList({
                       )
                     )}
                     {isTransaction && <span> {messageText}</span>}
+                  </>
+                ) : isSystem && dealerName ? (
+                  <>
+                    <span>系統：{messageText}【{dealerLabel}：</span>
+                    <span style={{ fontWeight: "bold", cursor: "pointer", color: getUserColor(dealerName) }} onClick={() => handleSelectUser(dealerName)}>
+                      {dealerName}
+                    </span>
+                    <span style={{ color: "#ff9900" }}>】{dealerRest}</span>
                   </>
                 ) : isSystem && relatedUser ? (
                   <>
