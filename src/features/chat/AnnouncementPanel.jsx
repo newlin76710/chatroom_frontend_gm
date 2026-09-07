@@ -9,7 +9,7 @@ export default function AnnouncementPanel({ open, onClose, myLevel, token }) {
   const [loading, setLoading] = useState(false);
   const [color, setColor] = useState("#ffffff");
   const panelRef = useRef(null);
-  const isAdmin = myLevel >= (roomConfig.admin_max_level || 99);
+  const isAdmin = myLevel >= (roomConfig.mini_admin_level || 98);
 
   const pos = useRef({ x: 20, y: 80, offsetX: 0, offsetY: 0, dragging: false });
 
