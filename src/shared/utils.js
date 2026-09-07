@@ -25,6 +25,13 @@ const GAME_BROADCAST_PATTERNS = [
   /^🎉 .+搶到了.+獲得/,            // 搶金蘋果（單顆）結果
   /^🎉 恭喜 .+ 中了跑馬燈大獎/,     // 跑馬燈中獎結果
   /^🎰 跑馬燈結束，沒有人在線上/,   // 跑馬燈無人參加
+  /在21點獲勝，贏得/,              // 21點中獎廣播（blackjackRouter.js）
+  /在輪盤直注數字.+，獲得/,         // 輪盤中獎廣播（rouletteRouter.js）
+  /在百家樂押.+獲勝，淨贏/,         // 百家樂中獎廣播（baccaratRouter.js）
+  /在老虎機中贏得/,                // 拉霸中獎廣播（slot.js）
+  /在骰寶中贏得/,                  // 骰寶中獎廣播（sicbo.js）
+  /押中.+號車冠軍，獲得/,          // 賽車中獎廣播（carRaceRouter.js）
+  /通過殭屍生存戰三關全破，獲得/,   // 殭屍生存全破獎勵廣播（zombieRunRouter.js）
 ];
 
 export function isGameBroadcastMessage(text) {
