@@ -50,16 +50,18 @@ const TAB_ENABLED_KEY = {
   bigtwo: "bigtwo_enabled",
   xiangqi: "xiangqi_enabled",
 };
-const TABS = ALL_TABS.filter(t => {
-  const cfgKey = TAB_ENABLED_KEY[t.key];
-  return !cfgKey || roomConfig[cfgKey] !== false;
-});
-
 // 麻將/大老二/象棋是「佔用一桌」型遊戲，切換分頁前要跟休閒廳原本的邏輯一樣跳確認，
 // 避免正在對局中被不小心切走造成中離損失；其餘遊戲各自獨立，不需要這個確認。
 const TABLE_GAME_LABEL = { mahjong: "麻將", bigtwo: "大老二", xiangqi: "象棋" };
 
 export default function GameHallPanel({ token, apples, onApplesChange, socket, room, name, open, onClose }) {
+  // 每次 render 都重新算，不要放在 module scope——roomConfig 是 loadRoomConfig() 打完 API
+  // 才會被 Object.assign 填值的可變物件，如果在 import 當下（API 還沒回來）就算好 TABS
+  // 並存成 module 常數，之後 roomConfig 就算真的更新了，這個列表也永遠不會重新計算。
+  const TABS = ALL_TABS.filter(t => {
+    const cfgKey = TAB_ENABLED_KEY[t.key];
+    return !cfgKey || roomConfig[cfgKey] !== false;
+  });
   // 預設分頁：一般是推幣機，但如果連推幣機都被關閉，退而求其次選第一個還有開的分頁
   const [tab, setTab] = useState(() => TABS.find(t => t.key === "pusher") ? "pusher" : (TABS[0]?.key || "pusher"));
   const { windowRef, onPointerDown } = useDraggableWindow();

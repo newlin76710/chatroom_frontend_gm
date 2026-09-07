@@ -117,17 +117,19 @@
 
 /* 🎖️ 高級會員徽章（暱稱後面） */
 .ul-premium-badge {
-  margin-left: 2px;
-  font-size: 16px;
+  margin-left: 1px;
+  margin-right: -5px;
+  font-size: 14px;
   line-height: 1;
   flex-shrink: 0;
   cursor: default;
 }
 
-/* 🔱 管理員徽章（91 級以上、未達站長級，暱稱後面） */
+/* 🔱 管理員徽章（91 級以上、未達站長級，暱稱後面）——這個 emoji 圖案本身右側留白較多，用負的 margin-right 裁掉多餘空白 */
 .ul-admin-badge {
-  margin-left: 2px;
-  font-size: 16px;
+  margin-left: -1px;
+  margin-right: -7px;
+  font-size: 14px;
   line-height: 1;
   flex-shrink: 0;
   cursor: default;
@@ -135,8 +137,9 @@
 
 /* 👑 大站長徽章（99 級 / admin_max_level 以上，暱稱後面） */
 .ul-owner-badge {
-  margin-left: 2px;
-  font-size: 16px;
+  margin-left: 1px;
+  margin-right: -5px;
+  font-size: 14px;
   line-height: 1;
   flex-shrink: 0;
   cursor: default;
@@ -144,8 +147,9 @@
 
 /* 🥈 小站長徽章（剛好 98 級，暱稱後面） */
 .ul-mini-owner-badge {
-  margin-left: 2px;
-  font-size: 16px;
+  margin-left: 1px;
+  margin-right: -5px;
+  font-size: 14px;
   line-height: 1;
   flex-shrink: 0;
   cursor: default;

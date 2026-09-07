@@ -17,7 +17,6 @@ const DEFAULT_SETTINGS = {
   close_min: 0,
   plate_speed: "normal",
   jackpotPool: 0,
-  pushBias: 1,
 };
 
 function pad2(value) {
@@ -130,12 +129,10 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
     sceneRef.current?.setExternalState({
       plateSpeed: settings.plate_speed || "normal",
       enabled: settings.enabled && open,
-      pushBias: settings.pushBias ?? 1,
     });
     controlsRef.current?.setState({
       plateSpeed: settings.plate_speed || "normal",
       enabled: settings.enabled && open,
-      pushBias: settings.pushBias ?? 1,
     });
   }, [settings, open]);
 
@@ -192,9 +189,6 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
     if (data.dailyCap != null) {
       setDailyCapInfo({ netProfit: Number(data.dailyNetProfit || 0), cap: Number(data.dailyCap || 100) });
     }
-    if (data.pushBias != null) {
-      setSettings((s) => (s ? { ...s, pushBias: data.pushBias } : s));
-    }
     setMessage("");
     return data;
   }, [demo, onApplesChange, token]);
@@ -239,9 +233,6 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
     if (data.jackpotHit) setJackpotPopup({ amount: data.jackpotAmount });
     if (data.dailyCap != null) {
       setDailyCapInfo({ netProfit: Number(data.dailyNetProfit || 0), cap: Number(data.dailyCap || 100) });
-    }
-    if (data.pushBias != null) {
-      setSettings((s) => (s ? { ...s, pushBias: data.pushBias } : s));
     }
     if (data.capped && data.message) {
       setMessage(data.message);
@@ -315,7 +306,6 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
         balance: applesRef.current,
         plateSpeed: settings.plate_speed || "normal",
         enabled: settings.enabled && open,
-        pushBias: settings.pushBias ?? 1,
       },
     });
     const scene = game.scene.getScene("PusherGameScene");
@@ -336,7 +326,6 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
       balance: apples ?? 0,
       plateSpeed: settings?.plate_speed || "normal",
       enabled: settings?.enabled && open,
-      pushBias: settings?.pushBias ?? 1,
     });
     controlsRef.current?.setState({
       bet: BET,
@@ -344,7 +333,6 @@ export default function PusherMachine({ token, apples, onApplesChange, demo = fa
       balance: apples ?? 0,
       plateSpeed: settings?.plate_speed || "normal",
       enabled: settings?.enabled && open,
-      pushBias: settings?.pushBias ?? 1,
     });
   }, [apples, open, position, settings]);
 

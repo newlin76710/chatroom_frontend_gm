@@ -71,7 +71,6 @@ export default class PusherGameScene extends Phaser.Scene {
       balance: 0,
       plateSpeed: "normal",
       enabled: true,
-      pushBias: 1,
     };
     this.aim = { active: false, x: CHUTE.x, y: CHUTE.y };
   }
@@ -506,9 +505,7 @@ export default class PusherGameScene extends Phaser.Scene {
       if (sprite.y < TABLE.back || sprite.y > TABLE.drop - 4) continue;
 
       const nearEdge = sprite.y > TABLE.drop - 120;
-      // pushBias 由後端依「目標回收率 vs 實際回收率」動態算出（見 pusherMachine.js
-      // computePushBias），只縮放這個助推力，不改變落幣區/感應區判定，維持物理手感
-      const edgeForce = nearEdge ? 0.0000012 * (this.state.pushBias || 1) : 0;
+      const edgeForce = nearEdge ? 0.0000012 : 0;
       if (edgeForce > 0) {
         this.matter.body.applyForce(sprite.body, sprite.body.position, {
           x: 0,
