@@ -2,6 +2,8 @@
 // 統一入口：整合原本娛樂城（21點/輪盤/骰寶/老虎機/百家樂）+ 遊樂場（推幣機/賽車/殭屍生存戰）
 // + 休閒廳（麻將/大老二/象棋）共 11 個遊戲成一個可拖曳浮動視窗，取代原本三個各自獨立、
 // 娛樂城/遊樂場又是全螢幕遮罩擋住聊天畫面的入口。
+// 全部 11 個遊戲各自都有獨立的「啟用」開關（room_settings 的 *_enabled 欄位，見
+// TAB_ENABLED_KEY），關閉時分頁直接從列表消失（不是保留分頁、內容顯示未開放那種）。
 import { lazy, Suspense, useCallback, useRef, useState } from "react";
 import "./GameHallPanel.css";
 import { useDraggableWindow } from "../../shared/hooks/useDraggableWindow";
@@ -19,7 +21,7 @@ const MahjongGame = lazy(() => import("../lounge/MahjongGame"));
 const BigTwoGame = lazy(() => import("../lounge/BigTwoGame"));
 const XiangqiGame = lazy(() => import("../lounge/XiangqiGame"));
 
-const TABS = [
+const ALL_TABS = [
   { key: "pusher",  label: "🎰 推幣機" },
   { key: "blackjack", label: "🃏 21點" },
   { key: "roulette", label: "🎡 輪盤" },
@@ -33,12 +35,33 @@ const TABS = [
   { key: "xiangqi", label: "♟️ 象棋" },
 ];
 
+// 每個分頁都有對應的 roomConfig「啟用」欄位，沒設定時預設當作開啟（跟其他 *_enabled
+// 欄位一致），關閉時整個分頁直接從列表消失，不是灰掉/停用中的樣子。
+const TAB_ENABLED_KEY = {
+  pusher: "pusher_enabled",
+  blackjack: "blackjack_enabled",
+  roulette: "roulette_enabled",
+  sicbo: "sicbo_enabled",
+  slot: "slot_enabled",
+  baccarat: "baccarat_enabled",
+  race: "race_enabled",
+  zombie: "zombie_enabled",
+  mahjong: "mahjong_enabled",
+  bigtwo: "bigtwo_enabled",
+  xiangqi: "xiangqi_enabled",
+};
+const TABS = ALL_TABS.filter(t => {
+  const cfgKey = TAB_ENABLED_KEY[t.key];
+  return !cfgKey || roomConfig[cfgKey] !== false;
+});
+
 // 麻將/大老二/象棋是「佔用一桌」型遊戲，切換分頁前要跟休閒廳原本的邏輯一樣跳確認，
-// 避免正在對局中被不小心切走造成中離損失；其餘 8 個遊戲各自獨立，不需要這個確認。
+// 避免正在對局中被不小心切走造成中離損失；其餘遊戲各自獨立，不需要這個確認。
 const TABLE_GAME_LABEL = { mahjong: "麻將", bigtwo: "大老二", xiangqi: "象棋" };
 
 export default function GameHallPanel({ token, apples, onApplesChange, socket, room, name, open, onClose }) {
-  const [tab, setTab] = useState("pusher");
+  // 預設分頁：一般是推幣機，但如果連推幣機都被關閉，退而求其次選第一個還有開的分頁
+  const [tab, setTab] = useState(() => TABS.find(t => t.key === "pusher") ? "pusher" : (TABS[0]?.key || "pusher"));
   const { windowRef, onPointerDown } = useDraggableWindow();
 
   const mahjongRef = useRef(null);
@@ -102,39 +125,61 @@ export default function GameHallPanel({ token, apples, onApplesChange, socket, r
           對局狀態才不會因為切分頁或關閉遊戲廳而消失 */}
       <div className="gamehall-body">
         <Suspense fallback={null}>
-          <div style={{ display: tab === "pusher" ? "contents" : "none" }}>
-            <PusherMachine token={token} apples={apples} onApplesChange={onApplesChange} visible={open && tab === "pusher"} />
-          </div>
-          <div style={{ display: tab === "blackjack" ? "block" : "none" }}>
-            <BlackjackGame token={token} apples={apples} onApplesChange={onApplesChange} />
-          </div>
-          <div style={{ display: tab === "roulette" ? "block" : "none" }}>
-            <RouletteGame token={token} apples={apples} onApplesChange={onApplesChange} />
-          </div>
-          <div style={{ display: tab === "sicbo" ? "block" : "none" }}>
-            <SicBoGame token={token} apples={apples} onApplesChange={onApplesChange} />
-          </div>
-          <div style={{ display: tab === "slot" ? "block" : "none" }}>
-            <SlotMachine token={token} apples={apples} onApplesChange={onApplesChange} />
-          </div>
-          <div style={{ display: tab === "baccarat" ? "block" : "none" }}>
-            <BaccaratGame token={token} apples={apples} onApplesChange={onApplesChange} />
-          </div>
-          <div style={{ display: tab === "race" ? "block" : "none" }}>
-            <RacingGame token={token} apples={apples} onApplesChange={onApplesChange} />
-          </div>
-          <div style={{ display: tab === "zombie" ? "block" : "none" }}>
-            <ZombieSurvivalGame token={token} apples={apples} onApplesChange={onApplesChange} />
-          </div>
-          <div style={{ display: tab === "mahjong" ? "block" : "none" }}>
-            <MahjongGame ref={mahjongRef} socket={socket} room={room} name={name} apples={apples} onActiveChange={onMahjongActiveChange} />
-          </div>
-          <div style={{ display: tab === "bigtwo" ? "block" : "none" }}>
-            <BigTwoGame ref={bigtwoRef} socket={socket} room={room} name={name} apples={apples} onActiveChange={onBigtwoActiveChange} />
-          </div>
-          <div style={{ display: tab === "xiangqi" ? "block" : "none" }}>
-            <XiangqiGame ref={xiangqiRef} socket={socket} room={room} name={name} apples={apples} onActiveChange={onXiangqiActiveChange} />
-          </div>
+          {roomConfig.pusher_enabled !== false && (
+            <div style={{ display: tab === "pusher" ? "contents" : "none" }}>
+              <PusherMachine token={token} apples={apples} onApplesChange={onApplesChange} visible={open && tab === "pusher"} />
+            </div>
+          )}
+          {roomConfig.blackjack_enabled !== false && (
+            <div style={{ display: tab === "blackjack" ? "block" : "none" }}>
+              <BlackjackGame token={token} apples={apples} onApplesChange={onApplesChange} />
+            </div>
+          )}
+          {roomConfig.roulette_enabled !== false && (
+            <div style={{ display: tab === "roulette" ? "block" : "none" }}>
+              <RouletteGame token={token} apples={apples} onApplesChange={onApplesChange} />
+            </div>
+          )}
+          {roomConfig.sicbo_enabled !== false && (
+            <div style={{ display: tab === "sicbo" ? "block" : "none" }}>
+              <SicBoGame token={token} apples={apples} onApplesChange={onApplesChange} />
+            </div>
+          )}
+          {roomConfig.slot_enabled !== false && (
+            <div style={{ display: tab === "slot" ? "block" : "none" }}>
+              <SlotMachine token={token} apples={apples} onApplesChange={onApplesChange} />
+            </div>
+          )}
+          {roomConfig.baccarat_enabled !== false && (
+            <div style={{ display: tab === "baccarat" ? "block" : "none" }}>
+              <BaccaratGame token={token} apples={apples} onApplesChange={onApplesChange} />
+            </div>
+          )}
+          {roomConfig.race_enabled !== false && (
+            <div style={{ display: tab === "race" ? "block" : "none" }}>
+              <RacingGame token={token} apples={apples} onApplesChange={onApplesChange} />
+            </div>
+          )}
+          {roomConfig.zombie_enabled !== false && (
+            <div style={{ display: tab === "zombie" ? "block" : "none" }}>
+              <ZombieSurvivalGame token={token} apples={apples} onApplesChange={onApplesChange} />
+            </div>
+          )}
+          {roomConfig.mahjong_enabled !== false && (
+            <div style={{ display: tab === "mahjong" ? "block" : "none" }}>
+              <MahjongGame ref={mahjongRef} socket={socket} room={room} name={name} apples={apples} onActiveChange={onMahjongActiveChange} />
+            </div>
+          )}
+          {roomConfig.bigtwo_enabled !== false && (
+            <div style={{ display: tab === "bigtwo" ? "block" : "none" }}>
+              <BigTwoGame ref={bigtwoRef} socket={socket} room={room} name={name} apples={apples} onActiveChange={onBigtwoActiveChange} />
+            </div>
+          )}
+          {roomConfig.xiangqi_enabled !== false && (
+            <div style={{ display: tab === "xiangqi" ? "block" : "none" }}>
+              <XiangqiGame ref={xiangqiRef} socket={socket} room={room} name={name} apples={apples} onActiveChange={onXiangqiActiveChange} />
+            </div>
+          )}
         </Suspense>
       </div>
     </div>

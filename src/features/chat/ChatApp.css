@@ -205,10 +205,8 @@ body {
   cursor: pointer;
 }
 
-/* ===== 舊版整體外皮（置中 + 仿舊版配色的外框） ===== */
+/* ===== 舊版整體外皮（仿舊版配色的外框，滿版貼齊視窗，不置中留黑邊） ===== */
 .chat-layout--legacy {
-  max-width: 1400px;
-  margin: 0 auto;
   border: 3px solid #cc66cc;
   border-radius: 14px;
   background: linear-gradient(180deg, #2a0a2a 0%, #120212 100%);
@@ -521,7 +519,7 @@ body {
   background: #222;
   cursor: pointer;
   font-weight: bold;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   white-space: nowrap;
 }
 
@@ -547,7 +545,7 @@ body {
   align-items: center;
   gap: 3px;
   min-width: 0;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
 }
 
 .user-item:hover,
@@ -677,8 +675,12 @@ body {
 }
 
 .apple-amount-input {
-  width: 50px;
-  padding: 4px;
+  width: 92px;
+  padding: 6px 8px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  font-variant-numeric: tabular-nums;
   text-align: center;
   border-radius: 6px;
   border: 1px solid #ccc;

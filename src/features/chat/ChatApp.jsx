@@ -31,7 +31,7 @@ import AnnouncementPanel from "./AnnouncementPanel";
 import MyMessageLogPanel from "./MyMessageLogPanel";
 import AppErrorBoundary from "../../shared/AppErrorBoundary";
 import { getAiAvatar } from "../../shared/aiConfig";
-import { expForNextLevel, safeText } from "../../shared/utils";
+import { expForNextLevel, safeText, isGameBroadcastMessage } from "../../shared/utils";
 import { useMessages } from "../../shared/hooks/useMessages";
 import { useUserState } from "../../shared/hooks/useUserState";
 import { HEARTBEAT_INTERVAL, GENDER_COLORS } from "../../shared/constants";
@@ -47,6 +47,14 @@ const converter = Converter({ from: "cn", to: "tw" });
 const toTraditional = (text) => (text ? converter(text) : "");
 
 const formatLv = (lv) => String(lv).padStart(2, "0");
+
+// 推牌冷卻倒數顯示用：毫秒轉 MM:SS
+const formatCooldownMMSS = (ms) => {
+  const totalSec = Math.max(0, Math.ceil(ms / 1000));
+  const mm = String(Math.floor(totalSec / 60)).padStart(2, "0");
+  const ss = String(totalSec % 60).padStart(2, "0");
+  return `${mm}:${ss}`;
+};
 
 const extractVideoID = (url) => {
   if (!url) return null;
@@ -177,11 +185,22 @@ export default function ChatApp() {
   const [showGameHall, setShowGameHall] = useState(false);
   const [showAdminTools, setShowAdminTools] = useState(false);
   const [filteredUsers, setFilteredUsers] = useState([]);
+  // 隱藏系統自動發送的遊戲推播廣播（純前端偏好，不持久化，跟 filteredUsers 同一套模式）
+  const [hideGameBroadcasts, setHideGameBroadcasts] = useState(false);
   const [currentSinger, setCurrentSinger] = useState(null);
   const [convertTC, setConvertTC] = useState(true);
   const [appleAmount, setAppleAmount] = useState(1);
+  // 送金幣輸入框顯示用的千分位字串；appleAmount 本身維持乾淨的數字，供送出/送金牡丹計算用
+  const [appleAmountText, setAppleAmountText] = useState("1");
+  // appleAmount 被外部改動時（例如送出成功後重置為 1）同步格式化文字；
+  // 使用者打字時的即時格式化在 onChange 內直接處理，不會跟這個 effect 互相干擾
+  useEffect(() => {
+    setAppleAmountText(appleAmount.toLocaleString("en-US"));
+  }, [appleAmount]);
   const [sendingApple, setSendingApple] = useState(false);
   const [sendingPeony, setSendingPeony] = useState(false);
+  // 送金幣/金牡丹是否採「密談」模式：訊息只有雙方跟監看管理員看得到（跟 ShopPanel 的私下贈送一致）
+  const [isPrivateGift, setIsPrivateGift] = useState(false);
   const [showAppleSetting, setShowAppleSetting] = useState(false);
   const [perTransferLimit, setPerTransferLimit] = useState(0); // 0 = 不限制
   const [scrollLocked, setScrollLocked] = useState(false);
@@ -193,6 +212,10 @@ export default function ChatApp() {
   const gamesBusy = rpsActive || pingpongActive;
   const [marqueeActive, setMarqueeActive] = useState(false);
   const [pushCardActive, setPushCardActive] = useState(false);
+  // 推牌冷卻：後端在 pushCardEnd 給的是絕對時間戳（cooldownEndsAt），不是純倒數秒數，
+  // 這樣分頁切到背景再切回來、或裝置時間有延遲時，剩餘時間還是能算對，不會累積誤差。
+  const [pushCardCooldownEndsAt, setPushCardCooldownEndsAt] = useState(null);
+  const [pushCardCooldownRemainingMs, setPushCardCooldownRemainingMs] = useState(0);
 
   const [invalidTokenCountdown, setInvalidTokenCountdown] = useState(null);
   const invalidTokenTimerRef = useRef(null);
@@ -224,10 +247,14 @@ export default function ChatApp() {
   useEffect(() => { roomRef.current = room; }, [room]);
   useEffect(() => { nameRef.current = name; }, [name]);
 
-  // ✅ 過濾訊息用 useMemo，只在 messages / filteredUsers 改變時重算
+  // ✅ 過濾訊息用 useMemo，只在 messages / filteredUsers / hideGameBroadcasts 改變時重算
   const visibleMessages = useMemo(
-    () => messages.filter((msg) => !filteredUsers.includes(msg.user?.name)),
-    [messages, filteredUsers]
+    () => messages.filter((msg) => {
+      if (filteredUsers.includes(msg.user?.name)) return false;
+      if (hideGameBroadcasts && msg.user?.name === "系統" && isGameBroadcastMessage(msg.message)) return false;
+      return true;
+    }),
+    [messages, filteredUsers, hideGameBroadcasts]
   );
 
   // ─── 初始化 ──────────────────────────────────────────────────────────────
@@ -467,8 +494,14 @@ export default function ChatApp() {
   }, [socket]);
 
   useEffect(() => {
-    const onStart = () => setPushCardActive(true);
-    const onEnd   = () => setPushCardActive(false);
+    const onStart = () => {
+      setPushCardActive(true);
+      setPushCardCooldownEndsAt(null); // 能開新局代表冷卻一定已經結束，清掉舊的倒數顯示
+    };
+    const onEnd = (data) => {
+      setPushCardActive(false);
+      setPushCardCooldownEndsAt(data?.cooldownEndsAt || null);
+    };
     socket.on("pushCardStart", onStart);
     socket.on("pushCardEnd",   onEnd);
     return () => {
@@ -476,6 +509,23 @@ export default function ChatApp() {
       socket.off("pushCardEnd",   onEnd);
     };
   }, [socket]);
+
+  // 推牌冷卻倒數：每秒重算一次剩餘時間，時間到自動歸零、停止計時
+  useEffect(() => {
+    if (!pushCardCooldownEndsAt) { setPushCardCooldownRemainingMs(0); return; }
+    const tick = () => {
+      const remaining = pushCardCooldownEndsAt - Date.now();
+      if (remaining <= 0) {
+        setPushCardCooldownRemainingMs(0);
+        setPushCardCooldownEndsAt(null);
+      } else {
+        setPushCardCooldownRemainingMs(remaining);
+      }
+    };
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [pushCardCooldownEndsAt]);
 
   useEffect(() => {
     const handleFrontendVersionUpdated = ({ version } = {}) => {
@@ -843,7 +893,7 @@ export default function ChatApp() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ targetUsername: target, amount: safeAmount, room: RN }),
+        body: JSON.stringify({ targetUsername: target, amount: safeAmount, room: RN, isPrivate: isPrivateGift }),
       });
       const data = await res.json();
       if (!res.ok || data.success === false) {
@@ -855,7 +905,7 @@ export default function ChatApp() {
     } finally {
       setSendingApple(false);
     }
-  }, [target, appleAmount, token, apples, perTransferLimit, level, ANL]);
+  }, [target, appleAmount, token, apples, perTransferLimit, level, ANL, isPrivateGift]);
 
   const sendPeony = useCallback(async () => {
     if (!target) { alert("請選擇對象"); return; }
@@ -868,7 +918,7 @@ export default function ChatApp() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ targetUsername: target, amount }),
+        body: JSON.stringify({ targetUsername: target, amount, isPrivate: isPrivateGift }),
       });
       const data = await res.json();
       if (!res.ok || data.success === false) {
@@ -879,7 +929,7 @@ export default function ChatApp() {
     } finally {
       setSendingPeony(false);
     }
-  }, [target, token, appleAmount]);
+  }, [target, token, appleAmount, isPrivateGift]);
 
   const focusInput = useCallback(() => {
     requestAnimationFrame(() => inputRef.current?.focus());
@@ -1099,6 +1149,10 @@ export default function ChatApp() {
                       items={[
                         { label: "站務公告", onClick: () => setShowAnnouncement(true) },
                         { label: "編輯常用詞", onClick: () => setQuickPhraseOpenSignal((n) => n + 1) },
+                        {
+                          label: hideGameBroadcasts ? "🔊 顯示遊戲推播" : "🙈 隱藏遊戲推播",
+                          onClick: () => setHideGameBroadcasts((v) => !v),
+                        },
                         ...(!invisible ? [
                           { label: "點播歌曲", onClick: () => setShowSongRequestModal(true) },
                           { label: "開始聽", onClick: () => listenerRef.current?.startListen() },
@@ -1344,11 +1398,20 @@ export default function ChatApp() {
                     {level >= ANL && (
                       <button
                         className="admin-btn"
-                        disabled={pushCardActive || invisible}
+                        disabled={pushCardActive || invisible || pushCardCooldownRemainingMs > 0}
                         onClick={() => socket.emit("startPushCard", { token, room: RN })}
-                        title={invisible ? "隱身模式下無法開始推牌遊戲" : pushCardActive ? "推牌遊戲進行中" : "開始推牌遊戲"}
+                        title={
+                          invisible ? "隱身模式下無法開始推牌遊戲"
+                            : pushCardActive ? "推牌遊戲進行中"
+                            : pushCardCooldownRemainingMs > 0 ? `遊戲冷卻中，剩餘 ${formatCooldownMMSS(pushCardCooldownRemainingMs)}`
+                            : "開始推牌遊戲"
+                        }
                       >
-                        {pushCardActive ? "🃏 進行中…" : "🃏 推牌"}
+                        {pushCardActive
+                          ? "🃏 進行中…"
+                          : pushCardCooldownRemainingMs > 0
+                            ? `🃏 冷卻中 ${formatCooldownMMSS(pushCardCooldownRemainingMs)}`
+                            : "🃏 推牌"}
                       </button>
                     )}
                     {roomConfig.currency_name === "金蘋果" && <SurpriseHistoryPanel token={token} />}
@@ -1367,16 +1430,34 @@ export default function ChatApp() {
                       </select>
 
                       <input
-                        type="number"
-                        min={1}
-                        max={(level < ANL && perTransferLimit > 0) ? Math.min(apples, perTransferLimit) : apples}
-                        value={appleAmount}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={appleAmountText}
                         onChange={(e) => {
+                          const digits = e.target.value.replace(/\D/g, "");
+                          if (digits === "") { setAppleAmountText(""); return; }
                           const maxVal = (level < ANL && perTransferLimit > 0) ? Math.min(apples, perTransferLimit) : apples;
-                          setAppleAmount(Math.max(1, Math.min(maxVal, Math.floor(Number(e.target.value)))));
+                          const parsed = Math.max(1, Math.min(maxVal, parseInt(digits, 10)));
+                          setAppleAmount(parsed);
+                          setAppleAmountText(parsed.toLocaleString("en-US"));
+                        }}
+                        onBlur={() => {
+                          if (appleAmountText === "") setAppleAmountText(appleAmount.toLocaleString("en-US"));
                         }}
                         className="apple-amount-input"
                       />
+
+                      {target && (
+                        <label className="gift-private-toggle" style={{ display: "flex", alignItems: "center", gap: 6, margin: "4px 0", fontSize: "0.85rem" }}>
+                          <input
+                            type="checkbox"
+                            checked={isPrivateGift}
+                            onChange={(e) => setIsPrivateGift(e.target.checked)}
+                          />
+                          🔒 密談
+                        </label>
+                      )}
 
                       <button disabled={sendingApple} onClick={transferApple} className="apple-send-btn">
                         送{roomConfig.currency_name}{" "}
@@ -1385,7 +1466,7 @@ export default function ChatApp() {
 
                       {level >= AML && roomConfig.open_peony && (
                         <button disabled={sendingPeony} onClick={sendPeony} className="apple-send-btn" style={{ backgroundColor: "#87CEEB" }}>
-                          送金牡丹{appleAmount > 1 ? ` ×${appleAmount}` : ""}{" "}
+                          送金牡丹{appleAmount > 1 ? ` ×${appleAmount.toLocaleString("en-US")}` : ""}{" "}
                           <img src="/gifts/peony.gif" alt="金牡丹" style={{ width: 20, height: 20, marginTop: -5 }} />
                         </button>
                       )}

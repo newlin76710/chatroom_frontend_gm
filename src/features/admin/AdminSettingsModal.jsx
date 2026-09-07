@@ -27,6 +27,7 @@ const DEFAULT = {
   marquee_duration:     30,
   pushcard_max_bet:     50,
   pushcard_duration:    10,
+  pushcard_cooldown_minutes: 20,
   surprise_reward:      10,
   game1_enabled:        true,
   game1_hour:           20,
@@ -116,6 +117,7 @@ const DEFAULT = {
   baccarat_close_minute:     0,
   baccarat_max_bet:          200,
   baccarat_house_edge:       100,
+  baccarat_lucky6_enabled:   true,
   pusher_enabled:            true,
   pusher_open_hour:          0,
   pusher_open_minute:        0,
@@ -125,6 +127,7 @@ const DEFAULT = {
   pusher_jackpot_rate:       30,
   pusher_jackpot_payout_pct: 60,
   pusher_plate_speed:        "normal",
+  pusher_target_rtp:         75,
   race_enabled:              true,
   race_open_hour:            0,
   race_open_minute:          0,
@@ -136,6 +139,9 @@ const DEFAULT = {
   zombie_entry_cost:         10,
   zombie_level_reward:       15,
   zombie_daily_limit:        3,
+  bigtwo_enabled:            true,
+  mahjong_enabled:           true,
+  xiangqi_enabled:           true,
   speech_reward_enabled:     true,
   speech_reward_threshold:   100,
   speech_reward_amount:      10,
@@ -387,6 +393,11 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                 <input type="number" min={5} value={settings.pushcard_duration}
                   onChange={e => setInt("pushcard_duration", e.target.value)} />
                 <span className="field-note">秒（參加者選擇時間，時間到自動發牌）</span>
+              </Row>
+              <Row label="遊戲冷卻分鐘數">
+                <input type="number" min={0} max={60} value={settings.pushcard_cooldown_minutes}
+                  onChange={e => setInt("pushcard_cooldown_minutes", e.target.value)} />
+                <span className="field-note">分鐘（0-60，每局結束後要等幾分鐘才能再開新局，確保有純聽歌時間；0 = 不開啟冷卻）</span>
               </Row>
               {isApple && (
                 <Row label="每日樂透獎勵">
@@ -867,6 +878,15 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   <option value="fast">快</option>
                 </select>
               </Row>
+              <Row label="目標回收率 RTP">
+                <input type="number" min={40} max={95} style={{ width: 80 }}
+                  value={settings.pusher_target_rtp}
+                  onChange={e => setInt("pusher_target_rtp", e.target.value)} />
+                <span className="field-note">
+                  %，40-95。系統會持續追蹤實際投入/回收比例，自動微調推板助推力，讓長期回收率收斂到這個數字
+                  {settings.pusher_current_rtp != null && `（目前實際約 ${settings.pusher_current_rtp}%）`}
+                </span>
+              </Row>
             </section>
 
             {/* ─── 遊戲廳：21點 ────────────────────────────────── */}
@@ -1097,6 +1117,14 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   onChange={e => setInt("baccarat_house_edge", e.target.value)} />
                 <span className="field-note">1-200，100=中立，越大越偏莊，越小越偏玩家</span>
               </Row>
+              <Row label="Lucky 6 側注">
+                <label className="toggle-label" style={{ fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.baccarat_lucky6_enabled}
+                    onChange={e => setBool("baccarat_lucky6_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+                <span className="field-note">莊家 6 點獲勝才賠：2 張牌 1 賠 12，3 張牌 1 賠 20（跟主注同一副牌結算，也受上面的勝率偏向設定影響）</span>
+              </Row>
             </section>
 
             {/* ─── 遊戲廳：賽車 ──────────────────────────────── */}
@@ -1174,6 +1202,51 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   onChange={e => setInt("zombie_daily_limit", e.target.value)} />
                 <span className="field-note">次（不論成功或失敗都算一次）</span>
               </Row>
+            </section>
+
+            {/* ─── 休閒廳：麻將 ──────────────────────────── */}
+            <section className="settings-section">
+              <h4>
+                🀄 休閒廳：麻將
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.mahjong_enabled}
+                    onChange={e => setBool("mahjong_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+              <p className="field-note" style={{ margin: 0 }}>
+                關閉後，遊戲廳分頁列表會直接移除麻將，不是灰掉停用——需要重新整理頁面才會套用。
+              </p>
+            </section>
+
+            {/* ─── 休閒廳：大老二 ──────────────────────────── */}
+            <section className="settings-section">
+              <h4>
+                🃏 休閒廳：大老二
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.bigtwo_enabled}
+                    onChange={e => setBool("bigtwo_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+              <p className="field-note" style={{ margin: 0 }}>
+                關閉後，遊戲廳分頁列表會直接移除大老二，不是灰掉停用——需要重新整理頁面才會套用。
+              </p>
+            </section>
+
+            {/* ─── 休閒廳：象棋 ──────────────────────────── */}
+            <section className="settings-section">
+              <h4>
+                ♟️ 休閒廳：象棋
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.xiangqi_enabled}
+                    onChange={e => setBool("xiangqi_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+              <p className="field-note" style={{ margin: 0 }}>
+                關閉後，遊戲廳分頁列表會直接移除象棋，不是灰掉停用——需要重新整理頁面才會套用。
+              </p>
             </section>
 
             <div style={{ display: "flex", gap: 10, marginTop: 20 }}>

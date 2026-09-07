@@ -143,6 +143,7 @@ export default function SicBoGame({ token, apples, onApplesChange }) {
   const [settings, setSettings]         = useState(null);
   const [selectedChip, setSelectedChip] = useState(1);
   const [bets, setBets]                 = useState({});
+  const [lastBets, setLastBets]         = useState(null); // 上一局實際下注的內容，供「再押一次」用
   const [dice, setDice]                 = useState([1, 2, 3]);
   const [rolling, setRolling]           = useState(false);
   const [lastResult, setLastResult]     = useState(null);
@@ -173,6 +174,12 @@ export default function SicBoGame({ token, apples, onApplesChange }) {
   }
 
   function clearBets() { setBets({}); setError(""); }
+
+  function repeatLastBet() {
+    if (rolling || !lastBets) return;
+    setError("");
+    setBets(lastBets); // 直接套用上一局的下注內容；餘額/單注上限不足會在真正擲骰時由後端擋下
+  }
 
   async function rollDice() {
     if (totalBet < 1 || rolling) return;
@@ -207,6 +214,7 @@ export default function SicBoGame({ token, apples, onApplesChange }) {
 
       setDice(data.dice);
       setRolling(false);
+      setLastBets(bets);
       setBets({});
       setLastResult({ dice: data.dice, total: data.total, net: data.net, winTypes: data.winTypes || [] });
       if (onApplesChange) onApplesChange(data.newApples);
@@ -278,6 +286,9 @@ export default function SicBoGame({ token, apples, onApplesChange }) {
             <span className="sic-bet-label">下注 <strong>{totalBet}</strong></span>
             {totalBet > 0 && (
               <button className="sic-clear-btn" onClick={clearBets} disabled={rolling}>清除</button>
+            )}
+            {totalBet === 0 && lastBets && (
+              <button className="sic-clear-btn" onClick={repeatLastBet} disabled={rolling}>🔁 再押一次</button>
             )}
           </div>
           {error && <div className="sic-error">{error}</div>}

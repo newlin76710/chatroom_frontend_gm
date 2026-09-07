@@ -7,9 +7,15 @@ import { MAX_MESSAGES, PENDING_LEAVE_DELAY, SYSTEM_AVATAR } from "../constants";
 import { safeText } from "../utils";
 import { roomConfig } from "../roomConfig";
 
+// 每則訊息的穩定 id，供 MessageList 當 React key 用。
+// 不能用陣列 index 當 key：截斷最舊訊息（或前端靜音篩選）都會讓後面所有訊息的 index 往前移，
+// React 就會誤判成「同一列內容變了」而去改寫既有 DOM 節點的文字，
+// 使用者暫停捲動想複製/閱讀文字時，畫面內容卻一直被新訊息悄悄置換掉，體感就像「還在捲動」。
+let messageIdCounter = 0;
+
 // 底層 append，超過 MAX_MESSAGES 就截斷最舊的
 function appendMsg(prev, msg) {
-  const next = [...prev, msg];
+  const next = [...prev, { id: ++messageIdCounter, ...msg }];
   return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next;
 }
 
@@ -100,6 +106,8 @@ export function useMessages() {
         timestamp: new Date(msg.created_at).toLocaleTimeString(),
         mode: "reward",
         type: "transaction",
+        isPrivate: !!msg.isPrivate,
+        monitored: !!msg.monitored,
       })
     );
   }, []);
@@ -154,6 +162,8 @@ export function useMessages() {
         type: "peony",
         from,
         to,
+        isPrivate: !!data.isPrivate,
+        monitored: !!data.monitored,
       })
     );
   }, []);

@@ -23,6 +23,17 @@ const _cfg = {
   room_capacity:       100,
   currency_enabled:    true,
   open_game:           true,
+  bigtwo_enabled:      true,
+  slot_enabled:        true,
+  mahjong_enabled:     true,
+  xiangqi_enabled:     true,
+  pusher_enabled:      true,
+  blackjack_enabled:   true,
+  roulette_enabled:    true,
+  sicbo_enabled:       true,
+  baccarat_enabled:    true,
+  race_enabled:        true,
+  zombie_enabled:      true,
 };
 
 export const roomConfig = _cfg;

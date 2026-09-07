@@ -39,11 +39,14 @@ function HelpPanel({ onClose }) {
             <tr><td>莊</td><td>莊家點數大於閒家</td><td className="bac-help-pay">1賠1</td></tr>
             <tr><td>莊 6 點勝</td><td>免佣版特例</td><td className="bac-help-pay">1賠0.5</td></tr>
             <tr><td>和</td><td>雙方點數相同</td><td className="bac-help-pay">1賠8</td></tr>
+            <tr><td>Lucky 6（側注）</td><td>莊家以 6 點獲勝，2 張牌</td><td className="bac-help-pay">1賠12</td></tr>
+            <tr><td>Lucky 6（側注）</td><td>莊家以 6 點獲勝，3 張牌</td><td className="bac-help-pay">1賠20</td></tr>
           </tbody>
         </table>
         <p className="bac-help-note">
           ⚠️ 押閒或莊時，若開出和局，退回本金。<br />
-          ⚠️ 本遊戲採免佣百家樂規則，莊家 6 點獲勝時只賠半倍。
+          ⚠️ 本遊戲採免佣百家樂規則，莊家 6 點獲勝時只賠半倍。<br />
+          ⚠️ Lucky 6 是額外的側注，可以跟閒/莊/和的主注同時下，用同一副牌結算；莊家沒有以 6 點獲勝就直接輸掉側注本金。
         </p>
       </div>
     </div>
@@ -154,9 +157,10 @@ function Hand({ label, sub, total, cards, accent, revealed, count }) {
   );
 }
 
-function ResultBadge({ result, net, totalWin, betType, betAmount, settling }) {
+function ResultBadge({ result, net, totalWin, betType, betAmount, lucky6Amount, lucky6Payout, lucky6Cards, settling }) {
   const area = BET_AREAS.find(item => item.key === betType);
   const title = result === "player" ? "閒勝" : result === "banker" ? "莊勝" : result === "tie" ? "和局" : "等待開局";
+  const lucky6Win = (lucky6Payout ?? 0) > 0;
 
   return (
     <div className={`bac-result-pill ${result || ""}${settling ? " settling" : ""}`}>
@@ -166,7 +170,18 @@ function ResultBadge({ result, net, totalWin, betType, betAmount, settling }) {
         押注 {area?.zh || "-"} {betAmount ?? 0} {roomConfig.currency_unit}
         <br />
         入帳 {totalWin ?? 0} {roomConfig.currency_unit}
+        {(lucky6Amount ?? 0) > 0 && (
+          <>
+            <br />
+            Lucky 6 {lucky6Amount} {roomConfig.currency_unit}
+          </>
+        )}
       </div>
+      {lucky6Win && (
+        <div className="bac-lucky6-banner">
+          🍀 Lucky 6！莊家 {lucky6Cards} 張牌獲勝，中 {lucky6Payout} {roomConfig.currency_unit}
+        </div>
+      )}
     </div>
   );
 }
@@ -175,6 +190,7 @@ export default function BaccaratGame({ token, apples, onApplesChange }) {
   const [settings, setSettings] = useState(null);
   const [selectedBet, setSelectedBet] = useState("player");
   const [betAmount, setBetAmount] = useState(10);
+  const [lucky6On, setLucky6On] = useState(false); // Lucky 6 側注：跟主注一樣的金額，同一副牌結算
   const [loading, setLoading] = useState(false);
   const [settling, setSettling] = useState(false);
   const [result, setResult] = useState(null);
@@ -210,6 +226,8 @@ export default function BaccaratGame({ token, apples, onApplesChange }) {
   const open = useMemo(() => isOpenNow(settings), [settings]);
   const parsedPlayerCards = useMemo(() => (result?.playerCards || []).map(parseCard), [result]);
   const parsedBankerCards = useMemo(() => (result?.bankerCards || []).map(parseCard), [result]);
+  const lucky6Amount = lucky6On ? betAmount : 0;
+  const totalStake = betAmount + lucky6Amount;
 
   function changeBet(delta) {
     const max = settings?.max_bet || 200;
@@ -247,7 +265,7 @@ export default function BaccaratGame({ token, apples, onApplesChange }) {
   }
 
   async function deal() {
-    if (loading || settling || (apples ?? 0) < betAmount) return;
+    if (loading || settling || (apples ?? 0) < totalStake) return;
     setLoading(true);
     setError("");
     setResult(null);
@@ -258,7 +276,7 @@ export default function BaccaratGame({ token, apples, onApplesChange }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ betType: selectedBet, betAmount, room: RN }),
+        body: JSON.stringify({ betType: selectedBet, betAmount, lucky6Amount, room: RN }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -348,6 +366,9 @@ export default function BaccaratGame({ token, apples, onApplesChange }) {
                     totalWin={result.totalWin}
                     betType={result.betType}
                     betAmount={result.betAmount}
+                    lucky6Amount={result.lucky6Amount}
+                    lucky6Payout={result.lucky6Payout}
+                    lucky6Cards={result.lucky6Cards}
                     settling={settling}
                   />
                 ) : (
@@ -383,6 +404,18 @@ export default function BaccaratGame({ token, apples, onApplesChange }) {
                 </button>
               ))}
             </div>
+
+            {settings.lucky6_enabled !== false && (
+              <label className="bac-lucky6-toggle">
+                <input
+                  type="checkbox"
+                  checked={lucky6On}
+                  onChange={e => setLucky6On(e.target.checked)}
+                  disabled={loading || settling}
+                />
+                🍀 加碼 Lucky 6（莊 6 點勝：2 張牌 1 賠 12／3 張牌 1 賠 20），同樣押 {betAmount} {roomConfig.currency_unit}
+              </label>
+            )}
           </div>
         </div>
 
@@ -412,9 +445,9 @@ export default function BaccaratGame({ token, apples, onApplesChange }) {
           <button
             className="bac-deal-btn"
             onClick={deal}
-            disabled={loading || settling || !open || (apples ?? 0) < betAmount}
+            disabled={loading || settling || !open || (apples ?? 0) < totalStake}
           >
-            {settling ? "牌局進行中…" : loading ? "送出下注…" : "發牌"}
+            {settling ? "牌局進行中…" : loading ? "送出下注…" : lucky6On ? `發牌（共 ${totalStake}）` : "發牌"}
           </button>
         </div>
 

@@ -412,6 +412,32 @@
   gap: 14px;
 }
 
+.bac-lucky6-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(139, 239, 170, 0.08);
+  border: 1px solid rgba(139, 239, 170, 0.25);
+  color: #cdeedd;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.bac-lucky6-banner {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(139, 239, 170, 0.18);
+  border: 1px solid rgba(139, 239, 170, 0.4);
+  color: #eaffef;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
 .bac-bet-zone {
   min-height: 112px;
   padding: 16px 14px;

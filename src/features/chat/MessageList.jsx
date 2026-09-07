@@ -12,6 +12,14 @@ const countryFlag = code =>
     ? String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
     : "";
 
+// 舊版介面專用：把系統訊息裡的金額數字加粗（不換色，沿用外層文字顏色）
+function boldAmounts(text) {
+  if (!text) return text;
+  return String(text)
+    .split(/(\d[\d,]*)/g)
+    .map((part, idx) => (/^\d/.test(part) ? <span key={idx} style={{ fontWeight: "bold" }}>{part}</span> : part));
+}
+
 function MessageList({
   messages = [],
   name = "",
@@ -183,10 +191,10 @@ function MessageList({
 
           if (isSurprise) {
             return (
-              <div key={i} className="message-row surprise-message" style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
+              <div key={m.id ?? i} className="message-row surprise-message" style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
                 <div className="surprise-banner">
                   <span className="surprise-icon">🎊</span>
-                  <span className="surprise-text">{messageText}</span>
+                  <span className="surprise-text">{legacyUI ? boldAmounts(messageText) : messageText}</span>
                   <span className="surprise-icon">🎊</span>
                 </div>
               </div>
@@ -195,10 +203,10 @@ function MessageList({
 
           if (isMarqueeWin) {
             return (
-              <div key={i} className="message-row marquee-message" style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
+              <div key={m.id ?? i} className="message-row marquee-message" style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
                 <div className="marquee-banner">
                   <span className="marquee-icon">🎰</span>
-                  <span className="marquee-text">{messageText}</span>
+                  <span className="marquee-text">{legacyUI ? boldAmounts(messageText) : messageText}</span>
                   <span className="marquee-icon">🎰</span>
                 </div>
               </div>
@@ -207,10 +215,10 @@ function MessageList({
 
           if (isPeony) {
             return (
-              <div key={i} className="message-row peony-message" style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
+              <div key={m.id ?? i} className="message-row peony-message" style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
                 <div className="peony-banner">
                   <img src="/gifts/peony1.gif" alt="金牡丹" className="peony-big-icon" />
-                  <span className="peony-text">{messageText}</span>
+                  <span className="peony-text">{legacyUI ? boldAmounts(messageText) : messageText}</span>
                   <img src="/gifts/peony1.gif" alt="金牡丹" className="peony-big-icon" />
                 </div>
               </div>
@@ -218,7 +226,7 @@ function MessageList({
           }
 
           return (
-            <div key={i} className="message-row" style={{ display: "flex", justifyContent: alignRight ? "flex-end" : "flex-start", marginBottom: legacyUI ? 2 : 6 }}>
+            <div key={m.id ?? i} className="message-row" style={{ display: "flex", justifyContent: alignRight ? "flex-end" : "flex-start", marginBottom: legacyUI ? 2 : 6 }}>
               {!alignRight && !isSystem && !isTransaction && !isGift && (
                 <img
                   src={m.user?.avatar || getAiAvatar(userName) || "/avatars/g01.gif"}
@@ -227,7 +235,7 @@ function MessageList({
                 />
               )}
 
-              <div style={{ maxWidth: legacyUI ? "92%" : "75%", color, background: bgColor, padding: isRelatedToMe ? "6px 10px" : 0, borderRadius: isRelatedToMe ? 8 : 0, fontSize: `${msgFontSizeRem + ((isRPS || isPingpong) && !legacyUI ? 0.15 : 0)}rem`, whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: legacyUI ? 1.2 : 1.4 }}>
+              <div style={{ maxWidth: legacyUI ? "92%" : "75%", color, background: bgColor, padding: isRelatedToMe ? "6px 10px" : 0, borderRadius: isRelatedToMe ? 8 : 0, fontSize: `${msgFontSizeRem + ((isRPS || isPingpong) && !legacyUI ? 0.15 : 0)}rem`, whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: legacyUI ? 1.5 : 1.4 }}>
                 {tag && <span style={{ fontSize: "0.7rem", color: "#e60909", marginRight: 4 }}>{tag}</span>}
 
                 {(isTransaction || isGift) ? (
@@ -265,15 +273,15 @@ function MessageList({
                         </div>
                       )
                     )}
-                    {isTransaction && <span> {messageText}</span>}
+                    {isTransaction && <span> {legacyUI ? boldAmounts(messageText) : messageText}</span>}
                   </>
                 ) : isSystem && dealerName ? (
                   <>
-                    <span>系統：{messageText}【{dealerLabel}：</span>
+                    <span>系統：{legacyUI ? boldAmounts(messageText) : messageText}【{dealerLabel}：</span>
                     <span style={{ fontWeight: "bold", cursor: "pointer", color: getUserColor(dealerName) }} onClick={() => handleSelectUser(dealerName)}>
                       {dealerName}
                     </span>
-                    <span style={{ color: "#ff9900" }}>】{dealerRest}</span>
+                    <span style={{ color: "#ff9900" }}>】{legacyUI ? boldAmounts(dealerRest) : dealerRest}</span>
                   </>
                 ) : isSystem && relatedUser ? (
                   <>
@@ -283,7 +291,7 @@ function MessageList({
                         {relatedUser}
                       </span>
                     )}
-                    <span style={{ color: "#ff9900" }}> {messageText}</span>
+                    <span style={{ color: "#ff9900" }}> {legacyUI ? boldAmounts(messageText) : messageText}</span>
                   </>
                 ) : (!isSystem && emotionText) ? (
                   <>
@@ -321,7 +329,7 @@ function MessageList({
                           alt={roomConfig.currency_name}
                           style={{ width: 16, height: 16, verticalAlign: "middle", margin: "0 2px" }}
                         />
-                      )} {messageText}
+                      )} {legacyUI && isSystem ? boldAmounts(messageText) : messageText}
                     </span>
                   </>
                 )}
