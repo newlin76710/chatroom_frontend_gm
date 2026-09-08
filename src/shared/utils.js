@@ -23,8 +23,6 @@ const GAME_BROADCAST_PATTERNS = [
   /遊戲(?:開始|結束|時間到)/,       // 各小遊戲開始／結束／時間到公告
   /^🔥 搶.+第一個點到的人/,         // 搶金蘋果（單顆）玩法預告
   /^🎉 .+搶到了.+獲得/,            // 搶金蘋果（單顆）結果
-  /^🎉 恭喜 .+ 中了跑馬燈大獎/,     // 跑馬燈中獎結果
-  /^🎰 跑馬燈結束，沒有人在線上/,   // 跑馬燈無人參加
   /在21點獲勝，贏得/,              // 21點中獎廣播（blackjackRouter.js）
   /在輪盤直注數字.+，獲得/,         // 輪盤中獎廣播（rouletteRouter.js）
   /在百家樂押.+獲勝，淨贏/,         // 百家樂中獎廣播（baccaratRouter.js）
@@ -34,8 +32,17 @@ const GAME_BROADCAST_PATTERNS = [
   /通過殭屍生存戰三關全破，獲得/,   // 殭屍生存全破獎勵廣播（zombieRunRouter.js）
 ];
 
+// 跑馬燈／推牌是管理員手動觸發的即時遊戲（不是排程型小遊戲），玩家需要看到開局/結果公告
+// 才知道要不要參加，所以不管「隱藏遊戲推播」有沒有開都一律顯示——遊戲本身也是靠獨立的
+// socket 事件（marqueeStart / pushCardStart / pushCardEnd）驅動，不受這裡的過濾影響
+const ALWAYS_VISIBLE_PATTERNS = [
+  /跑馬燈/,
+  /推牌/,
+];
+
 export function isGameBroadcastMessage(text) {
   if (!text) return false;
   const s = String(text);
+  if (ALWAYS_VISIBLE_PATTERNS.some((re) => re.test(s))) return false;
   return GAME_BROADCAST_PATTERNS.some((re) => re.test(s));
 }

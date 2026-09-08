@@ -3,6 +3,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 1px;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
 
   padding: 1px 1px;
   background: rgba(0, 0, 0, 0.6);
@@ -13,11 +16,19 @@
 .current-singer {
   font-size: 14px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  max-width: 40%;
 }
 
 .next-singer {
   font-size: 14px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  max-width: 40%;
 }
 
 .sing-countdown {
@@ -25,6 +36,7 @@
   white-space: nowrap;
   color: #fb923c;
   font-weight: bold;
+  flex-shrink: 0;
 }
 
 .listen-btn {

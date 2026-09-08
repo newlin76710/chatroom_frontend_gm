@@ -38,9 +38,13 @@ export default function MessageLogPanel({
   const [searchUsername, setSearchUsername] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [searchTarget, setSearchTarget] = useState("");
+  const [conversationMode, setConversationMode] = useState(false); // 雙向對話（含公開）：username/target 互為對象
 
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+
+  // 點某筆發言查看「當時前後 N 分鐘」公開頻道上下文
+  const [context, setContext] = useState(null); // { anchorId, windowMinutes, logs, loading }
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
@@ -56,6 +60,7 @@ export default function MessageLogPanel({
       if (searchUsername) body.username = searchUsername;
       if (searchTarget) body.target = searchTarget;
       if (searchKeyword) body.keyword = searchKeyword;
+      if (conversationMode && searchUsername && searchTarget) body.conversation = true;
 
       const fromUtc = toUtc(fromDate);
       const toUtcDate = toUtc(toDate);
@@ -86,6 +91,34 @@ export default function MessageLogPanel({
     } catch (err) {
       console.error(err);
       alert("查詢發言紀錄失敗");
+    }
+  };
+
+  const loadContext = async (log, windowMinutes = 5) => {
+    setContext({ anchorId: log.id, windowMinutes, logs: [], loading: true });
+    try {
+      const res = await fetch(`${BACKEND}/admin/message-logs/context`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id: log.id, room: RN, windowMinutes }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "查詢失敗");
+        setContext(null);
+        return;
+      }
+
+      setContext({ anchorId: log.id, windowMinutes, logs: data.logs || [], loading: false });
+    } catch (err) {
+      console.error(err);
+      alert("查詢上下文失敗");
+      setContext(null);
     }
   };
 
@@ -142,28 +175,40 @@ export default function MessageLogPanel({
             <div className="admin-search">
               <input
                 type="text"
-                placeholder="使用者"
+                list="msglog-username-datalist"
+                placeholder="使用者 ID"
                 value={searchUsername}
                 onChange={(e) =>
                   setSearchUsername(e.target.value)
                 }
               />
 
-              <select
+              <input
+                type="text"
+                list="msglog-target-datalist"
+                placeholder="對象 ID（雙向對話用）"
                 value={searchTarget}
                 onChange={(e) =>
                   setSearchTarget(e.target.value)
                 }
-              >
-                <option value="">全部對象</option>
-                {userList
-                  .filter((u) => u.type !== "AI")
-                  .map((u) => (
-                    <option key={u.id} value={u.name}>
-                      {u.name}
-                    </option>
-                  ))}
-              </select>
+              />
+
+              <datalist id="msglog-username-datalist">
+                {userList.filter((u) => u.type !== "AI").map((u) => <option key={u.id} value={u.name} />)}
+              </datalist>
+              <datalist id="msglog-target-datalist">
+                {userList.filter((u) => u.type !== "AI").map((u) => <option key={u.id} value={u.name} />)}
+              </datalist>
+
+              <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.85rem" }} title="同時撈出「使用者→對象」與「對象→使用者」的私聊，並一併撈出兩人各自的公開發言，依時間排序，方便還原糾紛上下文">
+                <input
+                  type="checkbox"
+                  checked={conversationMode}
+                  onChange={(e) => setConversationMode(e.target.checked)}
+                  disabled={!searchUsername || !searchTarget}
+                />
+                雙向對話（含公開）
+              </label>
 
               <input
                 type="text"
@@ -210,6 +255,7 @@ export default function MessageLogPanel({
                     <th>類型</th>
                     <th>IP</th>
                     <th>時間（台灣）</th>
+                    <th>上下文</th>
                   </tr>
                 </thead>
 
@@ -243,12 +289,18 @@ export default function MessageLogPanel({
                         <td>
                           {new Date(l.created_at).toLocaleString("zh-TW", {hour12: false,})}
                         </td>
+
+                        <td>
+                          <button className="admin-btn" onClick={() => loadContext(l, 5)} title="查看當時前後幾分鐘公開頻道的完整對話，還原當下上下文">
+                            🔍 查看
+                          </button>
+                        </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={7}
                         style={{ textAlign: "center" }}
                       >
                         無資料
@@ -278,6 +330,56 @@ export default function MessageLogPanel({
                 </button>
               </div>
             </div>
+        </DraggablePanel>
+      )}
+
+      {context && (
+        <DraggablePanel
+          title={`上下文（前後 ${context.windowMinutes} 分鐘，公開頻道）`}
+          onClose={() => setContext(null)}
+          width={700}
+        >
+          <div className="admin-search">
+            {[5, 10].map((m) => (
+              <button
+                key={m}
+                className="admin-btn"
+                style={{ backgroundColor: context.windowMinutes === m ? "#1565c0" : "#1976d2" }}
+                onClick={() => loadContext({ id: context.anchorId }, m)}
+              >
+                前後 {m} 分鐘
+              </button>
+            ))}
+          </div>
+
+          <div className="admin-table-wrapper">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>使用者</th>
+                  <th>對象</th>
+                  <th>內容</th>
+                  <th>時間（台灣）</th>
+                </tr>
+              </thead>
+              <tbody>
+                {context.loading ? (
+                  <tr><td colSpan={4} style={{ textAlign: "center" }}>查詢中...</td></tr>
+                ) : context.logs.length > 0 ? (
+                  context.logs.map((l) => (
+                    <tr key={l.id} style={l.id === context.anchorId ? { backgroundColor: "#ffe082" } : undefined}>
+                      <td>{l.username}</td>
+                      <td>{l.target || "-"}</td>
+                      <td style={{ maxWidth: 300, whiteSpace: "pre-wrap" }}>{l.message}</td>
+                      <td>{new Date(l.created_at).toLocaleString("zh-TW", { hour12: false })}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td colSpan={4} style={{ textAlign: "center" }}>這段時間沒有公開頻道發言</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </DraggablePanel>
       )}
     </>

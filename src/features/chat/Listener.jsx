@@ -229,7 +229,7 @@ const Listener = forwardRef(function Listener({ room, name, socket, onSingerChan
 
   return (
     <div className="listener-bar">
-      <span className="current-singer">
+      <span className="current-singer" title={currentSinger || undefined}>
         🎤 演唱者：
         <span
           style={currentSinger && currentSinger !== name ? { cursor: "pointer" } : undefined}
@@ -242,7 +242,7 @@ const Listener = forwardRef(function Listener({ room, name, socket, onSingerChan
       {countdown !== null && currentSinger && (
         <span className="sing-countdown">⏱ 尚餘 {countdown} 秒 &nbsp;</span>
       )}
-      <span className="next-singer">
+      <span className="next-singer" title={nextSinger || undefined}>
         ⏭ 下一位：
         <span
           style={nextSinger && nextSinger !== name ? { cursor: "pointer" } : undefined}
