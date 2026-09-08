@@ -3,9 +3,6 @@
   align-items: center;
   justify-content: space-between;
   gap: 1px;
-  max-width: 100%;
-  min-width: 0;
-  overflow: hidden;
 
   padding: 1px 1px;
   background: rgba(0, 0, 0, 0.6);
