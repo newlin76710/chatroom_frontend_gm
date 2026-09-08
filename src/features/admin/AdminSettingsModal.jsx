@@ -25,6 +25,7 @@ const DEFAULT = {
   daily_receive_limit:  0,
   marquee_reward:       10,
   marquee_duration:     30,
+  marquee_cooldown_minutes: 20,
   pushcard_max_bet:     50,
   pushcard_duration:    10,
   pushcard_cooldown_minutes: 20,
@@ -383,6 +384,11 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
               <Row label="跑馬燈時長(秒)">
                 <input type="number" value={settings.marquee_duration}
                   onChange={e => setInt("marquee_duration", e.target.value)} />
+              </Row>
+              <Row label="跑馬燈冷卻分鐘數">
+                <input type="number" min={0} max={60} value={settings.marquee_cooldown_minutes}
+                  onChange={e => setInt("marquee_cooldown_minutes", e.target.value)} />
+                <span className="field-note">分鐘（0-60，每局結束後要等幾分鐘才能再開新局；0 = 不開啟冷卻）</span>
               </Row>
               <Row label="推牌遊戲最高下注">
                 <input type="number" min={1} value={settings.pushcard_max_bet}

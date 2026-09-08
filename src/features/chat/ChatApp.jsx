@@ -211,6 +211,10 @@ export default function ChatApp() {
   const [pingpongActive, setPingpongActive] = useState(false);
   const gamesBusy = rpsActive || pingpongActive;
   const [marqueeActive, setMarqueeActive] = useState(false);
+  // 跑馬燈冷卻：跟推牌同一種模式，後端給的是絕對時間戳（cooldownEndsAt），不是純倒數秒數，
+  // 這樣分頁切到背景再切回來、或裝置時間有延遲時，剩餘時間還是能算對，不會累積誤差。
+  const [marqueeCooldownEndsAt, setMarqueeCooldownEndsAt] = useState(null);
+  const [marqueeCooldownRemainingMs, setMarqueeCooldownRemainingMs] = useState(0);
   const [pushCardActive, setPushCardActive] = useState(false);
   // 推牌冷卻：後端在 pushCardEnd 給的是絕對時間戳（cooldownEndsAt），不是純倒數秒數，
   // 這樣分頁切到背景再切回來、或裝置時間有延遲時，剩餘時間還是能算對，不會累積誤差。
@@ -483,8 +487,14 @@ export default function ChatApp() {
   }, [socket, addPeonyMessage]);
 
   useEffect(() => {
-    const onStart = () => setMarqueeActive(true);
-    const onEnd   = () => setMarqueeActive(false);
+    const onStart = () => {
+      setMarqueeActive(true);
+      setMarqueeCooldownEndsAt(null); // 能開新局代表冷卻一定已經結束，清掉舊的倒數顯示
+    };
+    const onEnd = (data) => {
+      setMarqueeActive(false);
+      setMarqueeCooldownEndsAt(data?.cooldownEndsAt || null);
+    };
     socket.on("marqueeStart", onStart);
     socket.on("marqueeEnd",   onEnd);
     return () => {
@@ -492,6 +502,23 @@ export default function ChatApp() {
       socket.off("marqueeEnd",   onEnd);
     };
   }, [socket]);
+
+  // 跑馬燈冷卻倒數：每秒重算一次剩餘時間，時間到自動歸零、停止計時
+  useEffect(() => {
+    if (!marqueeCooldownEndsAt) { setMarqueeCooldownRemainingMs(0); return; }
+    const tick = () => {
+      const remaining = marqueeCooldownEndsAt - Date.now();
+      if (remaining <= 0) {
+        setMarqueeCooldownRemainingMs(0);
+        setMarqueeCooldownEndsAt(null);
+      } else {
+        setMarqueeCooldownRemainingMs(remaining);
+      }
+    };
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [marqueeCooldownEndsAt]);
 
   useEffect(() => {
     const onStart = () => {
@@ -1388,11 +1415,20 @@ export default function ChatApp() {
                     {level >= ANL && (
                       <button
                         className="admin-btn"
-                        disabled={marqueeActive || invisible}
+                        disabled={marqueeActive || invisible || marqueeCooldownRemainingMs > 0}
                         onClick={() => socket.emit("startMarquee", { token, room: RN })}
-                        title={invisible ? "隱身模式下無法開始跑馬燈" : marqueeActive ? "跑馬燈進行中" : "開始跑馬燈抽獎"}
+                        title={
+                          invisible ? "隱身模式下無法開始跑馬燈"
+                            : marqueeActive ? "跑馬燈進行中"
+                            : marqueeCooldownRemainingMs > 0 ? `遊戲冷卻中，剩餘 ${formatCooldownMMSS(marqueeCooldownRemainingMs)}`
+                            : "開始跑馬燈抽獎"
+                        }
                       >
-                        {marqueeActive ? "🎰 進行中…" : "🎰 跑馬燈"}
+                        {marqueeActive
+                          ? "🎰 進行中…"
+                          : marqueeCooldownRemainingMs > 0
+                            ? `🎰 冷卻中 ${formatCooldownMMSS(marqueeCooldownRemainingMs)}`
+                            : "🎰 跑馬燈"}
                       </button>
                     )}
                     {level >= ANL && (
