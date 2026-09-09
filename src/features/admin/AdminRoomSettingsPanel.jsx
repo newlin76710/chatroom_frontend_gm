@@ -216,6 +216,38 @@ export default function AdminRoomSettingsPanel({ token }) {
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>不開放跳板IP</span>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13 }}>
+          <input
+            type="checkbox"
+            checked={!!settings.block_proxy_ip}
+            onChange={e => setSettings(s => ({ ...s, block_proxy_ip: e.target.checked }))}
+          />
+          啟用（偵測到跳板/VPN IP 一律拒絕訪客與帳號登入）
+        </label>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>不開放新會員</span>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13 }}>
+          <input
+            type="checkbox"
+            checked={!!settings.block_new_accounts}
+            onChange={e => setSettings(s => ({ ...s, block_new_accounts: e.target.checked }))}
+          />
+          啟用
+        </label>
+        <input
+          type="number"
+          min={1}
+          max={365}
+          value={settings.new_account_block_days ?? 7}
+          onChange={e => setSettings(s => ({ ...s, new_account_block_days: Number(e.target.value) }))}
+          disabled={!settings.block_new_accounts}
+          style={{ width: 60, padding: "5px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }}
+        />
+        <span style={{ fontSize: 12, color: "#888" }}>天內註冊的帳號無法登入（僅限帳號登入，不影響訪客）</span>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>相同IP可贈送</span>
         <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13 }}>
           <input
