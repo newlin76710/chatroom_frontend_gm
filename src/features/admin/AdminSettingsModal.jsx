@@ -155,7 +155,7 @@ const DEFAULT = {
   monthly_admin_gift_amount:  0,
 };
 
-export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
+export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLevel }) {
   const [settings, setSettings] = useState(DEFAULT);
   const [loading,  setLoading]  = useState(true);
   const [saving,   setSaving]   = useState(false);
@@ -457,8 +457,8 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                   )}
             </section>
 
-            {/* ─── 管理員公關金（每月固定發放給本房管理員） ───────── */}
-            {isApple && (
+            {/* ─── 管理員公關金（每月固定發放給本房管理員）：僅滿級站長（admin_max_level）看得到 ───────── */}
+            {isApple && myLevel >= (roomConfig.admin_max_level || 99) && (
             <section className="settings-section">
               <h4>
                 🎁 管理員公關金

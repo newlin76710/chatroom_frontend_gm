@@ -1585,6 +1585,7 @@ export default function ChatApp() {
             onClose={() => setShowAppleSetting(false)}
             token={token}
             BACKEND={BACKEND}
+            myLevel={level}
           />
         </DeferredPanel>
       )}
