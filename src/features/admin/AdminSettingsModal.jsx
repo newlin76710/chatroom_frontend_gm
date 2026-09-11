@@ -151,6 +151,8 @@ const DEFAULT = {
   online_reward_amount:             5,
   currency_name:             "",
   currency_emoji:            "💰",
+  monthly_admin_gift_enabled: false,
+  monthly_admin_gift_amount:  0,
 };
 
 export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
@@ -454,6 +456,27 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND }) {
                     </>
                   )}
             </section>
+
+            {/* ─── 管理員公關金（每月固定發放給本房管理員） ───────── */}
+            {isApple && (
+            <section className="settings-section">
+              <h4>
+                🎁 管理員公關金
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.monthly_admin_gift_enabled}
+                    onChange={e => setBool("monthly_admin_gift_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+              <Row label="每月發放數量">
+                <input type="number" min={0} value={settings.monthly_admin_gift_amount}
+                  onChange={e => setInt("monthly_admin_gift_amount", e.target.value)} />
+                <span className="field-note">
+                  個{currencyName}（每月 1 號自動發放給本房 {roomConfig.admin_min_level || 91}~{roomConfig.admin_max_level || 99} 級管理員，作為公關用；需滿級站長權限才能調整此設定）
+                </span>
+              </Row>
+            </section>
+            )}
 
             {/* ─── 遊戲一：多顆金蘋果 ────────────────────────────── */}
             {isApple && (
