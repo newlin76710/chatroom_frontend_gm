@@ -246,6 +246,28 @@ export default function ChatApp() {
   const speechCountRef = useRef(0);
   // 在線獎勵：下一次跟後端核對的排程 timer
   const onlineRewardTimerRef = useRef(null);
+
+  // 全螢幕特效佇列（煙火/雪球）：同時間只播一個，避免人多時大家一起觸發，
+  // 疊出好幾層全螢幕動畫同時解碼/合成造成 CPU/GPU 尖峰。多出來的請求依序排隊播放。
+  const effectQueueRef = useRef([]);
+  const effectPlayingRef = useRef(false);
+  const MAX_EFFECT_QUEUE = 6;
+  const playNextEffectRef = useRef(() => {});
+  playNextEffectRef.current = () => {
+    if (effectPlayingRef.current) return;
+    const next = effectQueueRef.current.shift();
+    if (!next) return;
+    effectPlayingRef.current = true;
+    next(() => {
+      effectPlayingRef.current = false;
+      playNextEffectRef.current();
+    });
+  };
+  const enqueueEffect = useCallback((run) => {
+    if (effectQueueRef.current.length >= MAX_EFFECT_QUEUE) return; // 佇列爆量時捨棄多餘特效，避免延遲累積到好幾分鐘後才播
+    effectQueueRef.current.push(run);
+    playNextEffectRef.current();
+  }, []);
   useEffect(() => { userListRef.current = userList; }, [userList]);
   useEffect(() => { closedVideoIdRef.current = closedVideoId; }, [closedVideoId]);
   useEffect(() => { roomRef.current = room; }, [room]);
@@ -612,47 +634,50 @@ export default function ChatApp() {
     };
 
     const handleFirework = (data) => {
-      const container = document.createElement("div");
-      container.className = "firework-container";
+      enqueueEffect((done) => {
+        const container = document.createElement("div");
+        container.className = "firework-container";
 
-      const img = document.createElement("img");
-      img.src = "/gifts/firework-transparent.webp";
-      img.className = "firework-gif";
-      img.alt = "";
+        const img = document.createElement("img");
+        img.src = "/gifts/firework-transparent.webp";
+        img.className = "firework-gif";
+        img.alt = "";
 
-      const message = document.createElement("div");
-      message.className = "firework-message";
-      message.textContent = data.message || "";
+        const message = document.createElement("div");
+        message.className = "firework-message";
+        message.textContent = data.message || "";
 
-      container.appendChild(img);
-      container.appendChild(message);
-      document.body.appendChild(container);
-      setTimeout(() => container.remove(), 5000);
+        container.appendChild(img);
+        container.appendChild(message);
+        document.body.appendChild(container);
+        setTimeout(() => { container.remove(); done(); }, 5000);
+      });
     };
 
     const showSnowballEffect = (text) => {
-      console.log("❄️ showSnowballEffect:", text);
-      const container = document.createElement("div");
-      container.className = "snowball-container";
+      enqueueEffect((done) => {
+        const container = document.createElement("div");
+        container.className = "snowball-container";
 
-      const message = document.createElement("div");
-      message.className = "snowball-message";
-      message.textContent = text;
-      container.appendChild(message);
+        const message = document.createElement("div");
+        message.className = "snowball-message";
+        message.textContent = text;
+        container.appendChild(message);
 
-      const FLAKE_COUNT = 24;
-      for (let i = 0; i < FLAKE_COUNT; i++) {
-        const flake = document.createElement("span");
-        flake.className = "snowball-flake";
-        flake.textContent = "❄️";
-        flake.style.left = `${Math.random() * 100}%`;
-        flake.style.animationDelay = `${(Math.random() * 0.4).toFixed(2)}s`;
-        flake.style.fontSize = `${16 + Math.random() * 20}px`;
-        container.appendChild(flake);
-      }
+        const FLAKE_COUNT = 24;
+        for (let i = 0; i < FLAKE_COUNT; i++) {
+          const flake = document.createElement("span");
+          flake.className = "snowball-flake";
+          flake.textContent = "❄️";
+          flake.style.left = `${Math.random() * 100}%`;
+          flake.style.animationDelay = `${(Math.random() * 0.4).toFixed(2)}s`;
+          flake.style.fontSize = `${16 + Math.random() * 20}px`;
+          container.appendChild(flake);
+        }
 
-      document.body.appendChild(container);
-      setTimeout(() => container.remove(), 2500);
+        document.body.appendChild(container);
+        setTimeout(() => { container.remove(); done(); }, 2500);
+      });
     };
 
     const handleSnowballHit = ({ from }) => {
@@ -680,7 +705,7 @@ export default function ChatApp() {
       socket.off("snowballThrown", handleSnowballThrown);
       socket.off("snowballError", handleSnowballError);
     };
-  }, [socket]);
+  }, [socket, enqueueEffect]);
 
   // ─── forceLogout / kickFailed ─────────────────────────────────────────────
   useEffect(() => {
@@ -1131,7 +1156,7 @@ export default function ChatApp() {
                 ownMessageLeft={ownMessageLeft}
                 messagesEndRef={messagesEndRef}
                 onSelectTarget={selectTarget}
-                userList={userList}
+                userListRef={userListRef}
                 scrollLocked={scrollLocked}
                 scrollLockedRef={scrollLockedRef}
                 legacyUI={legacyChatUI}
