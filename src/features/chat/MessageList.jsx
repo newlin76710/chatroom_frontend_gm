@@ -304,7 +304,7 @@ function MessageList({
   const _localRef = useRef(scrollLocked);            // 沒傳 ref 時的後備
   const activeScrollLockedRef = scrollLockedRef || _localRef;
   const prevScrollLockedRef = useRef(scrollLocked);
-  const prevMsgLenRef = useRef(0);
+  const prevLastMsgIdRef = useRef(null);
   // 沒有外部 ref 時才從 prop 同步（有外部 ref 則由 ChatApp 自行維護）
   if (!scrollLockedRef) _localRef.current = scrollLocked;
 
@@ -354,15 +354,19 @@ function MessageList({
     }
   }, []);
 
-  // 有新訊息時，依 scrollLocked 決定是否捲到底
+  // 有新訊息時，依 scrollLocked 決定是否捲到底。
+  // 用「最後一則訊息的 id」而非陣列長度判斷有沒有新訊息：
+  // 訊息數量達到 MAX_MESSAGES 上限後，陣列長度會固定不再增加（appendMsg 會把最舊的截掉），
+  // 若只看長度，訊息一多就會誤判成「沒有新訊息」而永遠不再自動捲動。
   useLayoutEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const currLen = messages.length;
-    if (currLen === 0) { prevMsgLenRef.current = 0; return; }
-    const prevLen = prevMsgLenRef.current;
-    prevMsgLenRef.current = currLen;
-    if (currLen <= prevLen || activeScrollLockedRef.current) return;
+    const lastMsg = messages[messages.length - 1];
+    const lastId = lastMsg?.id ?? null;
+    if (lastId === null) { prevLastMsgIdRef.current = null; return; }
+    if (lastId === prevLastMsgIdRef.current) return;
+    prevLastMsgIdRef.current = lastId;
+    if (activeScrollLockedRef.current) return;
     el.scrollTop = el.scrollHeight;
   }, [messages]);
 
