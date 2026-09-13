@@ -11,6 +11,9 @@ const FONT_SIZE_REM = { small: 0.85, medium: 1, large: 1.15, xlarge: 1.35 };
 // 這裡只是不讓太舊、已經捲出畫面的訊息繼續佔用 DOM 節點與重排成本。
 const RENDER_WINDOW = 150;
 
+// 給「不需要跟著在線名單重新解析顏色」的訊息列用的固定值——保持參照穩定，才能讓 memo 生效。
+const STABLE_ROSTER_TOKEN = null;
+
 const countryFlag = code =>
   code?.length === 2
     ? String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
@@ -39,6 +42,8 @@ const MessageRow = memo(function MessageRow({
   lookupUser,
   onSelectUser,
   scrollToBottomOnImageLoad,
+  // eslint-disable-next-line no-unused-vars -- 只用來讓 React.memo 判斷「這則訊息要不要因為在線名單變動而重新解析顏色」，本身不參與畫面渲染。
+  rosterToken,
 }) {
   const userName = safeText(m.user?.name);
   const targetName = safeText(m.target);
@@ -376,21 +381,33 @@ function MessageList({
 
   return (
     <div ref={containerRef} className="message-list">
-      {windowed.map((m, i) => (
-        <MessageRow
-          key={m.id ?? i}
-          m={m}
-          name={name}
-          level={level}
-          AML={AML}
-          ownMessageLeft={ownMessageLeft}
-          legacyUI={legacyUI}
-          getUserColor={getUserColor}
-          lookupUser={lookupUser}
-          onSelectUser={handleSelectUser}
-          scrollToBottomOnImageLoad={scrollToBottomOnImageLoad}
-        />
-      ))}
+      {windowed.map((m, i) => {
+        // 訊息本身的作者名字顏色在寫入 state 時就已經帶好性別資料（見 useMessages.js 的 fullUser），
+        // 不需要每次都跟在線名單核對，可以放心讓這一列長期沿用 memo 結果。
+        // 但系統訊息裡提到的「其他人名」（進入聊天室/升級/煙火…）跟轉帳/禮物的收禮對象，
+        // 是在渲染當下才去現查在線名單解析顏色——如果解析當下那個人剛好還沒被加進名單
+        // （常見於「XXX 進入聊天室」這類訊息，跟名單廣播互有先後），
+        // 就必須讓這一列在名單之後更新時「還有機會」重新算一次，否則顏色會凍結在第一次算出來的（通常是找不到人時的預設綠色）。
+        const isSystemMsg = m.user?.name === "系統";
+        const isTxOrGift = m.type === "transaction" || m.type === "gift";
+        const rosterToken = (isSystemMsg || isTxOrGift) ? userList : STABLE_ROSTER_TOKEN;
+        return (
+          <MessageRow
+            key={m.id ?? i}
+            m={m}
+            name={name}
+            level={level}
+            AML={AML}
+            ownMessageLeft={ownMessageLeft}
+            legacyUI={legacyUI}
+            getUserColor={getUserColor}
+            lookupUser={lookupUser}
+            onSelectUser={handleSelectUser}
+            scrollToBottomOnImageLoad={scrollToBottomOnImageLoad}
+            rosterToken={rosterToken}
+          />
+        );
+      })}
 
       {typing && <div className="typing fade-in" style={{ fontSize: "0.9rem", color: "#aaa", marginTop: 4 }}>{safeText(typing)}</div>}
 
