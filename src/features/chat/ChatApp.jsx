@@ -187,6 +187,8 @@ export default function ChatApp() {
   const [filteredUsers, setFilteredUsers] = useState([]);
   // 隱藏系統自動發送的遊戲推播廣播（純前端偏好，不持久化，跟 filteredUsers 同一套模式）
   const [hideGameBroadcasts, setHideGameBroadcasts] = useState(false);
+  // 隱藏全螢幕煙火/雪球特效（有人反應打殭屍時會被擋住畫面而失敗），存在 sessionStorage 讓偏好留到下次重整
+  const [hideFxEffects, setHideFxEffects] = useState(() => sessionStorage.getItem("hideFxEffects") === "true");
   const [currentSinger, setCurrentSinger] = useState(null);
   const [convertTC, setConvertTC] = useState(true);
   const [appleAmount, setAppleAmount] = useState(1);
@@ -282,6 +284,10 @@ export default function ChatApp() {
     }),
     [messages, filteredUsers, hideGameBroadcasts]
   );
+
+  // 給 socket handler 讀最新值用（見下方 handleFirework/showSnowballEffect），避免因為這個偏好改變就要重新掛一次 socket 監聽
+  const hideFxEffectsRef = useRef(hideFxEffects);
+  useEffect(() => { hideFxEffectsRef.current = hideFxEffects; }, [hideFxEffects]);
 
   // ─── 初始化 ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -634,6 +640,7 @@ export default function ChatApp() {
     };
 
     const handleFirework = (data) => {
+      if (hideFxEffectsRef.current) return; // 使用者在功能選單關掉了煙火/雪球特效（例如打殭屍時會被擋住畫面）
       enqueueEffect((done) => {
         const container = document.createElement("div");
         container.className = "firework-container";
@@ -655,6 +662,7 @@ export default function ChatApp() {
     };
 
     const showSnowballEffect = (text) => {
+      if (hideFxEffectsRef.current) return; // 使用者在功能選單關掉了煙火/雪球特效（例如打殭屍時會被擋住畫面）
       enqueueEffect((done) => {
         const container = document.createElement("div");
         container.className = "snowball-container";
@@ -1204,6 +1212,14 @@ export default function ChatApp() {
                         {
                           label: hideGameBroadcasts ? "🔊 顯示遊戲推播" : "🙈 隱藏遊戲推播",
                           onClick: () => setHideGameBroadcasts((v) => !v),
+                        },
+                        {
+                          label: hideFxEffects ? "🎆 顯示煙火與雪球特效" : "🚫 隱藏煙火與雪球特效",
+                          onClick: () => setHideFxEffects((v) => {
+                            const next = !v;
+                            sessionStorage.setItem("hideFxEffects", next ? "true" : "false");
+                            return next;
+                          }),
                         },
                         ...(!invisible ? [
                           { label: "點播歌曲", onClick: () => setShowSongRequestModal(true) },
