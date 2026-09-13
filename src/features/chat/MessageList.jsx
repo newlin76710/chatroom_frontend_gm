@@ -289,7 +289,6 @@ function MessageList({
   messagesEndRef,
   onSelectTarget,
   userList = [],
-  userListRef,
   scrollLocked = false,
   scrollLockedRef,         // 從 ChatApp 傳入的 ref，點擊時同步更新
   ownMessageLeft = roomConfig.own_message_left,
@@ -305,15 +304,16 @@ function MessageList({
   if (!scrollLockedRef) _localRef.current = scrollLocked;
 
   // userList 在忙碌房間裡幾乎每個 updateUsers 廣播都會換一個新陣列參照，
-  // 若當成一般 prop 傳給下面的 memo 行，會逼著所有訊息列一起重新渲染。
-  // 這裡優先吃 userListRef（ref 不會觸發重新渲染），沒有才退回吃 prop（相容舊用法）。
-  const _localUserListRef = useRef(userList);
-  _localUserListRef.current = userList;
-  const activeUserListRef = userListRef || _localUserListRef;
+  // 若直接把它當成 MessageRow 的 prop 往下傳，會逼著所有訊息列一起重新渲染。
+  // 這裡改用 ref 存最新名單，在「渲染當下」同步寫入（不是 useEffect，避免讀到上一輪的舊快照），
+  // 讓 getUserColor/lookupUser 這兩個傳給 MessageRow 的 callback 參照維持穩定，
+  // MessageRow 才能真正跳過因在線名單變動而觸發的重新渲染。
+  const userListRef = useRef(userList);
+  userListRef.current = userList;
 
   const lookupUser = useCallback((userName) => {
-    return activeUserListRef.current.find((u) => u.name === userName);
-  }, [activeUserListRef]);
+    return userListRef.current.find((u) => u.name === userName);
+  }, []);
 
   const getUserColor = useCallback((userName) => {
     const user = lookupUser(userName);

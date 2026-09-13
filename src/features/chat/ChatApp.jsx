@@ -1156,7 +1156,7 @@ export default function ChatApp() {
                 ownMessageLeft={ownMessageLeft}
                 messagesEndRef={messagesEndRef}
                 onSelectTarget={selectTarget}
-                userListRef={userListRef}
+                userList={userList}
                 scrollLocked={scrollLocked}
                 scrollLockedRef={scrollLockedRef}
                 legacyUI={legacyChatUI}
