@@ -674,9 +674,14 @@ body {
   cursor: pointer;
 }
 
+.apple-amount-wrap {
+  position: relative;
+  display: inline-block;
+}
+
 .apple-amount-input {
   width: 92px;
-  padding: 6px 8px;
+  padding: 6px 22px 6px 8px;
   font-size: 1.05rem;
   font-weight: 600;
   letter-spacing: 0.5px;
@@ -684,6 +689,41 @@ body {
   text-align: center;
   border-radius: 6px;
   border: 1px solid #ccc;
+}
+
+.apple-amount-spinner {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  bottom: 1px;
+  display: flex;
+  flex-direction: column;
+  width: 20px;
+}
+
+.apple-amount-spinner button {
+  flex: 1 1 0;
+  padding: 0;
+  border: none;
+  border-left: 1px solid #ccc;
+  background: #f0f0f0;
+  font-size: 0.6rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #555;
+}
+
+.apple-amount-spinner button:first-child {
+  border-top-right-radius: 6px;
+  border-bottom: 1px solid #ccc;
+}
+
+.apple-amount-spinner button:last-child {
+  border-bottom-right-radius: 6px;
+}
+
+.apple-amount-spinner button:hover {
+  background: #e0e0e0;
 }
 
 .apple-send-btn {

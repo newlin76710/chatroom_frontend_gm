@@ -967,6 +967,12 @@ export default function ChatApp() {
     }
   }, [target, appleAmount, token, apples, perTransferLimit, level, ANL, isPrivateGift]);
 
+  // 送幣數量 ▲▼ 微調：+1/-1，並套用跟輸入框一致的上限（一般玩家受單筆轉帳上限限制）
+  const stepAppleAmount = useCallback((delta) => {
+    const maxVal = (level < ANL && perTransferLimit > 0) ? Math.min(apples, perTransferLimit) : apples;
+    setAppleAmount((prev) => Math.max(1, Math.min(maxVal, (Number.isFinite(prev) ? prev : 1) + delta)));
+  }, [level, ANL, perTransferLimit, apples]);
+
   const sendPeony = useCallback(async () => {
     if (!target) { alert("請選擇對象"); return; }
     const amount = Math.max(1, Math.floor(appleAmount) || 1);
@@ -1506,24 +1512,30 @@ export default function ChatApp() {
                           .map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
                       </select>
 
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        value={appleAmountText}
-                        onChange={(e) => {
-                          const digits = e.target.value.replace(/\D/g, "");
-                          if (digits === "") { setAppleAmountText(""); return; }
-                          const maxVal = (level < ANL && perTransferLimit > 0) ? Math.min(apples, perTransferLimit) : apples;
-                          const parsed = Math.max(1, Math.min(maxVal, parseInt(digits, 10)));
-                          setAppleAmount(parsed);
-                          setAppleAmountText(parsed.toLocaleString("en-US"));
-                        }}
-                        onBlur={() => {
-                          if (appleAmountText === "") setAppleAmountText(appleAmount.toLocaleString("en-US"));
-                        }}
-                        className="apple-amount-input"
-                      />
+                      <div className="apple-amount-wrap">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          value={appleAmountText}
+                          onChange={(e) => {
+                            const digits = e.target.value.replace(/\D/g, "");
+                            if (digits === "") { setAppleAmountText(""); return; }
+                            const maxVal = (level < ANL && perTransferLimit > 0) ? Math.min(apples, perTransferLimit) : apples;
+                            const parsed = Math.max(1, Math.min(maxVal, parseInt(digits, 10)));
+                            setAppleAmount(parsed);
+                            setAppleAmountText(parsed.toLocaleString("en-US"));
+                          }}
+                          onBlur={() => {
+                            if (appleAmountText === "") setAppleAmountText(appleAmount.toLocaleString("en-US"));
+                          }}
+                          className="apple-amount-input"
+                        />
+                        <div className="apple-amount-spinner">
+                          <button type="button" tabIndex={-1} onClick={() => stepAppleAmount(1)} aria-label="增加數量">▲</button>
+                          <button type="button" tabIndex={-1} onClick={() => stepAppleAmount(-1)} aria-label="減少數量">▼</button>
+                        </div>
+                      </div>
 
                       {target && (
                         <label className="gift-private-toggle" style={{ display: "flex", alignItems: "center", gap: 6, margin: "4px 0", fontSize: "0.85rem" }}>
