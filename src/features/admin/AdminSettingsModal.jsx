@@ -49,6 +49,7 @@ const DEFAULT = {
   littlemary_cooldown_minutes: 10,
   littlemary_auto_enabled: false,
   littlemary_auto_interval_minutes: 15,
+  flower_effect_enabled: true,
   flower_effect_threshold: 999,
   flower_effect_burst_limit: 1,
   flower_effect_cooldown_minutes: 5,
@@ -926,11 +927,14 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                         })} />
                       <span>賠率 ×</span>
                       <input type="number" min={1} value={sym.multiplier} style={{ width: 64 }}
-                        onChange={e => setSettings(p => {
-                          const symbols = [...p.littlemary_symbols];
-                          symbols[idx] = { ...symbols[idx], multiplier: Number(e.target.value) || 1 };
-                          return { ...p, littlemary_symbols: symbols };
-                        })} />
+                        onChange={e => {
+                          const raw = e.target.value;
+                          setSettings(p => {
+                            const symbols = [...p.littlemary_symbols];
+                            symbols[idx] = { ...symbols[idx], multiplier: raw === "" ? "" : (Number(raw) || 1) };
+                            return { ...p, littlemary_symbols: symbols };
+                          });
+                        }} />
                     </div>
                   ))}
                   <span className="field-note">押中的圖案獎金 = 下注金額 × 賠率倍率，共 {(settings.littlemary_symbols || []).length} 個圖案</span>
@@ -975,7 +979,14 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
             {/* ─── 送花特效升級（僅金幣模式） ──────────────────────────── */}
             {isCoin && (
             <section className="settings-section">
-              <h4>🌹 送花特效升級</h4>
+              <h4>
+                🌹 送花特效升級
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={settings.flower_effect_enabled !== false}
+                    onChange={e => setBool("flower_effect_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
               <Row label="觸發門檻">
                 <input type="number" min={1} value={settings.flower_effect_threshold}
                   onChange={e => setInt("flower_effect_threshold", e.target.value)} />

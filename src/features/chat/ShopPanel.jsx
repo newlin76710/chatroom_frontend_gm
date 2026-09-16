@@ -33,8 +33,10 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
     setQuantities((prev) => ({ ...prev, [id]: n }));
   };
 
+  // rose 兩邊都要有：送花特效升級（單次總金額達門檻自動加碼全螢幕特效）才會有足夠多玩家
+  // 摸得到這個入口，不能只藏在商城裡
   const GIFT_IDS = isMarket
-    ? ["diamond", "plane", "car"]
+    ? ["diamond", "plane", "car", "rose"]
     : ["rose", "chocolate", "cake"];
 
   const items = isMarket
@@ -42,6 +44,7 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
         { id: "diamond",  name: "💎 鑽石(送禮)", price: 5 },
         { id: "plane",    name: "✈️ 飛機(送禮)", price: 5 },
         { id: "car",      name: "🚗 跑車(送禮)", price: 5 },
+        { id: "rose",     name: "🌹 玫瑰(送禮)", price: 5 },
         { id: "firework", name: "🎆 放煙火(全場特效)", price: 15 },
         { id: "ball",     name: "🔮 積分球(+1000積分)", price: 30 },
         { id: "rename",   name: "✏️ 升級卡(+1級)",  price: 1000 },

@@ -36,6 +36,17 @@ export default function AdminRoomSettingsPanel({ token }) {
 
   if (!settings) return <div style={{ padding: 12, color: "#888" }}>讀取中…</div>;
 
+  // 數字輸入框專用：使用者清空框框準備重打時，e.target.value 會是 ""，這時如果直接
+  // Number("") 存回 0，畫面會立刻被 controlled value 拉回顯示 "0"，游標卡在 0 後面，
+  // 接下來打的每個數字都會接在這個 0 後面（例如想打 10，結果變成 010）。先允許狀態暫時
+  // 存成空字串（畫面顯示空白），真正存檔送出前再由後端/儲存時的型別轉換處理。
+  const setInt = (key, raw) => {
+    if (raw === "") { setSettings(s => ({ ...s, [key]: "" })); return; }
+    const n = Number(raw);
+    if (Number.isNaN(n) || n < 0) return;
+    setSettings(s => ({ ...s, [key]: Math.floor(n) }));
+  };
+
   return (
     <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -144,7 +155,7 @@ export default function AdminRoomSettingsPanel({ token }) {
           min={0}
           max={60}
           value={settings.message_cooldown_seconds ?? 1}
-          onChange={e => setSettings(s => ({ ...s, message_cooldown_seconds: Number(e.target.value) }))}
+          onChange={e => setInt("message_cooldown_seconds", e.target.value)}
           style={{ width: 70, padding: "5px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }}
         />
         <span style={{ fontSize: 12, color: "#888" }}>秒（0-60，發送訊息後需等待的秒數）</span>
@@ -156,7 +167,7 @@ export default function AdminRoomSettingsPanel({ token }) {
           min={1}
           max={50}
           value={settings.nickname_max_length ?? 10}
-          onChange={e => setSettings(s => ({ ...s, nickname_max_length: Number(e.target.value) }))}
+          onChange={e => setInt("nickname_max_length", e.target.value)}
           style={{ width: 70, padding: "5px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }}
         />
         <span style={{ fontSize: 12, color: "#888" }}>
@@ -170,7 +181,7 @@ export default function AdminRoomSettingsPanel({ token }) {
           min={roomConfig.admin_min_level || 91}
           max={roomConfig.admin_max_level || 99}
           value={settings.mini_admin_level ?? 98}
-          onChange={e => setSettings(s => ({ ...s, mini_admin_level: Number(e.target.value) }))}
+          onChange={e => setInt("mini_admin_level", e.target.value)}
           style={{ width: 70, padding: "5px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }}
         />
         <span style={{ fontSize: 12, color: "#888" }}>
@@ -197,7 +208,7 @@ export default function AdminRoomSettingsPanel({ token }) {
           type="number"
           min={0}
           value={settings.firework_cooldown_minutes ?? 0}
-          onChange={e => setSettings(s => ({ ...s, firework_cooldown_minutes: Number(e.target.value) }))}
+          onChange={e => setInt("firework_cooldown_minutes", e.target.value)}
           style={{ width: 70, padding: "5px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }}
         />
         <span style={{ fontSize: 12, color: "#888" }}>分鐘（同一 IP 施放一次後要等幾分鐘才能再放；0 = 不限制）</span>
@@ -209,7 +220,7 @@ export default function AdminRoomSettingsPanel({ token }) {
           type="number"
           min={0}
           value={settings.snowball_cooldown_minutes ?? 10}
-          onChange={e => setSettings(s => ({ ...s, snowball_cooldown_minutes: Number(e.target.value) }))}
+          onChange={e => setInt("snowball_cooldown_minutes", e.target.value)}
           style={{ width: 70, padding: "5px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }}
         />
         <span style={{ fontSize: 12, color: "#888" }}>分鐘（50 級以上互動「丟雪球」，同一使用者丟出後要等幾分鐘才能再丟；0 = 不限制）</span>
@@ -241,7 +252,7 @@ export default function AdminRoomSettingsPanel({ token }) {
           min={1}
           max={365}
           value={settings.new_account_block_days ?? 7}
-          onChange={e => setSettings(s => ({ ...s, new_account_block_days: Number(e.target.value) }))}
+          onChange={e => setInt("new_account_block_days", e.target.value)}
           disabled={!settings.block_new_accounts}
           style={{ width: 60, padding: "5px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }}
         />
@@ -274,21 +285,34 @@ export default function AdminRoomSettingsPanel({ token }) {
           min={0}
           max={500}
           value={settings.virtual_users_count ?? 0}
-          onChange={e => setSettings(s => ({ ...s, virtual_users_count: Number(e.target.value) }))}
+          onChange={e => setInt("virtual_users_count", e.target.value)}
           disabled={!settings.virtual_users_enabled}
           style={{ width: 70, padding: "5px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }}
         />
         <span style={{ fontSize: 12, color: "#888" }}>人（目標在線假人數量，會隨機浮動進出，不受貨幣模式限制）</span>
       </div>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0, paddingTop: 5 }}>虛擬用戶暱稱庫</span>
+        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0, paddingTop: 5 }}>男性暱稱庫</span>
         <textarea
-          value={settings.virtual_user_names || ""}
-          onChange={e => setSettings(s => ({ ...s, virtual_user_names: e.target.value }))}
+          value={settings.virtual_user_names_male || ""}
+          onChange={e => setSettings(s => ({ ...s, virtual_user_names_male: e.target.value }))}
           rows={5}
-          placeholder={"每行一個暱稱，例如：\n小明\n小美\n路人甲"}
+          placeholder={"每行一個暱稱，例如：\n小明\n阿強\n路人甲"}
           style={{ flex: 1, padding: "6px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13, fontFamily: "inherit", resize: "vertical" }}
         />
+      </div>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0, paddingTop: 5 }}>女性暱稱庫</span>
+        <textarea
+          value={settings.virtual_user_names_female || ""}
+          onChange={e => setSettings(s => ({ ...s, virtual_user_names_female: e.target.value }))}
+          rows={5}
+          placeholder={"每行一個暱稱，例如：\n小美\n阿珍\n路人乙"}
+          style={{ flex: 1, padding: "6px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13, fontFamily: "inherit", resize: "vertical" }}
+        />
+      </div>
+      <div style={{ fontSize: 12, color: "#888", marginLeft: 120 }}>
+        虛擬用戶會從男/女暱稱庫隨機抽人加入在線列表，名字跟性別是配對好的（男暱稱庫的名字一定顯示男生），兩邊都填才會有效果。
       </div>
 
       <button
