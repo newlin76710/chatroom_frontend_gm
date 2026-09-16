@@ -259,6 +259,38 @@ export default function AdminRoomSettingsPanel({ token }) {
         </label>
       </div>
 
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>虛擬用戶充人氣</span>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13 }}>
+          <input
+            type="checkbox"
+            checked={!!settings.virtual_users_enabled}
+            onChange={e => setSettings(s => ({ ...s, virtual_users_enabled: e.target.checked }))}
+          />
+          啟用
+        </label>
+        <input
+          type="number"
+          min={0}
+          max={500}
+          value={settings.virtual_users_count ?? 0}
+          onChange={e => setSettings(s => ({ ...s, virtual_users_count: Number(e.target.value) }))}
+          disabled={!settings.virtual_users_enabled}
+          style={{ width: 70, padding: "5px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }}
+        />
+        <span style={{ fontSize: 12, color: "#888" }}>人（目標在線假人數量，會隨機浮動進出，不受貨幣模式限制）</span>
+      </div>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0, paddingTop: 5 }}>虛擬用戶暱稱庫</span>
+        <textarea
+          value={settings.virtual_user_names || ""}
+          onChange={e => setSettings(s => ({ ...s, virtual_user_names: e.target.value }))}
+          rows={5}
+          placeholder={"每行一個暱稱，例如：\n小明\n小美\n路人甲"}
+          style={{ flex: 1, padding: "6px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13, fontFamily: "inherit", resize: "vertical" }}
+        />
+      </div>
+
       <button
         onClick={save}
         disabled={saving}

@@ -29,6 +29,36 @@ const DEFAULT = {
   pushcard_max_bet:     50,
   pushcard_duration:    10,
   pushcard_cooldown_minutes: 20,
+  pushcard_burst_limit: 1,
+  pushcard_auto_enabled: false,
+  pushcard_auto_interval_minutes: 30,
+  littlemary_enabled:   false,
+  littlemary_max_bet_per_symbol: 50,
+  littlemary_symbols: [
+    { key: "cherry", label: "🍒", multiplier: 2 },
+    { key: "bell", label: "🔔", multiplier: 3 },
+    { key: "star", label: "⭐", multiplier: 3 },
+    { key: "grape", label: "🍇", multiplier: 4 },
+    { key: "watermelon", label: "🍉", multiplier: 5 },
+    { key: "seven", label: "7️⃣", multiplier: 8 },
+    { key: "gem", label: "💎", multiplier: 10 },
+    { key: "crown", label: "👑", multiplier: 15 },
+  ],
+  littlemary_round_duration: 20,
+  littlemary_burst_limit: 1,
+  littlemary_cooldown_minutes: 10,
+  littlemary_auto_enabled: false,
+  littlemary_auto_interval_minutes: 15,
+  flower_effect_threshold: 999,
+  flower_effect_burst_limit: 1,
+  flower_effect_cooldown_minutes: 5,
+  red_envelope_amount_options: "100,500,1000,5000",
+  red_envelope_distribution_mode: "even",
+  red_envelope_burst_limit: 1,
+  red_envelope_cooldown_minutes: 10,
+  celebration_amount_options: "100,500,1000",
+  celebration_burst_limit: 1,
+  celebration_cooldown_minutes: 10,
   surprise_reward:      10,
   game1_enabled:        true,
   game1_hour:           20,
@@ -407,6 +437,29 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                   onChange={e => setInt("pushcard_cooldown_minutes", e.target.value)} />
                 <span className="field-note">分鐘（0-60，每局結束後要等幾分鐘才能再開新局，確保有純聽歌時間；0 = 不開啟冷卻）</span>
               </Row>
+
+              {isCoin && (
+              <>
+                <Row label="推牌可連發場次">
+                  <input type="number" min={1} max={20} value={settings.pushcard_burst_limit}
+                    onChange={e => setInt("pushcard_burst_limit", e.target.value)} />
+                  <span className="field-note">場（連續開到這個場次才會真的進入冷卻分鐘數倒數，預設 1 = 每場結束就冷卻，跟改版前一樣）</span>
+                </Row>
+                <Row label="推牌無人值守自動開局">
+                  <label className="toggle-label">
+                    <input type="checkbox" checked={!!settings.pushcard_auto_enabled}
+                      onChange={e => setBool("pushcard_auto_enabled", e.target.checked)} />
+                    {" "}啟用
+                  </label>
+                  <span className="field-note">開啟後不論有無管理員在線都會自動開局；關閉時，只要現場沒有管理員在線一樣會自動開局補場，開局訊息會顯示「忘年音樂電台管理團隊」發起</span>
+                </Row>
+                <Row label="推牌自動開局間隔">
+                  <input type="number" min={1} max={1440} value={settings.pushcard_auto_interval_minutes}
+                    onChange={e => setInt("pushcard_auto_interval_minutes", e.target.value)} />
+                  <span className="field-note">分鐘（例如 30 = 每 30 分鐘檢查一次是否要自動開一場）</span>
+                </Row>
+              </>
+              )}
               {isApple && (
                 <Row label="每日樂透獎勵">
                   <input type="number" value={settings.surprise_reward}
@@ -845,6 +898,151 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                     onChange={e => setInt("dig_reward_max", e.target.value)} />
                   <span className="field-note">個{currencyName}（每次挖寶隨機獲得）</span>
                 </div>
+              </Row>
+            </section>
+            )}
+
+            {/* ─── 小瑪莉跑馬燈押注（僅金幣模式） ──────────────────────── */}
+            {isCoin && (
+            <section className="settings-section">
+              <h4>
+                🎡 小瑪莉跑馬燈押注
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.littlemary_enabled}
+                    onChange={e => setBool("littlemary_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+
+              <Row label="圖案與賠率倍率">
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, width: "100%" }}>
+                  {(settings.littlemary_symbols || []).map((sym, idx) => (
+                    <div key={sym.key} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <input type="text" value={sym.label} style={{ width: 50, textAlign: "center" }}
+                        onChange={e => setSettings(p => {
+                          const symbols = [...p.littlemary_symbols];
+                          symbols[idx] = { ...symbols[idx], label: e.target.value };
+                          return { ...p, littlemary_symbols: symbols };
+                        })} />
+                      <span>賠率 ×</span>
+                      <input type="number" min={1} value={sym.multiplier} style={{ width: 64 }}
+                        onChange={e => setSettings(p => {
+                          const symbols = [...p.littlemary_symbols];
+                          symbols[idx] = { ...symbols[idx], multiplier: Number(e.target.value) || 1 };
+                          return { ...p, littlemary_symbols: symbols };
+                        })} />
+                    </div>
+                  ))}
+                  <span className="field-note">押中的圖案獎金 = 下注金額 × 賠率倍率，共 {(settings.littlemary_symbols || []).length} 個圖案</span>
+                </div>
+              </Row>
+              <Row label="單局每圖案下注上限">
+                <input type="number" min={1} value={settings.littlemary_max_bet_per_symbol}
+                  onChange={e => setInt("littlemary_max_bet_per_symbol", e.target.value)} />
+                <span className="field-note">個{currencyName}（每個圖案各自的下注上限）</span>
+              </Row>
+              <Row label="下注時間">
+                <input type="number" min={5} max={300} value={settings.littlemary_round_duration}
+                  onChange={e => setInt("littlemary_round_duration", e.target.value)} />
+                <span className="field-note">秒（開放下注到開獎的秒數）</span>
+              </Row>
+              <Row label="可連發場次">
+                <input type="number" min={1} max={20} value={settings.littlemary_burst_limit}
+                  onChange={e => setInt("littlemary_burst_limit", e.target.value)} />
+                <span className="field-note">場（連續開到這個場次才會真的進入冷卻分鐘數倒數，預設 1 = 每場結束就冷卻）</span>
+              </Row>
+              <Row label="冷卻分鐘數">
+                <input type="number" min={0} max={60} value={settings.littlemary_cooldown_minutes}
+                  onChange={e => setInt("littlemary_cooldown_minutes", e.target.value)} />
+                <span className="field-note">分鐘（0-60，0 = 不開啟冷卻）</span>
+              </Row>
+              <Row label="無人值守自動開局">
+                <label className="toggle-label">
+                  <input type="checkbox" checked={!!settings.littlemary_auto_enabled}
+                    onChange={e => setBool("littlemary_auto_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+                <span className="field-note">開啟後不論有無管理員在線都會自動開局；關閉時，只要現場沒有管理員在線一樣會自動開局補場</span>
+              </Row>
+              <Row label="自動開局間隔">
+                <input type="number" min={1} max={1440} value={settings.littlemary_auto_interval_minutes}
+                  onChange={e => setInt("littlemary_auto_interval_minutes", e.target.value)} />
+                <span className="field-note">分鐘（例如 15 = 每 15 分鐘檢查一次是否要自動開一場）</span>
+              </Row>
+            </section>
+            )}
+
+            {/* ─── 送花特效升級（僅金幣模式） ──────────────────────────── */}
+            {isCoin && (
+            <section className="settings-section">
+              <h4>🌹 送花特效升級</h4>
+              <Row label="觸發門檻">
+                <input type="number" min={1} value={settings.flower_effect_threshold}
+                  onChange={e => setInt("flower_effect_threshold", e.target.value)} />
+                <span className="field-note">個{currencyName}（單次送花總金額達此門檻，自動加碼全螢幕特效）</span>
+              </Row>
+              <Row label="可連發場次">
+                <input type="number" min={1} max={20} value={settings.flower_effect_burst_limit}
+                  onChange={e => setInt("flower_effect_burst_limit", e.target.value)} />
+                <span className="field-note">次（連續觸發到這個次數才會真的進入冷卻分鐘數倒數）</span>
+              </Row>
+              <Row label="冷卻分鐘數">
+                <input type="number" min={0} max={60} value={settings.flower_effect_cooldown_minutes}
+                  onChange={e => setInt("flower_effect_cooldown_minutes", e.target.value)} />
+                <span className="field-note">分鐘（0-60，0 = 不開啟冷卻；一般送花不受此限制，只限制大特效觸發頻率）</span>
+              </Row>
+            </section>
+            )}
+
+            {/* ─── 全場金幣雨／發紅包（僅金幣模式） ────────────────────── */}
+            {isCoin && (
+            <section className="settings-section">
+              <h4>🧧 全場金幣雨／發紅包</h4>
+              <Row label="金額選單">
+                <input type="text" value={settings.red_envelope_amount_options}
+                  onChange={e => setSettings(p => ({ ...p, red_envelope_amount_options: e.target.value }))}
+                  placeholder="100,500,1000,5000" style={{ width: 180 }} />
+                <span className="field-note">逗號分隔的正整數，玩家發紅包時可選其中一個金額</span>
+              </Row>
+              <Row label="分配方式">
+                <select value={settings.red_envelope_distribution_mode}
+                  onChange={e => setSettings(p => ({ ...p, red_envelope_distribution_mode: e.target.value }))}>
+                  <option value="even">均分</option>
+                  <option value="random">隨機</option>
+                </select>
+              </Row>
+              <Row label="可連發場次">
+                <input type="number" min={1} max={20} value={settings.red_envelope_burst_limit}
+                  onChange={e => setInt("red_envelope_burst_limit", e.target.value)} />
+                <span className="field-note">次（連續發到這個次數才會真的進入冷卻分鐘數倒數）</span>
+              </Row>
+              <Row label="冷卻分鐘數">
+                <input type="number" min={0} max={60} value={settings.red_envelope_cooldown_minutes}
+                  onChange={e => setInt("red_envelope_cooldown_minutes", e.target.value)} />
+                <span className="field-note">分鐘（0-60，0 = 不開啟冷卻）</span>
+              </Row>
+            </section>
+            )}
+
+            {/* ─── 專屬慶典模式（僅金幣模式） ──────────────────────────── */}
+            {isCoin && (
+            <section className="settings-section">
+              <h4>🎉 專屬慶典模式</h4>
+              <Row label="金額選單">
+                <input type="text" value={settings.celebration_amount_options}
+                  onChange={e => setSettings(p => ({ ...p, celebration_amount_options: e.target.value }))}
+                  placeholder="100,500,1000" style={{ width: 180 }} />
+                <span className="field-note">逗號分隔的正整數，玩家發起慶典時可選其中一個金額</span>
+              </Row>
+              <Row label="可連發場次">
+                <input type="number" min={1} max={20} value={settings.celebration_burst_limit}
+                  onChange={e => setInt("celebration_burst_limit", e.target.value)} />
+                <span className="field-note">次（連續發起到這個次數才會真的進入冷卻分鐘數倒數）</span>
+              </Row>
+              <Row label="冷卻分鐘數">
+                <input type="number" min={0} max={60} value={settings.celebration_cooldown_minutes}
+                  onChange={e => setInt("celebration_cooldown_minutes", e.target.value)} />
+                <span className="field-note">分鐘（0-60，0 = 不開啟冷卻）</span>
               </Row>
             </section>
             )}

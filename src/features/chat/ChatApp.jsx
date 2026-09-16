@@ -39,6 +39,7 @@ import { Converter } from "opencc-js";
 
 // ─── 環境設定 ────────────────────────────────────────────────────────────────
 import { roomConfig, loadRoomConfig, BACKEND, RN } from "../../shared/roomConfig";
+import { BRAND_NAME } from "../../shared/brand";
 loadRoomConfig();
 const FRONTEND_VERSION = import.meta.env.VITE_APP_VERSION || "dev";
 
@@ -89,6 +90,9 @@ const CherryTreeGame = lazy(() => import("../games/CherryTreeGame"));
 const DigTreasureGame = lazy(() => import("../games/DigTreasureGame"));
 const MarqueeGame = lazy(() => import("../games/MarqueeGame"));
 const PushCardGame = lazy(() => import("../games/PushCardGame"));
+const LittleMaryGame = lazy(() => import("../games/LittleMaryGame"));
+const RedEnvelopeGame = lazy(() => import("./RedEnvelopeGame"));
+const CelebrationModeGame = lazy(() => import("./CelebrationModeGame"));
 const AdminToolPanel = lazy(() => import("../admin/AdminToolPanel"));
 const ShopPanel = lazy(() => import("./ShopPanel"));
 const GameHallPanel = lazy(() => import("../gamehall/GameHallPanel"));
@@ -222,6 +226,12 @@ export default function ChatApp() {
   // 這樣分頁切到背景再切回來、或裝置時間有延遲時，剩餘時間還是能算對，不會累積誤差。
   const [pushCardCooldownEndsAt, setPushCardCooldownEndsAt] = useState(null);
   const [pushCardCooldownRemainingMs, setPushCardCooldownRemainingMs] = useState(0);
+  // 推牌可連發場次：burstLimit>1 時才有意義（=1 是預設值，代表沒有開連發功能）
+  const [pushCardBurstInfo, setPushCardBurstInfo] = useState(null); // { remaining, limit } | null
+  const [littleMaryActive, setLittleMaryActive] = useState(false);
+  const [littleMaryCooldownEndsAt, setLittleMaryCooldownEndsAt] = useState(null);
+  const [littleMaryCooldownRemainingMs, setLittleMaryCooldownRemainingMs] = useState(0);
+  const [littleMaryBurstInfo, setLittleMaryBurstInfo] = useState(null); // { remaining, limit } | null
 
   const [invalidTokenCountdown, setInvalidTokenCountdown] = useState(null);
   const invalidTokenTimerRef = useRef(null);
@@ -556,6 +566,9 @@ export default function ChatApp() {
     const onEnd = (data) => {
       setPushCardActive(false);
       setPushCardCooldownEndsAt(data?.cooldownEndsAt || null);
+      setPushCardBurstInfo(
+        data?.burstLimit > 1 ? { remaining: data.burstRemaining, limit: data.burstLimit } : null
+      );
     };
     socket.on("pushCardStart", onStart);
     socket.on("pushCardEnd",   onEnd);
@@ -583,6 +596,43 @@ export default function ChatApp() {
   }, [pushCardCooldownEndsAt]);
 
   useEffect(() => {
+    const onBetOpen = () => {
+      setLittleMaryActive(true);
+      setLittleMaryCooldownEndsAt(null);
+    };
+    const onResult = (data) => {
+      setLittleMaryActive(false);
+      setLittleMaryCooldownEndsAt(data?.cooldownEndsAt || null);
+      setLittleMaryBurstInfo(
+        data?.burstLimit > 1 ? { remaining: data.burstRemaining, limit: data.burstLimit } : null
+      );
+    };
+    socket.on("littleMaryBetOpen", onBetOpen);
+    socket.on("littleMaryResult", onResult);
+    return () => {
+      socket.off("littleMaryBetOpen", onBetOpen);
+      socket.off("littleMaryResult", onResult);
+    };
+  }, [socket]);
+
+  // 小瑪莉冷卻倒數：每秒重算一次剩餘時間，時間到自動歸零、停止計時
+  useEffect(() => {
+    if (!littleMaryCooldownEndsAt) { setLittleMaryCooldownRemainingMs(0); return; }
+    const tick = () => {
+      const remaining = littleMaryCooldownEndsAt - Date.now();
+      if (remaining <= 0) {
+        setLittleMaryCooldownRemainingMs(0);
+        setLittleMaryCooldownEndsAt(null);
+      } else {
+        setLittleMaryCooldownRemainingMs(remaining);
+      }
+    };
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [littleMaryCooldownEndsAt]);
+
+  useEffect(() => {
     const handleFrontendVersionUpdated = ({ version } = {}) => {
       if (!version) return;
       if (compareVersions(version, FRONTEND_VERSION) > 0) {
@@ -603,6 +653,8 @@ export default function ChatApp() {
         case "system_claw": return `夾${roomConfig.currency_name}機`;
         case "system_surprise": return "每日樂透";
         case "system_online": return "🕒 在線獎勵";
+        case "system_littlemary": return "🎡 小瑪莉";
+        case "system_red_envelope": return "🧧 金幣雨";
         default: return roomConfig.currency_name;
       }
     };
@@ -701,17 +753,121 @@ export default function ChatApp() {
       alert(`❄️ ${reason || "丟雪球失敗"}`);
     };
 
+    // 送花特效升級（僅金幣模式）：單次送花總金額達後台門檻時，後端會額外發這個事件，
+    // 跟原本的禮物訊息（giftMessage）並存，這裡只負責疊加一個更誇張的全螢幕特效。
+    const handleFlowerEffect = (data) => {
+      if (hideFxEffectsRef.current) return;
+      enqueueEffect((done) => {
+        const container = document.createElement("div");
+        container.className = "firework-container flower-effect-container";
+
+        const img = document.createElement("img");
+        img.src = "/gifts/rose.gif";
+        img.className = "firework-gif";
+        img.alt = "";
+
+        const message = document.createElement("div");
+        message.className = "firework-message";
+        message.textContent = `🌹 ${data?.sender || ""} 獻給 ${data?.target || ""} ${data?.quantity || ""} 朵玫瑰！`;
+
+        const signature = document.createElement("div");
+        signature.className = "flower-effect-signature";
+        signature.textContent = `${data?.brand || BRAND_NAME} 祝賀`;
+
+        container.appendChild(img);
+        container.appendChild(message);
+        container.appendChild(signature);
+        document.body.appendChild(container);
+        setTimeout(() => { container.remove(); done(); }, 5000);
+      });
+    };
+
+    // 全場金幣雨（僅金幣模式）：玩家自己發動，全場在線玩家看到紅包雨動畫；個人實際領到
+    // 多少金幣，是透過既有的 goldAwarded 事件（source="system_red_envelope"）另外顯示，
+    // 這裡只負責播放動畫本身。
+    const handleRedEnvelope = (data) => {
+      if (hideFxEffectsRef.current) return;
+      enqueueEffect((done) => {
+        const container = document.createElement("div");
+        container.className = "firework-container red-envelope-container";
+
+        const message = document.createElement("div");
+        message.className = "firework-message";
+        message.textContent = `🧧 ${data?.sender || ""} 發放紅包 ${data?.amount || ""} 個${roomConfig.currency_name}！`;
+
+        const signature = document.createElement("div");
+        signature.className = "flower-effect-signature";
+        signature.textContent = `${data?.brand || BRAND_NAME} 恭賀`;
+
+        const ENVELOPE_COUNT = 30;
+        for (let i = 0; i < ENVELOPE_COUNT; i++) {
+          const envelope = document.createElement("span");
+          envelope.className = "red-envelope-flake";
+          envelope.textContent = "🧧";
+          envelope.style.left = `${Math.random() * 100}%`;
+          envelope.style.animationDelay = `${(Math.random() * 1.2).toFixed(2)}s`;
+          envelope.style.fontSize = `${18 + Math.random() * 20}px`;
+          container.appendChild(envelope);
+        }
+
+        container.appendChild(message);
+        container.appendChild(signature);
+        document.body.appendChild(container);
+        setTimeout(() => { container.remove(); done(); }, 5000);
+      });
+    };
+
+    // 專屬慶典模式（僅金幣模式）：玩家選主題+扣款發起，全場飄落主題特效 + 頂端祝福語 + 簽名
+    const handleCelebration = (data) => {
+      if (hideFxEffectsRef.current) return;
+      enqueueEffect((done) => {
+        const container = document.createElement("div");
+        container.className = "firework-container celebration-container";
+
+        const message = document.createElement("div");
+        message.className = "firework-message";
+        message.textContent = `${data?.themeLabel || "🎉"} ${data?.text || ""}`;
+
+        const signature = document.createElement("div");
+        signature.className = "flower-effect-signature";
+        signature.textContent = `${data?.brand || BRAND_NAME} 呈獻（由 ${data?.sender || ""} 發起）`;
+
+        const PARTICLE_COUNT = 26;
+        const particleEmoji = data?.theme === "valentine" ? "💕" : data?.theme === "birthday" ? "🎈" : "✨";
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+          const particle = document.createElement("span");
+          particle.className = "celebration-flake";
+          particle.textContent = particleEmoji;
+          particle.style.left = `${Math.random() * 100}%`;
+          particle.style.animationDelay = `${(Math.random() * 1.5).toFixed(2)}s`;
+          particle.style.fontSize = `${16 + Math.random() * 22}px`;
+          container.appendChild(particle);
+        }
+
+        container.appendChild(message);
+        container.appendChild(signature);
+        document.body.appendChild(container);
+        setTimeout(() => { container.remove(); done(); }, 6000);
+      });
+    };
+
     socket.on("joinFailed", handleJoinFail);
     socket.on("fireworkShow", handleFirework);
     socket.on("snowballHit", handleSnowballHit);
     socket.on("snowballThrown", handleSnowballThrown);
     socket.on("snowballError", handleSnowballError);
+    socket.on("flowerEffectShow", handleFlowerEffect);
+    socket.on("redEnvelopeStart", handleRedEnvelope);
+    socket.on("celebrationStart", handleCelebration);
     return () => {
       socket.off("joinFailed", handleJoinFail);
       socket.off("fireworkShow", handleFirework);
       socket.off("snowballHit", handleSnowballHit);
       socket.off("snowballThrown", handleSnowballThrown);
       socket.off("snowballError", handleSnowballError);
+      socket.off("flowerEffectShow", handleFlowerEffect);
+      socket.off("redEnvelopeStart", handleRedEnvelope);
+      socket.off("celebrationStart", handleCelebration);
     };
   }, [socket, enqueueEffect]);
 
@@ -1487,6 +1643,7 @@ export default function ChatApp() {
                           invisible ? "隱身模式下無法開始推牌遊戲"
                             : pushCardActive ? "推牌遊戲進行中"
                             : pushCardCooldownRemainingMs > 0 ? `遊戲冷卻中，剩餘 ${formatCooldownMMSS(pushCardCooldownRemainingMs)}`
+                            : pushCardBurstInfo ? `開始推牌遊戲（連發剩餘 ${pushCardBurstInfo.remaining}/${pushCardBurstInfo.limit} 場）`
                             : "開始推牌遊戲"
                         }
                       >
@@ -1495,6 +1652,26 @@ export default function ChatApp() {
                           : pushCardCooldownRemainingMs > 0
                             ? `🃏 冷卻中 ${formatCooldownMMSS(pushCardCooldownRemainingMs)}`
                             : "🃏 推牌"}
+                      </button>
+                    )}
+                    {level >= ANL && roomConfig.currency_name === "金幣" && (
+                      <button
+                        className="admin-btn"
+                        disabled={littleMaryActive || invisible || littleMaryCooldownRemainingMs > 0}
+                        onClick={() => socket.emit("startLittleMary", { token, room: RN })}
+                        title={
+                          invisible ? "隱身模式下無法開始小瑪莉遊戲"
+                            : littleMaryActive ? "小瑪莉遊戲進行中"
+                            : littleMaryCooldownRemainingMs > 0 ? `遊戲冷卻中，剩餘 ${formatCooldownMMSS(littleMaryCooldownRemainingMs)}`
+                            : littleMaryBurstInfo ? `開始小瑪莉（連發剩餘 ${littleMaryBurstInfo.remaining}/${littleMaryBurstInfo.limit} 場）`
+                            : "開始小瑪莉跑馬燈押注"
+                        }
+                      >
+                        {littleMaryActive
+                          ? "🎡 進行中…"
+                          : littleMaryCooldownRemainingMs > 0
+                            ? `🎡 冷卻中 ${formatCooldownMMSS(littleMaryCooldownRemainingMs)}`
+                            : "🎡 小瑪莉"}
                       </button>
                     )}
                     {roomConfig.currency_name === "金蘋果" && <SurpriseHistoryPanel token={token} />}
@@ -1721,6 +1898,41 @@ export default function ChatApp() {
           apples={apples}
         />
       </DeferredPanel>
+
+      {/* 小瑪莉跑馬燈押注（僅金幣模式；管理員手動觸發或後端無人值守自動開局），右下角小卡片 */}
+      {roomConfig.currency_name === "金幣" && (
+        <DeferredPanel>
+          <LittleMaryGame
+            socket={socket}
+            token={token}
+            name={name}
+          />
+        </DeferredPanel>
+      )}
+
+      {/* 全場金幣雨／發紅包（僅金幣模式；任何玩家都可自己發動），左下角浮動按鈕 */}
+      {roomConfig.currency_name === "金幣" && (
+        <DeferredPanel>
+          <RedEnvelopeGame
+            socket={socket}
+            token={token}
+            name={name}
+            apples={apples}
+          />
+        </DeferredPanel>
+      )}
+
+      {/* 專屬慶典模式（僅金幣模式；任何玩家都可自己發動），左下角浮動按鈕（跟金幣雨錯開位置） */}
+      {roomConfig.currency_name === "金幣" && (
+        <DeferredPanel>
+          <CelebrationModeGame
+            socket={socket}
+            token={token}
+            name={name}
+            apples={apples}
+          />
+        </DeferredPanel>
+      )}
     </>
   );
 }

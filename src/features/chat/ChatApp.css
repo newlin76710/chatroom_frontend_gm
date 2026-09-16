@@ -783,6 +783,15 @@ body {
   100% { opacity: 0; }
 }
 
+.flower-effect-signature {
+  position: absolute;
+  bottom: 30px;
+  font-size: 1.1rem;
+  color: #ffd166;
+  text-shadow: 0 0 10px #000;
+  animation: fadeInOut 5s forwards;
+}
+
 .snowball-container {
   position: fixed;
   top: 0;
@@ -818,6 +827,40 @@ body {
   0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
   10%  { opacity: 1; }
   100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+}
+
+.red-envelope-container {
+  overflow: hidden;
+}
+
+.red-envelope-flake {
+  position: absolute;
+  top: -40px;
+  animation: red-envelope-fall 3.2s ease-in forwards;
+  filter: drop-shadow(0 0 6px rgba(255, 77, 77, 0.6));
+}
+
+@keyframes red-envelope-fall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+  8%   { opacity: 1; }
+  100% { transform: translateY(110vh) rotate(25deg); opacity: 0; }
+}
+
+.celebration-container {
+  overflow: hidden;
+}
+
+.celebration-flake {
+  position: absolute;
+  top: -40px;
+  animation: celebration-fall 4s ease-in forwards;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
+}
+
+@keyframes celebration-fall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+  8%   { opacity: 1; }
+  100% { transform: translateY(110vh) rotate(-20deg); opacity: 0; }
 }
 
 /* ===== TABLET RESPONSIVE (481px – 768px) ===== */

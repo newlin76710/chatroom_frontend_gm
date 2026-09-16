@@ -1,0 +1,163 @@
+/* 右下角小卡片，跟推牌/跑馬燈同一種「不擋畫面、不強制點掉」風格，但版面較寬（要放 8 個圖案） */
+.lmg-corner {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2500;
+  background: linear-gradient(150deg, #1a1030 0%, #0d0818 100%);
+  border: 2px solid #ffd166;
+  border-radius: 12px;
+  padding: 10px 14px 12px;
+  width: 280px;
+  color: #fff;
+  text-align: center;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 0 24px rgba(255, 209, 102, 0.3);
+  animation: lmg-corner-in 0.25s ease;
+}
+
+@keyframes lmg-corner-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.lmg-close {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  background: transparent;
+  border: none;
+  color: #999;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+}
+.lmg-close:hover { color: #fff; }
+
+.lmg-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.lmg-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffd166;
+}
+
+.lmg-timer {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ffe8a8;
+  font-variant-numeric: tabular-nums;
+}
+
+.lmg-body {
+  animation: lmg-appear 0.3s ease;
+}
+
+@keyframes lmg-appear {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.lmg-desc {
+  font-size: 0.78rem;
+  color: #ddd;
+  margin: 0 0 8px;
+  line-height: 1.4;
+}
+
+.lmg-error {
+  font-size: 0.75rem;
+  color: #ff8fa3;
+  margin: 0 0 8px;
+}
+
+.lmg-symbol-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.lmg-symbol-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+
+.lmg-symbol-label {
+  font-size: 1.1rem;
+  width: 24px;
+}
+
+.lmg-symbol-mult {
+  font-size: 0.7rem;
+  color: #ffd166;
+  width: 30px;
+  text-align: left;
+}
+
+.lmg-bet-input {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 6px;
+  border-radius: 6px;
+  border: 1px solid #ffd166;
+  background: #1a0f2b;
+  color: #fff;
+  font-size: 0.8rem;
+  text-align: center;
+}
+.lmg-bet-input:disabled { opacity: 0.4; }
+
+.lmg-bet-btn {
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #2a1a08;
+  background: linear-gradient(180deg, #ffe8a8 0%, #ffd166 100%);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.lmg-bet-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ─── 結果 ─── */
+.lmg-winning-symbol {
+  font-size: 1rem;
+  margin-bottom: 6px;
+}
+
+.lmg-winning-value {
+  font-size: 1.4rem;
+  margin: 0 4px;
+}
+
+.lmg-winning-mult {
+  font-size: 0.85rem;
+  color: #ffd166;
+  font-weight: 700;
+}
+
+.lmg-win {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ffd166;
+  margin: 4px 0 0;
+  text-shadow: 0 0 8px rgba(255, 209, 102, 0.5);
+}
+
+.lmg-lose {
+  font-size: 0.8rem;
+  color: #bbb;
+  margin: 4px 0 0;
+}

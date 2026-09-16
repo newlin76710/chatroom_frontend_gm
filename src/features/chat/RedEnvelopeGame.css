@@ -1,0 +1,110 @@
+/* 左下角浮動按鈕/面板，跟右下角的推牌/小瑪莉/跑馬燈小卡片對稱、不搶位置 */
+.reg-corner {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 2400;
+}
+
+.reg-trigger {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(180deg, #ff6b6b 0%, #c0272d 100%);
+  color: #fff;
+  font-size: 1.4rem;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(192, 39, 45, 0.5);
+}
+.reg-trigger:hover { transform: scale(1.05); }
+
+.reg-panel {
+  background: linear-gradient(150deg, #2a0a0a 0%, #1a0505 100%);
+  border: 2px solid #ff6b6b;
+  border-radius: 12px;
+  padding: 10px 14px 12px;
+  width: 240px;
+  color: #fff;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 0 24px rgba(255, 107, 107, 0.3);
+  animation: reg-panel-in 0.2s ease;
+}
+
+@keyframes reg-panel-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.reg-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.reg-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ff8f8f;
+}
+
+.reg-close {
+  background: transparent;
+  border: none;
+  color: #999;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.reg-close:hover { color: #fff; }
+
+.reg-desc {
+  font-size: 0.75rem;
+  color: #ddd;
+  margin: 0 0 8px;
+  line-height: 1.4;
+}
+
+.reg-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.reg-option-btn {
+  flex: 1 0 calc(50% - 6px);
+  padding: 6px 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 107, 107, 0.4);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.reg-option-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.reg-option-selected {
+  background: linear-gradient(180deg, #ff8f8f 0%, #ff6b6b 100%);
+  color: #2a0505;
+  border-color: transparent;
+}
+
+.reg-error {
+  font-size: 0.72rem;
+  color: #ffb3b3;
+  margin: 0 0 8px;
+}
+
+.reg-send-btn {
+  width: 100%;
+  padding: 7px 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #2a0505;
+  background: linear-gradient(180deg, #ff8f8f 0%, #ff6b6b 100%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #8a1418;
+}
+.reg-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }

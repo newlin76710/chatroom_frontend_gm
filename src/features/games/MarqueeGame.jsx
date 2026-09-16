@@ -39,7 +39,7 @@ export default function MarqueeGame({ socket, name, userList }) {
 
   // 排除 AI 跟隱身使用者——隱身的人不該出現在跑馬燈的跑動名單裡，也不該被抽到
   const participants = useMemo(
-    () => userList.filter((u) => u.type !== "AI" && !u.invisible).map((u) => u.name),
+    () => userList.filter((u) => u.type !== "AI" && u.type !== "virtual" && !u.invisible).map((u) => u.name),
     [userList]
   );
   participantsRef.current = participants;
