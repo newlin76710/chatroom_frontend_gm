@@ -783,6 +783,14 @@ body {
   100% { opacity: 0; }
 }
 
+.flower-effect-container .firework-gif {
+  width: auto;
+  height: auto;
+  max-width: min(360px, 60vw);
+  max-height: min(360px, 60vh);
+  object-fit: contain;
+}
+
 .flower-effect-signature {
   position: absolute;
   bottom: 30px;

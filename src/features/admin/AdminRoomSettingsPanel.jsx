@@ -291,6 +291,29 @@ export default function AdminRoomSettingsPanel({ token }) {
         />
         <span style={{ fontSize: 12, color: "#888" }}>人（目標在線假人數量，會隨機浮動進出，不受貨幣模式限制）</span>
       </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0 }}>假人等級範圍</span>
+        <input
+          type="number"
+          min={1}
+          max={90}
+          value={settings.virtual_users_level_min ?? 5}
+          onChange={e => setInt("virtual_users_level_min", e.target.value)}
+          disabled={!settings.virtual_users_enabled}
+          style={{ width: 60, padding: "5px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }}
+        />
+        <span style={{ fontSize: 13, color: "#444" }}>～</span>
+        <input
+          type="number"
+          min={1}
+          max={90}
+          value={settings.virtual_users_level_max ?? 20}
+          onChange={e => setInt("virtual_users_level_max", e.target.value)}
+          disabled={!settings.virtual_users_enabled}
+          style={{ width: 60, padding: "5px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }}
+        />
+        <span style={{ fontSize: 12, color: "#888" }}>級（每個假人進房時隨機落在此區間，上下限設一樣就等於統一等級）</span>
+      </div>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
         <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0, paddingTop: 5 }}>男性暱稱庫</span>
         <textarea

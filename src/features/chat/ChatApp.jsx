@@ -93,6 +93,7 @@ const PushCardGame = lazy(() => import("../games/PushCardGame"));
 const LittleMaryGame = lazy(() => import("../games/LittleMaryGame"));
 const RedEnvelopeGame = lazy(() => import("./RedEnvelopeGame"));
 const CelebrationModeGame = lazy(() => import("./CelebrationModeGame"));
+const QuickRoseButton = lazy(() => import("./QuickRoseButton"));
 const AdminToolPanel = lazy(() => import("../admin/AdminToolPanel"));
 const ShopPanel = lazy(() => import("./ShopPanel"));
 const GameHallPanel = lazy(() => import("../gamehall/GameHallPanel"));
@@ -1931,6 +1932,14 @@ export default function ChatApp() {
             name={name}
             apples={apples}
           />
+        </DeferredPanel>
+      )}
+
+      {/* 999 朵玫瑰快捷送花（僅金幣模式），跟金幣雨/慶典模式並排的左下角浮動按鈕，
+          直接送給目前選定的聊天對象（target），省去打開商城選數量的步驟 */}
+      {roomConfig.currency_name === "金幣" && (
+        <DeferredPanel>
+          <QuickRoseButton token={token} targetName={target} />
         </DeferredPanel>
       )}
     </>

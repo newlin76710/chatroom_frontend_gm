@@ -26,6 +26,8 @@ const DEFAULT = {
   marquee_reward:       10,
   marquee_duration:     30,
   marquee_cooldown_minutes: 20,
+  marquee_auto_enabled: false,
+  marquee_auto_interval_minutes: 30,
   pushcard_max_bet:     50,
   pushcard_duration:    10,
   pushcard_cooldown_minutes: 20,
@@ -423,6 +425,23 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                   onChange={e => setInt("marquee_cooldown_minutes", e.target.value)} />
                 <span className="field-note">分鐘（0-60，每局結束後要等幾分鐘才能再開新局；0 = 不開啟冷卻）</span>
               </Row>
+              {isCoin && (
+              <>
+                <Row label="跑馬燈無人值守自動開局">
+                  <label className="toggle-label">
+                    <input type="checkbox" checked={!!settings.marquee_auto_enabled}
+                      onChange={e => setBool("marquee_auto_enabled", e.target.checked)} />
+                    {" "}啟用
+                  </label>
+                  <span className="field-note">開啟後不論有無管理員在線都會自動開局；關閉時，只要現場沒有管理員在線一樣會自動開局補場，開局訊息會顯示「忘年音樂電台管理團隊」發起</span>
+                </Row>
+                <Row label="跑馬燈自動開局間隔">
+                  <input type="number" min={1} max={1440} value={settings.marquee_auto_interval_minutes}
+                    onChange={e => setInt("marquee_auto_interval_minutes", e.target.value)} />
+                  <span className="field-note">分鐘（例如 30 = 每 30 分鐘檢查一次是否要自動開一場）</span>
+                </Row>
+              </>
+              )}
               <Row label="推牌遊戲最高下注">
                 <input type="number" min={1} value={settings.pushcard_max_bet}
                   onChange={e => setInt("pushcard_max_bet", e.target.value)} />

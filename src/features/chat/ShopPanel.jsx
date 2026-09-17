@@ -91,7 +91,11 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
         return;
       }
 
-      alert(`購買成功：${item.name}${quantity > 1 ? ` ×${quantity}` : ""}`);
+      let msg = `購買成功：${item.name}${quantity > 1 ? ` ×${quantity}` : ""}`;
+      if (data.flowerEffectCooldownRemainingMinutes) {
+        msg += `\n🌹 送花特效冷卻中，還需等待約 ${data.flowerEffectCooldownRemainingMinutes} 分鐘才會再次播放全螢幕特效`;
+      }
+      alert(msg);
     } catch (err) {
       alert("此功能尚未開放!");
     } finally {
