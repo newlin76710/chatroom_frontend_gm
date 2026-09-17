@@ -15,7 +15,7 @@ const CAKE_VARIANTS = [
 
 // rose 加進來是為了「送花特效升級」：選數量送花，單次總金額達後台門檻會自動加碼全螢幕特效
 const MULTI_QTY_IDS = ["diamond", "plane", "car", "ball", "rose"];
-const MAX_GIFT_QUANTITY = 20;
+const MAX_GIFT_QUANTITY = 999;
 
 export default function ShopPanel({ token, myName, myLevel, targetName, open, onClose, title = "商城" }) {
   const [buying, setBuying] = useState(null);
