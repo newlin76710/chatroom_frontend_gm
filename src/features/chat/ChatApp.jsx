@@ -212,6 +212,9 @@ export default function ChatApp() {
   // 左下角紅包/慶典/送花三顆浮動按鈕預設收起，避免蓋住 .trade-apple 那排的「⚙️ 設定」按鈕；
   // 點一下左下角的展開鈕才會秀出來
   const [giftClusterOpen, setGiftClusterOpen] = useState(false);
+  // 三顆裡面同時只能展開一個的面板：展開其中一個時，另外兩顆連按鈕本體都隱藏，
+  // 避免面板被旁邊還留著的觸發按鈕蓋到
+  const [activeGiftTool, setActiveGiftTool] = useState(null); // null | "redEnvelope" | "celebration" | "rose"
   const [perTransferLimit, setPerTransferLimit] = useState(0); // 0 = 不限制
   const [scrollLocked, setScrollLocked] = useState(false);
   const scrollLockedRef = useRef(false); // 同步更新，避免 useLayoutEffect 讀到過期值
@@ -1972,12 +1975,18 @@ export default function ChatApp() {
       )}
 
       {/* 紅包/慶典/送花這三顆左下角浮動按鈕預設收起（只留一顆小展開鈕），避免常駐佔用
-          左下角空間、擋住 .trade-apple 那排的「⚙️ 設定」等按鈕；點展開鈕才會秀出來 */}
+          左下角空間、擋住 .trade-apple 那排的「⚙️ 設定」等按鈕；點展開鈕才會秀出來。
+          三顆展開後，只要其中一個打開了面板，另外兩顆連按鈕本體都會隱藏（activeGiftTool），
+          避免面板被旁邊還留著的觸發按鈕蓋到 */}
       {roomConfig.currency_name === "金幣" && (
         <div className="gift-cluster">
           <button
             className="gift-cluster-toggle"
-            onClick={() => setGiftClusterOpen((o) => !o)}
+            onClick={() => setGiftClusterOpen((o) => {
+              const next = !o;
+              if (!next) setActiveGiftTool(null); // 收合整組時，把個別展開的面板也一起收掉
+              return next;
+            })}
             title={giftClusterOpen ? "收起" : "展開紅包／慶典／送花"}
           >
             {giftClusterOpen ? "✖" : "🎁"}
@@ -1993,6 +2002,9 @@ export default function ChatApp() {
                   token={token}
                   name={name}
                   apples={apples}
+                  hidden={activeGiftTool !== null && activeGiftTool !== "redEnvelope"}
+                  isOpen={activeGiftTool === "redEnvelope"}
+                  onOpenChange={(v) => setActiveGiftTool(v ? "redEnvelope" : null)}
                 />
               </DeferredPanel>
 
@@ -2003,13 +2015,22 @@ export default function ChatApp() {
                   token={token}
                   name={name}
                   apples={apples}
+                  hidden={activeGiftTool !== null && activeGiftTool !== "celebration"}
+                  isOpen={activeGiftTool === "celebration"}
+                  onOpenChange={(v) => setActiveGiftTool(v ? "celebration" : null)}
                 />
               </DeferredPanel>
 
               {/* 送花快捷，可自選數量，直接送給目前選定的聊天對象（target），
                   省去打開商城的步驟 */}
               <DeferredPanel>
-                <QuickRoseButton token={token} targetName={target} />
+                <QuickRoseButton
+                  token={token}
+                  targetName={target}
+                  hidden={activeGiftTool !== null && activeGiftTool !== "rose"}
+                  isOpen={activeGiftTool === "rose"}
+                  onOpenChange={(v) => setActiveGiftTool(v ? "rose" : null)}
+                />
               </DeferredPanel>
             </>
           )}

@@ -18,8 +18,9 @@ const THEMES = [
 
 const MAX_CUSTOM_TEXT_LENGTH = 60;
 
-export default function CelebrationModeGame({ socket, token, name, apples }) {
-  const [open, setOpen] = useState(false);
+// hidden：另一顆左下角按鈕（紅包/送花）展開時，這顆連同它的面板整個不渲染，避免蓋到對方的介面；
+// isOpen/onOpenChange：面板開關狀態交給 ChatApp.jsx 統一管理，才能跟另外兩顆互斥
+export default function CelebrationModeGame({ socket, token, name, apples, hidden, isOpen, onOpenChange }) {
   const [theme, setTheme] = useState("birthday");
   const [customText, setCustomText] = useState("");
   const [selectedAmount, setSelectedAmount] = useState(null);
@@ -33,7 +34,7 @@ export default function CelebrationModeGame({ socket, token, name, apples }) {
     const onStart = ({ sender } = {}) => {
       if (sender !== name) return;
       setSending(false);
-      setOpen(false);
+      onOpenChange(false);
       setCustomText("");
       setSelectedAmount(null);
       setErrorMsg("");
@@ -48,7 +49,7 @@ export default function CelebrationModeGame({ socket, token, name, apples }) {
       socket.off("celebrationStart", onStart);
       socket.off("celebrationError", onError);
     };
-  }, [socket, name]);
+  }, [socket, name, onOpenChange]);
 
   const send = useCallback(() => {
     if (!selectedAmount || sending) return;
@@ -68,6 +69,7 @@ export default function CelebrationModeGame({ socket, token, name, apples }) {
   }, [socket, selectedAmount, sending, theme, customText]);
 
   if (roomConfig.currency_name !== "金幣") return null;
+  if (hidden) return null;
 
   const options = String(roomConfig.celebration_amount_options || "100,500,1000")
     .split(",")
@@ -76,13 +78,13 @@ export default function CelebrationModeGame({ socket, token, name, apples }) {
 
   return (
     <div className="cmg-corner">
-      {!open ? (
-        <button className="cmg-trigger" onClick={() => setOpen(true)} title="發起慶典">🎉</button>
+      {!isOpen ? (
+        <button className="cmg-trigger" onClick={() => onOpenChange(true)} title="發起慶典">🎉</button>
       ) : (
         <div className="cmg-panel">
           <div className="cmg-header">
             <span className="cmg-title">🎉 專屬慶典模式</span>
-            <button className="cmg-close" onClick={() => { setOpen(false); setErrorMsg(""); }}>✖</button>
+            <button className="cmg-close" onClick={() => { onOpenChange(false); setErrorMsg(""); }}>✖</button>
           </div>
 
           <div className="cmg-theme-row">

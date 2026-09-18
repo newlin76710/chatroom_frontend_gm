@@ -9,9 +9,10 @@ import "./RedEnvelopeGame.css";
 import { RN, roomConfig } from "../../shared/roomConfig";
 import { useDraggableWindow } from "../../shared/hooks/useDraggableWindow";
 
-export default function RedEnvelopeGame({ socket, token, name, apples }) {
+// hidden：另一顆左下角按鈕（送花/慶典）展開時，這顆連同它的面板整個不渲染，避免蓋到對方的介面；
+// isOpen/onOpenChange：面板開關狀態交給 ChatApp.jsx 統一管理，才能跟另外兩顆互斥
+export default function RedEnvelopeGame({ socket, token, name, apples, hidden, isOpen, onOpenChange }) {
   const { windowRef, onPointerDown } = useDraggableWindow();
-  const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [sending, setSending] = useState(false);
@@ -23,7 +24,7 @@ export default function RedEnvelopeGame({ socket, token, name, apples }) {
     const onStart = ({ sender } = {}) => {
       if (sender !== name) return;
       setSending(false);
-      setOpen(false);
+      onOpenChange(false);
       setSelected(null);
       setErrorMsg("");
     };
@@ -37,7 +38,7 @@ export default function RedEnvelopeGame({ socket, token, name, apples }) {
       socket.off("redEnvelopeStart", onStart);
       socket.off("redEnvelopeError", onError);
     };
-  }, [socket, name]);
+  }, [socket, name, onOpenChange]);
 
   const send = useCallback(() => {
     if (!selected || sending) return;
@@ -47,6 +48,7 @@ export default function RedEnvelopeGame({ socket, token, name, apples }) {
   }, [socket, selected, sending]);
 
   if (roomConfig.currency_name !== "金幣") return null;
+  if (hidden) return null;
 
   const options = String(roomConfig.red_envelope_amount_options || "100,500,1000,5000")
     .split(",")
@@ -55,13 +57,13 @@ export default function RedEnvelopeGame({ socket, token, name, apples }) {
 
   return (
     <div className="reg-corner">
-      {!open ? (
-        <button className="reg-trigger" onClick={() => setOpen(true)} title="發紅包">🧧</button>
+      {!isOpen ? (
+        <button className="reg-trigger" onClick={() => onOpenChange(true)} title="發紅包">🧧</button>
       ) : (
         <div className="reg-panel" ref={windowRef}>
           <div className="reg-header" onPointerDown={onPointerDown} title="按住拖曳">
             <span className="reg-title">🧧 發紅包</span>
-            <button className="reg-close" onClick={() => { setOpen(false); setErrorMsg(""); }}>✖</button>
+            <button className="reg-close" onClick={() => { onOpenChange(false); setErrorMsg(""); }}>✖</button>
           </div>
           <p className="reg-desc">選擇要發放的金額，全場在線玩家均分/隨機領取</p>
           <div className="reg-options">

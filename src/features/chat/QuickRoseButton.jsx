@@ -8,13 +8,15 @@ import { BACKEND, RN, roomConfig } from "../../shared/roomConfig";
 const QUANTITY_PRESETS = [1, 10, 99, 520, 999];
 const MAX_QUANTITY = 999;
 
-export default function QuickRoseButton({ token, targetName }) {
-  const [open, setOpen] = useState(false);
+// hidden：另一顆左下角按鈕（紅包/慶典）展開時，這顆連同它的面板整個不渲染，避免蓋到對方的介面；
+// isOpen/onOpenChange：面板開關狀態交給 ChatApp.jsx 統一管理，才能跟另外兩顆互斥
+export default function QuickRoseButton({ token, targetName, hidden, isOpen, onOpenChange }) {
   const [quantity, setQuantity] = useState(99);
   const [sending, setSending] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
   if (roomConfig.currency_name !== "金幣") return null;
+  if (hidden) return null;
 
   const send = async () => {
     if (!targetName) {
@@ -48,7 +50,7 @@ export default function QuickRoseButton({ token, targetName }) {
         return;
       }
 
-      setOpen(false);
+      onOpenChange(false);
       alert(`🌹 已送出 ${qty} 朵玫瑰給 ${targetName}！`);
     } catch (err) {
       setErrorMsg("此功能尚未開放!");
@@ -59,15 +61,15 @@ export default function QuickRoseButton({ token, targetName }) {
 
   return (
     <div className="qrb-corner">
-      {!open ? (
-        <button className="qrb-trigger" onClick={() => setOpen(true)} title={`送花給 ${targetName || "?"}`}>
+      {!isOpen ? (
+        <button className="qrb-trigger" onClick={() => onOpenChange(true)} title={`送花給 ${targetName || "?"}`}>
           🌹送花
         </button>
       ) : (
         <div className="qrb-panel">
           <div className="qrb-header">
             <span className="qrb-title">🌹 送花給 {targetName || "?"}</span>
-            <button className="qrb-close" onClick={() => { setOpen(false); setErrorMsg(""); }}>✖</button>
+            <button className="qrb-close" onClick={() => { onOpenChange(false); setErrorMsg(""); }}>✖</button>
           </div>
 
           <div className="qrb-presets">
