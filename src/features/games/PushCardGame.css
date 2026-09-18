@@ -1,9 +1,7 @@
-/* 右下角小卡片，跟跑馬燈同一個位置、同一種「不擋畫面、不強制點掉」風格 */
+/* 右下角小卡片，跟跑馬燈/小瑪莉同一種「不擋畫面、不強制點掉」風格；實際定位交給
+   ChatApp.jsx 的 .right-status-stack 統一排列，避免三張卡片疊在同一個座標互相遮擋 */
 .pcg-corner {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: 2500;
+  position: relative;
   background: linear-gradient(150deg, #2a0a12 0%, #1a0209 100%);
   border: 2px solid #ff4d6d;
   border-radius: 12px;

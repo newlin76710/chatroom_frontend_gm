@@ -746,6 +746,19 @@ body {
   cursor: not-allowed;
 }
 
+/* 右下角狀態小卡片（跑馬燈/推牌/小瑪莉）統一堆疊容器：見 ChatApp.jsx 說明，
+   取代三張卡片各自寫死同一組 right/bottom 座標的作法 */
+.right-status-stack {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2500;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
 .firework-container {
   position: fixed;
   top: 0;
@@ -784,10 +797,10 @@ body {
 }
 
 .flower-effect-container .firework-gif {
-  width: auto;
-  height: auto;
-  max-width: min(360px, 60vw);
-  max-height: min(360px, 60vh);
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
   object-fit: contain;
 }
 
@@ -797,7 +810,32 @@ body {
   font-size: 1.1rem;
   color: #ffd166;
   text-shadow: 0 0 10px #000;
-  animation: fadeInOut 5s forwards;
+}
+
+/* 送花特效：全螢幕放大 2~3 秒後自動轉半透明淡出，避免長時間整個擋住畫面操作；
+   容器統一控制透明度，裡面的圖片/文字/簽名都跟著淡出，不再各自跑自己的 fadeInOut */
+.flower-effect-container {
+  animation: flower-fade-out 3s ease-in-out forwards;
+}
+/* 跑車特效沿用送花特效的全螢幕縮放＋淡出邏輯（.car-effect-container 只是疊加在
+   .flower-effect-container 上的第二個 class），這裡只加一個賽車風格的底色氛圍做區隔 */
+.car-effect-container {
+  background: radial-gradient(ellipse at center, rgba(255, 60, 40, 0.28) 0%, rgba(10, 10, 10, 0.35) 70%, transparent 100%);
+}
+
+.flower-effect-container .firework-gif,
+.flower-effect-container .firework-message,
+.flower-effect-container .flower-effect-signature {
+  animation: none;
+  opacity: 1;
+}
+
+@keyframes flower-fade-out {
+  0%   { opacity: 0; }
+  10%  { opacity: 1; }
+  60%  { opacity: 1; }
+  80%  { opacity: 0.35; }
+  100% { opacity: 0; }
 }
 
 .snowball-container {
@@ -854,8 +892,36 @@ body {
   100% { transform: translateY(110vh) rotate(25deg); opacity: 0; }
 }
 
+/* 撒金幣：跟紅包雨並存，旋轉墜落＋比紅包更亮的金色光暈，做出兩種特效疊加的層次感 */
+.red-envelope-coin-flake {
+  position: absolute;
+  top: -40px;
+  animation: red-envelope-coin-fall 2.6s ease-in forwards;
+  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.8));
+}
+
+@keyframes red-envelope-coin-fall {
+  0%   { transform: translateY(0) rotate(0deg) scale(1); opacity: 0; }
+  8%   { opacity: 1; }
+  100% { transform: translateY(110vh) rotate(360deg) scale(0.9); opacity: 0; }
+}
+
 .celebration-container {
   overflow: hidden;
+}
+
+/* 各主題專屬底色氛圍，跟粒子 emoji 一起做出「主題視覺」的區隔感，不是每個主題都長一樣 */
+.celebration-theme-christmas {
+  background: radial-gradient(ellipse at center, rgba(20, 90, 50, 0.35) 0%, rgba(120, 10, 20, 0.25) 70%, transparent 100%);
+}
+.celebration-theme-newyear {
+  background: radial-gradient(ellipse at center, rgba(255, 200, 60, 0.3) 0%, rgba(180, 20, 40, 0.25) 70%, transparent 100%);
+}
+.celebration-theme-valentine {
+  background: radial-gradient(ellipse at center, rgba(255, 105, 150, 0.3) 0%, transparent 70%);
+}
+.celebration-theme-birthday {
+  background: radial-gradient(ellipse at center, rgba(255, 190, 60, 0.28) 0%, transparent 70%);
 }
 
 .celebration-flake {

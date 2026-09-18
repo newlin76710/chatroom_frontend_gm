@@ -7,11 +7,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import "./LittleMaryGame.css";
 
 import { RN, roomConfig } from "../../shared/roomConfig";
+import { useDraggableWindow } from "../../shared/hooks/useDraggableWindow";
 
 const RESULT_DISPLAY_MS = 6000;
 const FALLBACK_BUFFER_MS = 3000;
 
 export default function LittleMaryGame({ socket, token, name }) {
+  const { windowRef, onPointerDown } = useDraggableWindow();
   const [visible, setVisible] = useState(false);
   const [phase, setPhase] = useState("betting"); // betting | result
   const [symbols, setSymbols] = useState([]);
@@ -126,9 +128,9 @@ export default function LittleMaryGame({ socket, token, name }) {
   const bettingOpen = phase === "betting" && secondsLeft > 0;
 
   return (
-    <div className="lmg-corner">
+    <div className="lmg-corner" ref={windowRef}>
       <button className="lmg-close" onClick={close} title="關閉">✖</button>
-      <div className="lmg-header">
+      <div className="lmg-header" onPointerDown={onPointerDown} title="按住拖曳">
         <span className="lmg-title">🎡 小瑪莉</span>
         {phase === "betting" && <span className="lmg-timer">{secondsLeft}s</span>}
       </div>

@@ -7,8 +7,10 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import "./RedEnvelopeGame.css";
 
 import { RN, roomConfig } from "../../shared/roomConfig";
+import { useDraggableWindow } from "../../shared/hooks/useDraggableWindow";
 
 export default function RedEnvelopeGame({ socket, token, name, apples }) {
+  const { windowRef, onPointerDown } = useDraggableWindow();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
@@ -56,8 +58,8 @@ export default function RedEnvelopeGame({ socket, token, name, apples }) {
       {!open ? (
         <button className="reg-trigger" onClick={() => setOpen(true)} title="發紅包">🧧</button>
       ) : (
-        <div className="reg-panel">
-          <div className="reg-header">
+        <div className="reg-panel" ref={windowRef}>
+          <div className="reg-header" onPointerDown={onPointerDown} title="按住拖曳">
             <span className="reg-title">🧧 發紅包</span>
             <button className="reg-close" onClick={() => { setOpen(false); setErrorMsg(""); }}>✖</button>
           </div>

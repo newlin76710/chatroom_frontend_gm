@@ -297,7 +297,7 @@ export default function AdminRoomSettingsPanel({ token }) {
           type="number"
           min={1}
           max={90}
-          value={settings.virtual_users_level_min ?? 5}
+          value={settings.virtual_users_level_min ?? 2}
           onChange={e => setInt("virtual_users_level_min", e.target.value)}
           disabled={!settings.virtual_users_enabled}
           style={{ width: 60, padding: "5px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }}
@@ -307,7 +307,7 @@ export default function AdminRoomSettingsPanel({ token }) {
           type="number"
           min={1}
           max={90}
-          value={settings.virtual_users_level_max ?? 20}
+          value={settings.virtual_users_level_max ?? 18}
           onChange={e => setInt("virtual_users_level_max", e.target.value)}
           disabled={!settings.virtual_users_enabled}
           style={{ width: 60, padding: "5px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }}

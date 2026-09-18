@@ -1,7 +1,8 @@
-/* 左下角浮動按鈕，跟金幣雨（reg-corner, left:16px）／慶典模式（cmg-corner, left:76px）並排錯開 */
+/* 左下角浮動按鈕，跟金幣雨（reg-corner, left:16px）／慶典模式（cmg-corner, left:84px）並排錯開；
+   玫瑰按鈕是文字胖膠囊形（比 48px 圓形按鈕寬），跟前一顆的間距要留大一點避免誤觸 */
 .qrb-corner {
   position: fixed;
-  left: 136px;
+  left: 152px;
   bottom: 16px;
   z-index: 2400;
 }
@@ -21,3 +22,97 @@
 }
 .qrb-trigger:hover { transform: scale(1.05); }
 .qrb-trigger:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.qrb-panel {
+  background: linear-gradient(150deg, #3a0a1e 0%, #200510 100%);
+  border: 2px solid #ff8fb3;
+  border-radius: 12px;
+  padding: 10px 14px 12px;
+  width: 240px;
+  color: #fff;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 0 24px rgba(255, 143, 179, 0.3);
+  animation: qrb-panel-in 0.2s ease;
+}
+
+@keyframes qrb-panel-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.qrb-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.qrb-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffb3cc;
+}
+
+.qrb-close {
+  background: transparent;
+  border: none;
+  color: #999;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.qrb-close:hover { color: #fff; }
+
+.qrb-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.qrb-preset-btn {
+  flex: 1 0 calc(33.33% - 6px);
+  padding: 6px 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 143, 179, 0.4);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.qrb-preset-selected {
+  background: linear-gradient(180deg, #ff8fb3 0%, #d6336c 100%);
+  color: #2a0512;
+  border-color: transparent;
+}
+
+.qrb-qty-input {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 143, 179, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+}
+
+.qrb-error {
+  font-size: 0.72rem;
+  color: #ffb3b3;
+  margin: 0 0 8px;
+}
+
+.qrb-send-btn {
+  width: 100%;
+  padding: 7px 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #2a0512;
+  background: linear-gradient(180deg, #ff8fb3 0%, #d6336c 100%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #8a1440;
+}
+.qrb-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }

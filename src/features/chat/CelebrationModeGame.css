@@ -1,7 +1,7 @@
 /* 左下角浮動按鈕/面板，跟金幣雨（reg-corner）疊放時用 margin 錯開，避免重疊 */
 .cmg-corner {
   position: fixed;
-  left: 76px;
+  left: 84px;
   bottom: 16px;
   z-index: 2400;
 }

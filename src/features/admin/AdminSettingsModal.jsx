@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import "./AdminSettingsModal.css";
 import { RN, roomConfig } from "../../shared/roomConfig";
+import { BRAND_NAME } from "../../shared/brand";
 
 const DEFAULT = {
   leaderboard_enabled:  false,
@@ -28,12 +29,20 @@ const DEFAULT = {
   marquee_cooldown_minutes: 20,
   marquee_auto_enabled: false,
   marquee_auto_interval_minutes: 30,
+  marquee_auto_start_hour: 0,
+  marquee_auto_start_minute: 0,
+  marquee_auto_end_hour: 24,
+  marquee_auto_end_minute: 0,
   pushcard_max_bet:     50,
   pushcard_duration:    10,
   pushcard_cooldown_minutes: 20,
   pushcard_burst_limit: 1,
   pushcard_auto_enabled: false,
   pushcard_auto_interval_minutes: 30,
+  pushcard_auto_start_hour: 0,
+  pushcard_auto_start_minute: 0,
+  pushcard_auto_end_hour: 24,
+  pushcard_auto_end_minute: 0,
   littlemary_enabled:   false,
   littlemary_max_bet_per_symbol: 50,
   littlemary_symbols: [
@@ -51,10 +60,18 @@ const DEFAULT = {
   littlemary_cooldown_minutes: 10,
   littlemary_auto_enabled: false,
   littlemary_auto_interval_minutes: 15,
+  littlemary_auto_start_hour: 0,
+  littlemary_auto_start_minute: 0,
+  littlemary_auto_end_hour: 24,
+  littlemary_auto_end_minute: 0,
   flower_effect_enabled: true,
   flower_effect_threshold: 999,
   flower_effect_burst_limit: 1,
   flower_effect_cooldown_minutes: 5,
+  car_effect_enabled: true,
+  car_effect_threshold: 999,
+  car_effect_burst_limit: 1,
+  car_effect_cooldown_minutes: 5,
   red_envelope_amount_options: "100,500,1000,5000",
   red_envelope_distribution_mode: "even",
   red_envelope_burst_limit: 1,
@@ -440,6 +457,27 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                     onChange={e => setInt("marquee_auto_interval_minutes", e.target.value)} />
                   <span className="field-note">分鐘（例如 30 = 每 30 分鐘檢查一次是否要自動開一場）</span>
                 </Row>
+                <Row label="跑馬燈自動開局時段（台灣時間）">
+                  <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                    <input type="number" min={0} max={23} style={{ width: 56 }}
+                      value={settings.marquee_auto_start_hour}
+                      onChange={e => setInt("marquee_auto_start_hour", e.target.value)} />
+                    <span>時</span>
+                    <input type="number" min={0} max={59} style={{ width: 56 }}
+                      value={settings.marquee_auto_start_minute}
+                      onChange={e => setInt("marquee_auto_start_minute", e.target.value)} />
+                    <span>分 ～</span>
+                    <input type="number" min={0} max={24} style={{ width: 56 }}
+                      value={settings.marquee_auto_end_hour}
+                      onChange={e => setInt("marquee_auto_end_hour", e.target.value)} />
+                    <span>時</span>
+                    <input type="number" min={0} max={59} style={{ width: 56 }}
+                      value={settings.marquee_auto_end_minute}
+                      onChange={e => setInt("marquee_auto_end_minute", e.target.value)} />
+                    <span>分</span>
+                  </div>
+                  <span className="field-note">只有落在這段時間內才會無人值守自動開局；手動開局不受此限制。預設 0 時～24 時 = 全天不限制</span>
+                </Row>
               </>
               )}
               <Row label="推牌遊戲最高下注">
@@ -477,6 +515,27 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                   <input type="number" min={1} max={1440} value={settings.pushcard_auto_interval_minutes}
                     onChange={e => setInt("pushcard_auto_interval_minutes", e.target.value)} />
                   <span className="field-note">分鐘（例如 30 = 每 30 分鐘檢查一次是否要自動開一場）</span>
+                </Row>
+                <Row label="推牌自動開局時段（台灣時間）">
+                  <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                    <input type="number" min={0} max={23} style={{ width: 56 }}
+                      value={settings.pushcard_auto_start_hour}
+                      onChange={e => setInt("pushcard_auto_start_hour", e.target.value)} />
+                    <span>時</span>
+                    <input type="number" min={0} max={59} style={{ width: 56 }}
+                      value={settings.pushcard_auto_start_minute}
+                      onChange={e => setInt("pushcard_auto_start_minute", e.target.value)} />
+                    <span>分 ～</span>
+                    <input type="number" min={0} max={24} style={{ width: 56 }}
+                      value={settings.pushcard_auto_end_hour}
+                      onChange={e => setInt("pushcard_auto_end_hour", e.target.value)} />
+                    <span>時</span>
+                    <input type="number" min={0} max={59} style={{ width: 56 }}
+                      value={settings.pushcard_auto_end_minute}
+                      onChange={e => setInt("pushcard_auto_end_minute", e.target.value)} />
+                    <span>分</span>
+                  </div>
+                  <span className="field-note">只有落在這段時間內才會無人值守自動開局；手動開局不受此限制。預設 0 時～24 時 = 全天不限制</span>
                 </Row>
               </>
               )}
@@ -992,6 +1051,27 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                   onChange={e => setInt("littlemary_auto_interval_minutes", e.target.value)} />
                 <span className="field-note">分鐘（例如 15 = 每 15 分鐘檢查一次是否要自動開一場）</span>
               </Row>
+              <Row label="自動開局時段（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                  <input type="number" min={0} max={23} style={{ width: 56 }}
+                    value={settings.littlemary_auto_start_hour}
+                    onChange={e => setInt("littlemary_auto_start_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.littlemary_auto_start_minute}
+                    onChange={e => setInt("littlemary_auto_start_minute", e.target.value)} />
+                  <span>分 ～</span>
+                  <input type="number" min={0} max={24} style={{ width: 56 }}
+                    value={settings.littlemary_auto_end_hour}
+                    onChange={e => setInt("littlemary_auto_end_hour", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 56 }}
+                    value={settings.littlemary_auto_end_minute}
+                    onChange={e => setInt("littlemary_auto_end_minute", e.target.value)} />
+                  <span>分</span>
+                </div>
+                <span className="field-note">只有落在這段時間內才會無人值守自動開局；手動開局不受此限制。預設 0 時～24 時 = 全天不限制</span>
+              </Row>
             </section>
             )}
 
@@ -1019,7 +1099,39 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
               <Row label="冷卻分鐘數">
                 <input type="number" min={0} max={60} value={settings.flower_effect_cooldown_minutes}
                   onChange={e => setInt("flower_effect_cooldown_minutes", e.target.value)} />
-                <span className="field-note">分鐘（0-60，0 = 不開啟冷卻；一般送花不受此限制，只限制大特效觸發頻率）</span>
+                <span className="field-note">分鐘（0-60，0 = 不開啟冷卻；冷卻中會直接擋下達門檻的整筆送花，不扣款也不播特效，門檻以下的一般送花不受影響）</span>
+              </Row>
+            </section>
+            )}
+
+            {/* ─── 跑車全螢幕特效（本房間獨家、僅金幣模式） ─────────────── */}
+            {isCoin && (
+            <section className="settings-section">
+              <h4>
+                🚗 跑車全螢幕特效
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={settings.car_effect_enabled !== false}
+                    onChange={e => setBool("car_effect_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+              <p className="field-note" style={{ margin: "0 0 8px" }}>
+                本房間獨家特效：畫面會帶上「{BRAND_NAME}」品牌名跟房號，跟送花特效升級是同一套機制，玩法/門檻邏輯完全比照辦理
+              </p>
+              <Row label="觸發門檻">
+                <input type="number" min={1} value={settings.car_effect_threshold}
+                  onChange={e => setInt("car_effect_threshold", e.target.value)} />
+                <span className="field-note">個{currencyName}（單次送跑車總金額達此門檻，自動加碼全螢幕特效）</span>
+              </Row>
+              <Row label="可連發場次">
+                <input type="number" min={1} max={20} value={settings.car_effect_burst_limit}
+                  onChange={e => setInt("car_effect_burst_limit", e.target.value)} />
+                <span className="field-note">次（連續觸發到這個次數才會真的進入冷卻分鐘數倒數）</span>
+              </Row>
+              <Row label="冷卻分鐘數">
+                <input type="number" min={0} max={60} value={settings.car_effect_cooldown_minutes}
+                  onChange={e => setInt("car_effect_cooldown_minutes", e.target.value)} />
+                <span className="field-note">分鐘（0-60，0 = 不開啟冷卻；冷卻中會直接擋下達門檻的整筆送禮，不扣款也不播特效，門檻以下的一般送禮不受影響）</span>
               </Row>
             </section>
             )}

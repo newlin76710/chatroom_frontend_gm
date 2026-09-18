@@ -13,7 +13,6 @@ const CAKE_VARIANTS = [
   { id: "cupcake",        emoji: "🧁", name: "杯子蛋糕",   image: "/gifts/cake_cupcake.gif" },
 ];
 
-// rose 加進來是為了「送花特效升級」：選數量送花，單次總金額達後台門檻會自動加碼全螢幕特效
 const MULTI_QTY_IDS = ["diamond", "plane", "car", "ball", "rose"];
 const MAX_GIFT_QUANTITY = 999;
 
@@ -33,10 +32,9 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
     setQuantities((prev) => ({ ...prev, [id]: n }));
   };
 
-  // rose 兩邊都要有：送花特效升級（單次總金額達門檻自動加碼全螢幕特效）才會有足夠多玩家
-  // 摸得到這個入口，不能只藏在商城裡
+  // 玫瑰送禮只留在商城，賣場不再提供（改走左下角的送花快捷按鈕/商城）
   const GIFT_IDS = isMarket
-    ? ["diamond", "plane", "car", "rose"]
+    ? ["diamond", "plane", "car"]
     : ["rose", "chocolate", "cake"];
 
   const items = isMarket
@@ -44,7 +42,6 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
         { id: "diamond",  name: "💎 鑽石(送禮)", price: 5 },
         { id: "plane",    name: "✈️ 飛機(送禮)", price: 5 },
         { id: "car",      name: "🚗 跑車(送禮)", price: 5 },
-        { id: "rose",     name: "🌹 玫瑰(送禮)", price: 5 },
         { id: "firework", name: "🎆 放煙火(全場特效)", price: 15 },
         { id: "ball",     name: "🔮 積分球(+1000積分)", price: 30 },
         { id: "rename",   name: "✏️ 升級卡(+1級)",  price: 1000 },
@@ -91,11 +88,7 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
         return;
       }
 
-      let msg = `購買成功：${item.name}${quantity > 1 ? ` ×${quantity}` : ""}`;
-      if (data.flowerEffectCooldownRemainingMinutes) {
-        msg += `\n🌹 送花特效冷卻中，還需等待約 ${data.flowerEffectCooldownRemainingMinutes} 分鐘才會再次播放全螢幕特效`;
-      }
-      alert(msg);
+      alert(`購買成功：${item.name}${quantity > 1 ? ` ×${quantity}` : ""}`);
     } catch (err) {
       alert("此功能尚未開放!");
     } finally {

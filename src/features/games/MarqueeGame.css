@@ -1,9 +1,7 @@
-/* 右下角小抽獎狀態卡片，不擋畫面、不強制點掉 */
+/* 右下角小抽獎狀態卡片，不擋畫面、不強制點掉；實際定位交給 ChatApp.jsx 的
+   .right-status-stack 統一排列，避免三張卡片疊在同一個座標互相遮擋 */
 .mq-corner {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: 2500;
+  position: relative;
   background: linear-gradient(150deg, #1a1a2e 0%, #16213e 100%);
   border: 2px solid #f0a500;
   border-radius: 12px;

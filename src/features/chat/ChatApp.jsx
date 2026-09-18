@@ -386,11 +386,8 @@ export default function ChatApp() {
                 ? u.avatar
                 : getAiAvatar(u?.name) || "/avatars/g01.gif",
           }))
-          .sort((a, b) => {
-            if (a.type === "account" && b.type !== "account") return -1;
-            if (a.type !== "account" && b.type === "account") return 1;
-            return b.level - a.level;
-          })
+          // 假人（虛擬用戶）跟真人統一依等級由高到低排序，不再讓帳號類型優先排到最前面
+          .sort((a, b) => b.level - a.level)
       );
 
       // 只有自己的狀態同步交給 hook 處理（handler 內部透過 ref 讀最新值）
@@ -779,7 +776,37 @@ export default function ChatApp() {
         container.appendChild(message);
         container.appendChild(signature);
         document.body.appendChild(container);
-        setTimeout(() => { container.remove(); done(); }, 5000);
+        // 3 秒對齊 CSS 的 flower-fade-out 動畫時長：放大展示後自動淡出，不長時間擋畫面
+        setTimeout(() => { container.remove(); done(); }, 3000);
+      });
+    };
+
+    // 跑車全螢幕特效（本房間獨家、僅金幣模式）：跟送花特效同一套模式，差別是畫面上會
+    // 帶房號＋品牌名，防止被其他房間直接盜用同一支特效當自己的賣點。
+    const handleCarEffect = (data) => {
+      if (hideFxEffectsRef.current) return;
+      enqueueEffect((done) => {
+        const container = document.createElement("div");
+        container.className = "firework-container flower-effect-container car-effect-container";
+
+        const img = document.createElement("img");
+        img.src = "/gifts/car.gif";
+        img.className = "firework-gif";
+        img.alt = "";
+
+        const message = document.createElement("div");
+        message.className = "firework-message";
+        message.textContent = `🚗 ${data?.sender || ""} 獻給 ${data?.target || ""} ${data?.quantity || ""} 台跑車！`;
+
+        const signature = document.createElement("div");
+        signature.className = "flower-effect-signature";
+        signature.textContent = `${data?.brand || BRAND_NAME} × 房間${data?.room || room} 獨家呈現`;
+
+        container.appendChild(img);
+        container.appendChild(message);
+        container.appendChild(signature);
+        document.body.appendChild(container);
+        setTimeout(() => { container.remove(); done(); }, 3000);
       });
     };
 
@@ -811,6 +838,19 @@ export default function ChatApp() {
           container.appendChild(envelope);
         }
 
+        // 撒金幣：跟紅包雨並存的另一層全螢幕特效，用房間自訂的貨幣 emoji（沒有就用預設金幣）
+        const COIN_COUNT = 40;
+        const coinEmoji = roomConfig.currency_emoji || "🪙";
+        for (let i = 0; i < COIN_COUNT; i++) {
+          const coin = document.createElement("span");
+          coin.className = "red-envelope-coin-flake";
+          coin.textContent = coinEmoji;
+          coin.style.left = `${Math.random() * 100}%`;
+          coin.style.animationDelay = `${(Math.random() * 1.5).toFixed(2)}s`;
+          coin.style.fontSize = `${16 + Math.random() * 18}px`;
+          container.appendChild(coin);
+        }
+
         container.appendChild(message);
         container.appendChild(signature);
         document.body.appendChild(container);
@@ -823,7 +863,9 @@ export default function ChatApp() {
       if (hideFxEffectsRef.current) return;
       enqueueEffect((done) => {
         const container = document.createElement("div");
-        container.className = "firework-container celebration-container";
+        // 每個主題疊一個對應的底色 class，讓聖誕/新年等主題除了粒子 emoji 之外，
+        // 整個全螢幕特效還有自己專屬的色調氛圍，不會四個主題看起來都一樣
+        container.className = `firework-container celebration-container celebration-theme-${data?.theme || "festival"}`;
 
         const message = document.createElement("div");
         message.className = "firework-message";
@@ -834,11 +876,17 @@ export default function ChatApp() {
         signature.textContent = `${data?.brand || BRAND_NAME} 呈獻（由 ${data?.sender || ""} 發起）`;
 
         const PARTICLE_COUNT = 26;
-        const particleEmoji = data?.theme === "valentine" ? "💕" : data?.theme === "birthday" ? "🎈" : "✨";
+        const THEME_PARTICLES = {
+          valentine: ["💕"],
+          birthday: ["🎈"],
+          christmas: ["🎄", "❄️", "🎁", "🔔"],
+          newyear: ["🎆", "🎊", "🧧", "✨"],
+        };
+        const particlePool = THEME_PARTICLES[data?.theme] || ["✨"];
         for (let i = 0; i < PARTICLE_COUNT; i++) {
           const particle = document.createElement("span");
           particle.className = "celebration-flake";
-          particle.textContent = particleEmoji;
+          particle.textContent = particlePool[Math.floor(Math.random() * particlePool.length)];
           particle.style.left = `${Math.random() * 100}%`;
           particle.style.animationDelay = `${(Math.random() * 1.5).toFixed(2)}s`;
           particle.style.fontSize = `${16 + Math.random() * 22}px`;
@@ -858,6 +906,7 @@ export default function ChatApp() {
     socket.on("snowballThrown", handleSnowballThrown);
     socket.on("snowballError", handleSnowballError);
     socket.on("flowerEffectShow", handleFlowerEffect);
+    socket.on("carEffectShow", handleCarEffect);
     socket.on("redEnvelopeStart", handleRedEnvelope);
     socket.on("celebrationStart", handleCelebration);
     return () => {
@@ -867,6 +916,7 @@ export default function ChatApp() {
       socket.off("snowballThrown", handleSnowballThrown);
       socket.off("snowballError", handleSnowballError);
       socket.off("flowerEffectShow", handleFlowerEffect);
+      socket.off("carEffectShow", handleCarEffect);
       socket.off("redEnvelopeStart", handleRedEnvelope);
       socket.off("celebrationStart", handleCelebration);
     };
@@ -1881,26 +1931,33 @@ export default function ChatApp() {
         )}
       </DeferredPanel>
 
-      {/* 跑馬燈抽獎遊戲（管理員手動觸發），右下角小卡片顯示狀態，不擋畫面 */}
-      <DeferredPanel>
-        <MarqueeGame
-          socket={socket}
-          name={name}
-          userList={userList}
-        />
-      </DeferredPanel>
+      {/* 跑馬燈/推牌都是右下角「不擋畫面」的狀態小卡片，兩個各自的 CSS 之前都寫死同一組
+          right/bottom 座標，同時顯示時會直接疊在一起互相遮擋；改成統一交給這個 flex 容器
+          排列，哪張卡片沒顯示就自然不占位，不用猜每張卡片的高度手動錯開 */}
+      <div className="right-status-stack">
+        {/* 跑馬燈抽獎遊戲（管理員手動觸發），右下角小卡片顯示狀態，不擋畫面 */}
+        <DeferredPanel>
+          <MarqueeGame
+            socket={socket}
+            name={name}
+            userList={userList}
+          />
+        </DeferredPanel>
 
-      {/* 推牌遊戲（管理員手動觸發），右下角小卡片顯示狀態，不擋畫面；玩法/版面參考跑馬燈 */}
-      <DeferredPanel>
-        <PushCardGame
-          socket={socket}
-          token={token}
-          name={name}
-          apples={apples}
-        />
-      </DeferredPanel>
+        {/* 推牌遊戲（管理員手動觸發），右下角小卡片顯示狀態，不擋畫面；玩法/版面參考跑馬燈 */}
+        <DeferredPanel>
+          <PushCardGame
+            socket={socket}
+            token={token}
+            name={name}
+            apples={apples}
+          />
+        </DeferredPanel>
+      </div>
 
-      {/* 小瑪莉跑馬燈押注（僅金幣模式；管理員手動觸發或後端無人值守自動開局），右下角小卡片 */}
+      {/* 小瑪莉跑馬燈押注（僅金幣模式；管理員手動觸發或後端無人值守自動開局）。跟推牌/跑馬燈
+          不同，這張卡片可以用滑鼠拖曳移動（見 LittleMaryGame.jsx 的 useDraggableWindow），
+          所以自己獨立定位、不放進上面的 .right-status-stack，預設位置刻意跟那個堆疊錯開 */}
       {roomConfig.currency_name === "金幣" && (
         <DeferredPanel>
           <LittleMaryGame
@@ -1911,7 +1968,8 @@ export default function ChatApp() {
         </DeferredPanel>
       )}
 
-      {/* 全場金幣雨／發紅包（僅金幣模式；任何玩家都可自己發動），左下角浮動按鈕 */}
+      {/* 全場金幣雨／發紅包（僅金幣模式；任何玩家都可自己發動），左下角浮動按鈕；打開後的
+          發紅包視窗可以用滑鼠拖曳移動（見 RedEnvelopeGame.jsx 的 useDraggableWindow） */}
       {roomConfig.currency_name === "金幣" && (
         <DeferredPanel>
           <RedEnvelopeGame
@@ -1935,8 +1993,8 @@ export default function ChatApp() {
         </DeferredPanel>
       )}
 
-      {/* 999 朵玫瑰快捷送花（僅金幣模式），跟金幣雨/慶典模式並排的左下角浮動按鈕，
-          直接送給目前選定的聊天對象（target），省去打開商城選數量的步驟 */}
+      {/* 送花快捷（僅金幣模式），跟金幣雨/慶典模式並排的左下角浮動按鈕，可自選數量，
+          直接送給目前選定的聊天對象（target），省去打開商城的步驟 */}
       {roomConfig.currency_name === "金幣" && (
         <DeferredPanel>
           <QuickRoseButton token={token} targetName={target} />

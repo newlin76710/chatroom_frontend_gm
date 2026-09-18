@@ -19,7 +19,13 @@
 }
 .reg-trigger:hover { transform: scale(1.05); }
 
+/* 打開後獨立用 position:fixed 定位（不是靠父層 .reg-corner 排版），這樣拖曳時設定的
+   left/top 才會是相對整個視窗，而不是被父層的 bottom 定位拉著跑 */
 .reg-panel {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 2450;
   background: linear-gradient(150deg, #2a0a0a 0%, #1a0505 100%);
   border: 2px solid #ff6b6b;
   border-radius: 12px;
@@ -40,6 +46,10 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 6px;
+  cursor: grab;
+}
+.reg-header:active {
+  cursor: grabbing;
 }
 
 .reg-title {

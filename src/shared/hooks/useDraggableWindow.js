@@ -39,6 +39,10 @@ export function useDraggableWindow() {
     stateRef.current.offsetX = e.clientX - rect.left;
     stateRef.current.offsetY = e.clientY - rect.top;
     stateRef.current.width = rect.width;
+    // 有些視窗預設是用 right/bottom 定位（例如貼右下角的小卡片），拖曳開始後
+    // 一律改用 left/top 為準，避免 right/bottom 還留著跟新設的 top 一起把視窗撐高/撐扁
+    windowRef.current.style.right = "auto";
+    windowRef.current.style.bottom = "auto";
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
   }, [onPointerMove, onPointerUp]);

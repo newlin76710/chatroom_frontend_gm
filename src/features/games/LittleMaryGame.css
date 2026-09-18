@@ -1,8 +1,9 @@
-/* 右下角小卡片，跟推牌/跑馬燈同一種「不擋畫面、不強制點掉」風格，但版面較寬（要放 8 個圖案） */
+/* 可拖曳視窗，預設貼在跑馬燈/推牌卡片堆疊（.right-status-stack）上方，避免預設位置就疊在
+   一起；玩家可以按住標題列把它拖到不擋頻道的地方，不用像另外兩張純狀態卡片一樣只能死板排列 */
 .lmg-corner {
   position: fixed;
   right: 16px;
-  bottom: 16px;
+  bottom: 200px;
   z-index: 2500;
   background: linear-gradient(150deg, #1a1030 0%, #0d0818 100%);
   border: 2px solid #ffd166;
@@ -13,6 +14,13 @@
   text-align: center;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 0 24px rgba(255, 209, 102, 0.3);
   animation: lmg-corner-in 0.25s ease;
+}
+
+.lmg-header {
+  cursor: grab;
+}
+.lmg-header:active {
+  cursor: grabbing;
 }
 
 @keyframes lmg-corner-in {

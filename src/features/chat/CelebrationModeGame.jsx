@@ -11,6 +11,8 @@ const THEMES = [
   { key: "birthday", label: "🎂 生日" },
   { key: "valentine", label: "💕 情人節" },
   { key: "festival", label: "🎉 節慶" },
+  { key: "christmas", label: "🎄 聖誕節" },
+  { key: "newyear", label: "🎊 新年" },
   { key: "custom", label: "✨ 自訂慶祝" },
 ];
 
