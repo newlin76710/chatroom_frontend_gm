@@ -746,6 +746,26 @@ body {
   cursor: not-allowed;
 }
 
+/* 左下角紅包/慶典/送花的收合展開鈕：固定佔用 left:16px 這個位置，展開後的三顆按鈕
+   往右錯開（見各自的 .reg-corner/.cmg-corner/.qrb-corner），收起時只留這一顆小按鈕，
+   不會常駐擋住 .trade-apple 那排的「⚙️ 設定」等按鈕 */
+.gift-cluster-toggle {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 2410;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(180deg, #ffd166 0%, #e8a400 100%);
+  color: #2a1a00;
+  font-size: 1.3rem;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(232, 164, 0, 0.5);
+}
+.gift-cluster-toggle:hover { transform: scale(1.05); }
+
 /* 右下角狀態小卡片（跑馬燈/推牌/小瑪莉）統一堆疊容器：見 ChatApp.jsx 說明，
    取代三張卡片各自寫死同一組 right/bottom 座標的作法 */
 .right-status-stack {

@@ -1,7 +1,8 @@
-/* 左下角浮動按鈕/面板，跟右下角的推牌/小瑪莉/跑馬燈小卡片對稱、不搶位置 */
+/* 左下角浮動按鈕/面板；left:16px 留給 ChatApp.jsx 的 .gift-cluster-toggle 收合鈕，
+   這裡跟著往右錯開一格 */
 .reg-corner {
   position: fixed;
-  left: 16px;
+  left: 84px;
   bottom: 16px;
   z-index: 2400;
 }
@@ -23,7 +24,7 @@
    left/top 才會是相對整個視窗，而不是被父層的 bottom 定位拉著跑 */
 .reg-panel {
   position: fixed;
-  left: 16px;
+  left: 84px;
   bottom: 16px;
   z-index: 2450;
   background: linear-gradient(150deg, #2a0a0a 0%, #1a0505 100%);

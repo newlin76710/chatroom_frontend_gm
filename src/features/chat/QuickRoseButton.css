@@ -1,8 +1,9 @@
-/* 左下角浮動按鈕，跟金幣雨（reg-corner, left:16px）／慶典模式（cmg-corner, left:84px）並排錯開；
-   玫瑰按鈕是文字胖膠囊形（比 48px 圓形按鈕寬），跟前一顆的間距要留大一點避免誤觸 */
+/* 左下角浮動按鈕，跟金幣雨（reg-corner, left:84px）／慶典模式（cmg-corner, left:152px）並排錯開；
+   left:16px 留給 .gift-cluster-toggle 收合鈕；玫瑰按鈕是文字胖膠囊形（比 48px 圓形按鈕寬），
+   跟前一顆的間距要留大一點避免誤觸 */
 .qrb-corner {
   position: fixed;
-  left: 152px;
+  left: 220px;
   bottom: 16px;
   z-index: 2400;
 }

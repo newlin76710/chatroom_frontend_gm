@@ -1,7 +1,8 @@
-/* 左下角浮動按鈕/面板，跟金幣雨（reg-corner）疊放時用 margin 錯開，避免重疊 */
+/* 左下角浮動按鈕/面板，跟金幣雨（reg-corner）疊放時用 margin 錯開，避免重疊；
+   left:16px 留給 .gift-cluster-toggle 收合鈕 */
 .cmg-corner {
   position: fixed;
-  left: 84px;
+  left: 152px;
   bottom: 16px;
   z-index: 2400;
 }

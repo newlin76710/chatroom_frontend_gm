@@ -209,6 +209,9 @@ export default function ChatApp() {
   // 送金幣/金牡丹是否採「密談」模式：訊息只有雙方跟監看管理員看得到（跟 ShopPanel 的私下贈送一致）
   const [isPrivateGift, setIsPrivateGift] = useState(false);
   const [showAppleSetting, setShowAppleSetting] = useState(false);
+  // 左下角紅包/慶典/送花三顆浮動按鈕預設收起，避免蓋住 .trade-apple 那排的「⚙️ 設定」按鈕；
+  // 點一下左下角的展開鈕才會秀出來
+  const [giftClusterOpen, setGiftClusterOpen] = useState(false);
   const [perTransferLimit, setPerTransferLimit] = useState(0); // 0 = 不限制
   const [scrollLocked, setScrollLocked] = useState(false);
   const scrollLockedRef = useRef(false); // 同步更新，避免 useLayoutEffect 讀到過期值
@@ -1968,37 +1971,49 @@ export default function ChatApp() {
         </DeferredPanel>
       )}
 
-      {/* 全場金幣雨／發紅包（僅金幣模式；任何玩家都可自己發動），左下角浮動按鈕；打開後的
-          發紅包視窗可以用滑鼠拖曳移動（見 RedEnvelopeGame.jsx 的 useDraggableWindow） */}
+      {/* 紅包/慶典/送花這三顆左下角浮動按鈕預設收起（只留一顆小展開鈕），避免常駐佔用
+          左下角空間、擋住 .trade-apple 那排的「⚙️ 設定」等按鈕；點展開鈕才會秀出來 */}
       {roomConfig.currency_name === "金幣" && (
-        <DeferredPanel>
-          <RedEnvelopeGame
-            socket={socket}
-            token={token}
-            name={name}
-            apples={apples}
-          />
-        </DeferredPanel>
-      )}
+        <div className="gift-cluster">
+          <button
+            className="gift-cluster-toggle"
+            onClick={() => setGiftClusterOpen((o) => !o)}
+            title={giftClusterOpen ? "收起" : "展開紅包／慶典／送花"}
+          >
+            {giftClusterOpen ? "✖" : "🎁"}
+          </button>
 
-      {/* 專屬慶典模式（僅金幣模式；任何玩家都可自己發動），左下角浮動按鈕（跟金幣雨錯開位置） */}
-      {roomConfig.currency_name === "金幣" && (
-        <DeferredPanel>
-          <CelebrationModeGame
-            socket={socket}
-            token={token}
-            name={name}
-            apples={apples}
-          />
-        </DeferredPanel>
-      )}
+          {giftClusterOpen && (
+            <>
+              {/* 全場金幣雨／發紅包（任何玩家都可自己發動）；打開後的發紅包視窗可以用滑鼠
+                  拖曳移動（見 RedEnvelopeGame.jsx 的 useDraggableWindow） */}
+              <DeferredPanel>
+                <RedEnvelopeGame
+                  socket={socket}
+                  token={token}
+                  name={name}
+                  apples={apples}
+                />
+              </DeferredPanel>
 
-      {/* 送花快捷（僅金幣模式），跟金幣雨/慶典模式並排的左下角浮動按鈕，可自選數量，
-          直接送給目前選定的聊天對象（target），省去打開商城的步驟 */}
-      {roomConfig.currency_name === "金幣" && (
-        <DeferredPanel>
-          <QuickRoseButton token={token} targetName={target} />
-        </DeferredPanel>
+              {/* 專屬慶典模式（任何玩家都可自己發動） */}
+              <DeferredPanel>
+                <CelebrationModeGame
+                  socket={socket}
+                  token={token}
+                  name={name}
+                  apples={apples}
+                />
+              </DeferredPanel>
+
+              {/* 送花快捷，可自選數量，直接送給目前選定的聊天對象（target），
+                  省去打開商城的步驟 */}
+              <DeferredPanel>
+                <QuickRoseButton token={token} targetName={target} />
+              </DeferredPanel>
+            </>
+          )}
+        </div>
       )}
     </>
   );
