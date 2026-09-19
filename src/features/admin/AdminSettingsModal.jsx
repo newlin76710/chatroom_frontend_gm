@@ -126,6 +126,12 @@ const DEFAULT = {
   dig_minute2:          0,
   dig_hour3:            18,
   dig_minute3:          0,
+  dig_hour4:            9,
+  dig_minute4:          0,
+  dig_hour5:            6,
+  dig_minute5:          0,
+  dig_hour6:            0,
+  dig_minute6:          0,
   dig_duration:         60,
   dig_max_digs:         5,
   dig_reward_min:       1,
@@ -952,6 +958,51 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                   <span>分</span>
                   <span style={{ color: "#aaa", fontSize: "0.85rem" }}>
                     → {fmtTime(settings.dig_hour3, settings.dig_minute3)}
+                  </span>
+                </div>
+              </Row>
+              <Row label="第 4 場開始時間（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <input type="number" min={0} max={23} style={{ width: 64 }}
+                    value={settings.dig_hour4}
+                    onChange={e => setInt("dig_hour4", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 64 }}
+                    value={settings.dig_minute4}
+                    onChange={e => setInt("dig_minute4", e.target.value)} />
+                  <span>分</span>
+                  <span style={{ color: "#aaa", fontSize: "0.85rem" }}>
+                    → {fmtTime(settings.dig_hour4, settings.dig_minute4)}
+                  </span>
+                </div>
+              </Row>
+              <Row label="第 5 場開始時間（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <input type="number" min={0} max={23} style={{ width: 64 }}
+                    value={settings.dig_hour5}
+                    onChange={e => setInt("dig_hour5", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 64 }}
+                    value={settings.dig_minute5}
+                    onChange={e => setInt("dig_minute5", e.target.value)} />
+                  <span>分</span>
+                  <span style={{ color: "#aaa", fontSize: "0.85rem" }}>
+                    → {fmtTime(settings.dig_hour5, settings.dig_minute5)}
+                  </span>
+                </div>
+              </Row>
+              <Row label="第 6 場開始時間（台灣時間）">
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <input type="number" min={0} max={23} style={{ width: 64 }}
+                    value={settings.dig_hour6}
+                    onChange={e => setInt("dig_hour6", e.target.value)} />
+                  <span>時</span>
+                  <input type="number" min={0} max={59} style={{ width: 64 }}
+                    value={settings.dig_minute6}
+                    onChange={e => setInt("dig_minute6", e.target.value)} />
+                  <span>分</span>
+                  <span style={{ color: "#aaa", fontSize: "0.85rem" }}>
+                    → {fmtTime(settings.dig_hour6, settings.dig_minute6)}
                   </span>
                 </div>
               </Row>
