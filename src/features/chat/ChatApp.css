@@ -841,6 +841,7 @@ body {
    .flower-effect-container 上的第二個 class），這裡只加一個賽車風格的底色氛圍做區隔 */
 .car-effect-container {
   background: radial-gradient(ellipse at center, rgba(255, 60, 40, 0.28) 0%, rgba(10, 10, 10, 0.35) 70%, transparent 100%);
+  overflow: hidden;
 }
 
 .flower-effect-container .firework-gif,
@@ -856,6 +857,69 @@ body {
   60%  { opacity: 1; }
   80%  { opacity: 0.35; }
   100% { opacity: 0; }
+}
+
+/* 999 玫瑰滿版特效：圖片改滿版鋪底＋開場爆衝感，比對照煙火再疊一層花瓣雨提升視覺份量。
+   :not(.car-effect-container) 讓這條規則只影響送花、不影響跑車（兩者共用 .flower-effect-container） */
+.flower-effect-container:not(.car-effect-container) .firework-gif {
+  animation: rose-burst-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes rose-burst-in {
+  0%   { opacity: 0; transform: scale(0.4); }
+  60%  { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.flower-petal-flake {
+  position: absolute;
+  top: -40px;
+  pointer-events: none;
+  animation: flower-petal-fall 2.4s ease-in forwards;
+  filter: drop-shadow(0 0 4px rgba(255, 90, 130, 0.6));
+}
+
+@keyframes flower-petal-fall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translateY(110vh) rotate(300deg); opacity: 0; }
+}
+
+/* 跑車全螢幕特效：圖片從畫面外開進來、橫越再開出去，取代原地放大淡出的靜態感 */
+.car-effect-container .firework-gif {
+  position: absolute;
+  top: 50%;
+  left: -35vw;
+  width: 55vw;
+  height: auto;
+  max-height: 55vh;
+  object-fit: contain;
+  transform: translateY(-50%);
+  animation: car-drive-across 3s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+@keyframes car-drive-across {
+  0%   { left: -35vw; opacity: 0; }
+  8%   { opacity: 1; }
+  50%  { left: 50vw; margin-left: -27.5vw; }
+  92%  { opacity: 1; }
+  100% { left: 135vw; opacity: 0; }
+}
+
+.car-speed-streak {
+  position: absolute;
+  left: 0;
+  width: 40vw;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.85), transparent);
+  border-radius: 2px;
+  animation: car-speed-streak-move 1.1s ease-in-out infinite;
+}
+
+@keyframes car-speed-streak-move {
+  0%   { transform: translateX(-45vw); opacity: 0; }
+  15%  { opacity: 1; }
+  100% { transform: translateX(105vw); opacity: 0; }
 }
 
 .snowball-container {

@@ -770,6 +770,20 @@ export default function ChatApp() {
         img.className = "firework-gif";
         img.alt = "";
 
+        // 花瓣雨：疊在玫瑰圖片上的滿版粒子層，比對照煙火單純放大圖片更有「炸開」的視覺份量
+        const PETAL_COUNT = 40;
+        const PETAL_EMOJIS = ["🌹", "🌸", "💮", "🌺"];
+        const petals = [];
+        for (let i = 0; i < PETAL_COUNT; i++) {
+          const petal = document.createElement("span");
+          petal.className = "flower-petal-flake";
+          petal.textContent = PETAL_EMOJIS[Math.floor(Math.random() * PETAL_EMOJIS.length)];
+          petal.style.left = `${Math.random() * 100}%`;
+          petal.style.animationDelay = `${(Math.random() * 0.6).toFixed(2)}s`;
+          petal.style.fontSize = `${16 + Math.random() * 22}px`;
+          petals.push(petal);
+        }
+
         const message = document.createElement("div");
         message.className = "firework-message";
         message.textContent = `🌹 ${data?.sender || ""} 獻給 ${data?.target || ""} ${data?.quantity || ""} 朵玫瑰！`;
@@ -779,6 +793,7 @@ export default function ChatApp() {
         signature.textContent = `${data?.brand || BRAND_NAME} 祝賀`;
 
         container.appendChild(img);
+        petals.forEach((p) => container.appendChild(p));
         container.appendChild(message);
         container.appendChild(signature);
         document.body.appendChild(container);
@@ -800,6 +815,17 @@ export default function ChatApp() {
         img.className = "firework-gif";
         img.alt = "";
 
+        // 車速殘影：沿駕駛路線疊幾道光條，加強「駛過」的速度感（取代原地放大淡出）
+        const STREAK_COUNT = 5;
+        const streaks = [];
+        for (let i = 0; i < STREAK_COUNT; i++) {
+          const streak = document.createElement("span");
+          streak.className = "car-speed-streak";
+          streak.style.top = `${38 + Math.random() * 24}%`;
+          streak.style.animationDelay = `${(i * 0.08).toFixed(2)}s`;
+          streaks.push(streak);
+        }
+
         const message = document.createElement("div");
         message.className = "firework-message";
         message.textContent = `🚗 ${data?.sender || ""} 獻給 ${data?.target || ""} ${data?.quantity || ""} 台跑車！`;
@@ -808,6 +834,7 @@ export default function ChatApp() {
         signature.className = "flower-effect-signature";
         signature.textContent = `${data?.brand || BRAND_NAME} × 房間${data?.room || room} 獨家呈現`;
 
+        streaks.forEach((s) => container.appendChild(s));
         container.appendChild(img);
         container.appendChild(message);
         container.appendChild(signature);
