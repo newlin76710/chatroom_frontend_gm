@@ -1,5 +1,5 @@
 // UserList.jsx
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { getAiAvatar } from "../../shared/aiConfig";
 import "./UserList.css";
 import { roomConfig } from "../../shared/roomConfig";
@@ -52,7 +52,15 @@ const UserRow = React.memo(function UserRow({
       className={`user-item ${isTarget ? "selected" : ""}`}
       onClick={() => onRowClick(name)}
     >
-      {avatarUrl && <img src={avatarUrl} alt={name} className="user-avatar" />}
+      {avatarUrl && (
+        <img
+          src={avatarUrl}
+          alt={name}
+          className="user-avatar"
+          loading="lazy"
+          decoding="async"
+        />
+      )}
 
       <span className="user-name" style={{ color }}>
         {name}
@@ -78,7 +86,7 @@ const UserRow = React.memo(function UserRow({
           onMouseEnter={(e) => onPeonyHover(e.currentTarget.getBoundingClientRect())}
           onMouseLeave={() => onPeonyHover(null)}
         >
-          <img src="/gifts/peony.gif" alt="金牡丹" className="ul-peony-icon" />
+          <img src="/gifts/peony.gif" alt="金牡丹" className="ul-peony-icon" loading="lazy" decoding="async" />
           {goldenPeonies}
         </span>
       )}
@@ -237,9 +245,21 @@ function UserList({
   const [openMenu, setOpenMenu] = React.useState(null);
   const [peonyPopup, setPeonyPopup] = React.useState(null); // { x, y }
 
-  const visibleUsers = userList.filter(u => OPENAI || u.type !== "AI");
-  const maleCount = visibleUsers.filter(u => u.type !== "AI" && u.gender === "男").length;
-  const femaleCount = visibleUsers.filter(u => u.type !== "AI" && u.gender === "女").length;
+  // 合併成一次迴圈：房間人數一多，updateUsers 幾乎每秒都會給一個新陣列參照，
+  // 三次獨立 filter() 掃全表的成本就會跟著廣播頻率疊加起來。
+  const { visibleUsers, maleCount, femaleCount } = useMemo(() => {
+    const visible = [];
+    let male = 0, female = 0;
+    for (const u of userList) {
+      if (!OPENAI && u.type === "AI") continue;
+      visible.push(u);
+      if (u.type !== "AI") {
+        if (u.gender === "男") male++;
+        else if (u.gender === "女") female++;
+      }
+    }
+    return { visibleUsers: visible, maleCount: male, femaleCount: female };
+  }, [userList, OPENAI]);
 
   const handleRowClick = useCallback((name) => {
     if (onSelectTarget) {
