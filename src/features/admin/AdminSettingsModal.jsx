@@ -209,6 +209,8 @@ const DEFAULT = {
   currency_emoji:            "💰",
   monthly_admin_gift_enabled: false,
   monthly_admin_gift_amount:  0,
+  game_broadcast_enabled:    true,
+  game_broadcast_threshold:  0,
 };
 
 export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLevel }) {
@@ -328,6 +330,27 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                     {" "}啟用排行榜
                   </label>
                 </Row>
+            </section>
+
+            {/* ─── 遊戲推播 ──────────────────────────────────────── */}
+            <section className="settings-section">
+              <h4>遊戲推播</h4>
+              <Row label="遊戲廳大獎推播">
+                <label className="toggle-label">
+                  <input type="checkbox" checked={!!settings.game_broadcast_enabled}
+                    onChange={e => setBool("game_broadcast_enabled", e.target.checked)} />
+                  {" "}啟用（關閉後推幣機/21點/輪盤/骰寶/老虎機/百家樂/賽車/殭屍生存戰完全不推播）
+                </label>
+              </Row>
+              {settings.game_broadcast_enabled && (
+                <Row label="最低推播金額">
+                  <input type="number" min={0} value={settings.game_broadcast_threshold}
+                    onChange={e => setInt("game_broadcast_threshold", e.target.value)} />
+                  <span className="field-note">
+                    個{currencyName}（單局贏得金額低於此門檻時系統靜音不推播，設 0 代表全部推播）
+                  </span>
+                </Row>
+              )}
             </section>
 
             {/* ─── 基本獎勵 ──────────────────────────────────────── */}
