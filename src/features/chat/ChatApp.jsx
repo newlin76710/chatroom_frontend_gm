@@ -40,6 +40,7 @@ import { Converter } from "opencc-js";
 // ─── 環境設定 ────────────────────────────────────────────────────────────────
 import { roomConfig, loadRoomConfig, BACKEND, RN } from "../../shared/roomConfig";
 import { BRAND_NAME } from "../../shared/brand";
+import { buildFlowerEffect, buildPlaneEffect, buildDiamondEffect } from "./giftEffects";
 loadRoomConfig();
 const FRONTEND_VERSION = import.meta.env.VITE_APP_VERSION || "dev";
 
@@ -757,50 +758,21 @@ export default function ChatApp() {
       alert(`❄️ ${reason || "丟雪球失敗"}`);
     };
 
-    // 送花特效升級（僅金幣模式）：單次送花總金額達後台門檻時，後端會額外發這個事件，
-    // 跟原本的禮物訊息（giftMessage）並存，這裡只負責疊加一個更誇張的全螢幕特效。
-    const handleFlowerEffect = (data) => {
+    // 送花特效分級（僅金幣模式）：單次送花總金額達後台門檻時，後端會額外發這個事件，
+    // payload.effect 決定播哪一組（99 花瓣雨/520 愛心花束/999 經典大花/1314 一生一世，
+    // 見 giftEffects.js），跟原本的禮物訊息（giftMessage）並存，這裡只負責疊加全螢幕特效。
+    const playGiftEffect = (build) => (data) => {
       if (hideFxEffectsRef.current) return;
       enqueueEffect((done) => {
-        const container = document.createElement("div");
-        container.className = "firework-container flower-effect-container";
-
-        const img = document.createElement("img");
-        img.src = "/gifts/rose.gif";
-        img.className = "firework-gif";
-        img.alt = "";
-
-        // 花瓣雨：疊在玫瑰圖片上的滿版粒子層，比對照煙火單純放大圖片更有「炸開」的視覺份量
-        const PETAL_COUNT = 40;
-        const PETAL_EMOJIS = ["🌹", "🌸", "💮", "🌺"];
-        const petals = [];
-        for (let i = 0; i < PETAL_COUNT; i++) {
-          const petal = document.createElement("span");
-          petal.className = "flower-petal-flake";
-          petal.textContent = PETAL_EMOJIS[Math.floor(Math.random() * PETAL_EMOJIS.length)];
-          petal.style.left = `${Math.random() * 100}%`;
-          petal.style.animationDelay = `${(Math.random() * 0.6).toFixed(2)}s`;
-          petal.style.fontSize = `${16 + Math.random() * 22}px`;
-          petals.push(petal);
-        }
-
-        const message = document.createElement("div");
-        message.className = "firework-message";
-        message.textContent = `🌹 ${data?.sender || ""} 獻給 ${data?.target || ""} ${data?.quantity || ""} 朵玫瑰！`;
-
-        const signature = document.createElement("div");
-        signature.className = "flower-effect-signature";
-        signature.textContent = `${data?.brand || BRAND_NAME} 祝賀`;
-
-        container.appendChild(img);
-        petals.forEach((p) => container.appendChild(p));
-        container.appendChild(message);
-        container.appendChild(signature);
-        document.body.appendChild(container);
-        // 3 秒對齊 CSS 的 flower-fade-out 動畫時長：放大展示後自動淡出，不長時間擋畫面
-        setTimeout(() => { container.remove(); done(); }, 3000);
+        const { node, duration } = build(data, { room });
+        document.body.appendChild(node);
+        setTimeout(() => { node.remove(); done(); }, duration);
       });
     };
+    const handleFlowerEffect = playGiftEffect(buildFlowerEffect);
+    // 獨家飛機/鑽石全螢幕特效（本房間獨家、僅金幣模式）：比照跑車特效，畫面帶電台橫幅＋房號
+    const handlePlaneEffect = playGiftEffect(buildPlaneEffect);
+    const handleDiamondEffect = playGiftEffect(buildDiamondEffect);
 
     // 跑車全螢幕特效（本房間獨家、僅金幣模式）：跟送花特效同一套模式，差別是畫面上會
     // 帶房號＋品牌名，防止被其他房間直接盜用同一支特效當自己的賣點。
@@ -940,6 +912,8 @@ export default function ChatApp() {
     socket.on("snowballError", handleSnowballError);
     socket.on("flowerEffectShow", handleFlowerEffect);
     socket.on("carEffectShow", handleCarEffect);
+    socket.on("planeEffectShow", handlePlaneEffect);
+    socket.on("diamondEffectShow", handleDiamondEffect);
     socket.on("redEnvelopeStart", handleRedEnvelope);
     socket.on("celebrationStart", handleCelebration);
     return () => {
@@ -950,6 +924,8 @@ export default function ChatApp() {
       socket.off("snowballError", handleSnowballError);
       socket.off("flowerEffectShow", handleFlowerEffect);
       socket.off("carEffectShow", handleCarEffect);
+      socket.off("planeEffectShow", handlePlaneEffect);
+      socket.off("diamondEffectShow", handleDiamondEffect);
       socket.off("redEnvelopeStart", handleRedEnvelope);
       socket.off("celebrationStart", handleCelebration);
     };

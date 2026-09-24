@@ -91,3 +91,23 @@
   cursor: pointer;
   font-size: 0.9rem;
 }
+/* 送花特效分級：4 組門檻/連發/冷卻的小表格 */
+.flower-tier-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 6px;
+  font-size: 0.88rem;
+}
+.flower-tier-table th,
+.flower-tier-table td {
+  padding: 4px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+  vertical-align: middle;
+}
+.flower-tier-table td:first-child {
+  text-align: left;
+}
+.flower-tier-table input[type="number"] {
+  width: 64px;
+}

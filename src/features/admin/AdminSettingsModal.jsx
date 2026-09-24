@@ -3,6 +3,20 @@ import "./AdminSettingsModal.css";
 import { RN, roomConfig } from "../../shared/roomConfig";
 import { BRAND_NAME } from "../../shared/brand";
 
+const FLOWER_EFFECT_INFO = {
+  petal_rain:    { label: "🌸 花瓣雨",         desc: "滿版玫瑰花瓣飄落" },
+  heart_bouquet: { label: "💝 愛心花束",       desc: "玫瑰流光排成愛心" },
+  classic_rose:  { label: "🌹 經典全螢幕大花", desc: "早期版本：整個畫面鋪滿大朵玫瑰" },
+  lifetime:      { label: "💍 一生一世",       desc: "金色煙火 + 滿屏玫瑰花海" },
+};
+
+// 獨家賣場禮物全螢幕特效（本房間獨家、僅金幣模式）：三種禮物共用同一套設定區塊
+const EXCLUSIVE_GIFT_EFFECTS = [
+  { prefix: "car",     title: "🚗 跑車全螢幕特效",     noun: "跑車", desc: "跑車橫越全螢幕＋車速殘影" },
+  { prefix: "plane",   title: "✈️ 獨家飛機全螢幕特效", noun: "飛機", desc: "飛機帶光軌斜向飛越全螢幕，後方拉出電台專屬橫幅" },
+  { prefix: "diamond", title: "💎 獨家鑽石全螢幕特效", noun: "鑽石", desc: "巨鑽在中央閃耀旋轉＋星光爆發，附電台專屬金色字樣" },
+];
+
 const DEFAULT = {
   leaderboard_enabled:  false,
   open_game:            true,
@@ -72,6 +86,21 @@ const DEFAULT = {
   car_effect_threshold: 999,
   car_effect_burst_limit: 1,
   car_effect_cooldown_minutes: 5,
+  // 送花特效分級：對應後端 share/giftEffects.js 的 DEFAULT_FLOWER_EFFECT_TIERS
+  flower_effect_tiers: [
+    { effect: "petal_rain",    threshold: 99,   burst_limit: 3, cooldown_minutes: 1,  enabled: true },
+    { effect: "heart_bouquet", threshold: 520,  burst_limit: 2, cooldown_minutes: 3,  enabled: true },
+    { effect: "classic_rose",  threshold: 999,  burst_limit: 1, cooldown_minutes: 5,  enabled: true },
+    { effect: "lifetime",      threshold: 1314, burst_limit: 1, cooldown_minutes: 10, enabled: true },
+  ],
+  plane_effect_enabled: true,
+  plane_effect_threshold: 999,
+  plane_effect_burst_limit: 1,
+  plane_effect_cooldown_minutes: 5,
+  diamond_effect_enabled: true,
+  diamond_effect_threshold: 999,
+  diamond_effect_burst_limit: 1,
+  diamond_effect_cooldown_minutes: 5,
   red_envelope_amount_options: "100,500,1000,5000",
   red_envelope_distribution_mode: "even",
   red_envelope_burst_limit: 1,
@@ -298,6 +327,19 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
   };
 
   const setBool = (key, val) => setSettings(p => ({ ...p, [key]: val }));
+
+  // 送花特效分級：flower_effect_tiers 是陣列，跟 setInt 一樣允許暫時清空成 "" 方便重打
+  const setTier = (idx, key, val) => setSettings(p => {
+    const tiers = (p.flower_effect_tiers || DEFAULT.flower_effect_tiers).map(t => ({ ...t }));
+    tiers[idx][key] = val;
+    return { ...p, flower_effect_tiers: tiers };
+  });
+  const setTierInt = (idx, key, raw) => {
+    if (raw === "") { setTier(idx, key, ""); return; }
+    const n = Number(raw);
+    if (Number.isNaN(n) || n < 0) return;
+    setTier(idx, key, Math.floor(n));
+  };
 
   if (!open) return null;
 
@@ -1149,7 +1191,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
             </section>
             )}
 
-            {/* ─── 送花特效升級（僅金幣模式） ──────────────────────────── */}
+            {/* ─── 送花特效分級（僅金幣模式） ──────────────────────────── */}
             {isCoin && (
             <section className="settings-section">
               <h4>
@@ -1157,58 +1199,78 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
                   <input type="checkbox" checked={settings.flower_effect_enabled !== false}
                     onChange={e => setBool("flower_effect_enabled", e.target.checked)} />
-                  {" "}啟用
+                  {" "}總開關
                 </label>
               </h4>
-              <Row label="觸發門檻">
-                <input type="number" min={1} value={settings.flower_effect_threshold}
-                  onChange={e => setInt("flower_effect_threshold", e.target.value)} />
-                <span className="field-note">個{currencyName}（單次送花總金額達此門檻，自動加碼全螢幕特效）</span>
-              </Row>
-              <Row label="可連發場次">
-                <input type="number" min={1} max={20} value={settings.flower_effect_burst_limit}
-                  onChange={e => setInt("flower_effect_burst_limit", e.target.value)} />
-                <span className="field-note">次（連續觸發到這個次數才會真的進入冷卻分鐘數倒數）</span>
-              </Row>
-              <Row label="冷卻分鐘數">
-                <input type="number" min={0} max={60} value={settings.flower_effect_cooldown_minutes}
-                  onChange={e => setInt("flower_effect_cooldown_minutes", e.target.value)} />
-                <span className="field-note">分鐘（0-60，0 = 不開啟冷卻；冷卻中會直接擋下達門檻的整筆送花，不扣款也不播特效，門檻以下的一般送花不受影響）</span>
-              </Row>
+              <p className="field-note" style={{ margin: "0 0 8px" }}>
+                單次送花總金額達到的「最高門檻」那一組特效觸發，4 組各自計算連發場次/冷卻；冷卻中會直接擋下達該門檻的整筆送花（不扣款也不播特效），未達任何門檻的一般送花不受影響
+              </p>
+              <table className="flower-tier-table">
+                <thead>
+                  <tr><th>特效</th><th>啟用</th><th>門檻（{currencyName}）</th><th>連發場次</th><th>冷卻（分）</th></tr>
+                </thead>
+                <tbody>
+                  {(settings.flower_effect_tiers || DEFAULT.flower_effect_tiers).map((tier, idx) => (
+                    <tr key={tier.effect}>
+                      <td title={FLOWER_EFFECT_INFO[tier.effect]?.desc}>
+                        {FLOWER_EFFECT_INFO[tier.effect]?.label || tier.effect}
+                        <div className="field-note">{FLOWER_EFFECT_INFO[tier.effect]?.desc}</div>
+                      </td>
+                      <td>
+                        <input type="checkbox" checked={tier.enabled !== false}
+                          onChange={e => setTier(idx, "enabled", e.target.checked)} />
+                      </td>
+                      <td>
+                        <input type="number" min={1} value={tier.threshold}
+                          onChange={e => setTierInt(idx, "threshold", e.target.value)} />
+                      </td>
+                      <td>
+                        <input type="number" min={1} max={20} value={tier.burst_limit}
+                          onChange={e => setTierInt(idx, "burst_limit", e.target.value)} />
+                      </td>
+                      <td>
+                        <input type="number" min={0} max={60} value={tier.cooldown_minutes}
+                          onChange={e => setTierInt(idx, "cooldown_minutes", e.target.value)} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <span className="field-note">連發場次：連續觸發到這個次數才會真的進入冷卻倒數（1-20）；冷卻 0-60 分鐘，0 = 不冷卻</span>
             </section>
             )}
 
-            {/* ─── 跑車全螢幕特效（本房間獨家、僅金幣模式） ─────────────── */}
-            {isCoin && (
-            <section className="settings-section">
+            {/* ─── 獨家賣場禮物全螢幕特效：跑車/飛機/鑽石（本房間獨家、僅金幣模式） ─── */}
+            {isCoin && EXCLUSIVE_GIFT_EFFECTS.map(({ prefix, title, noun, desc }) => (
+            <section className="settings-section" key={prefix}>
               <h4>
-                🚗 跑車全螢幕特效
+                {title}
                 <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
-                  <input type="checkbox" checked={settings.car_effect_enabled !== false}
-                    onChange={e => setBool("car_effect_enabled", e.target.checked)} />
+                  <input type="checkbox" checked={settings[`${prefix}_effect_enabled`] !== false}
+                    onChange={e => setBool(`${prefix}_effect_enabled`, e.target.checked)} />
                   {" "}啟用
                 </label>
               </h4>
               <p className="field-note" style={{ margin: "0 0 8px" }}>
-                本房間獨家特效：畫面會帶上「{BRAND_NAME}」品牌名跟房號，跟送花特效升級是同一套機制，玩法/門檻邏輯完全比照辦理
+                本房間獨家特效（{desc}）：畫面會帶上「{BRAND_NAME}」品牌名跟房號，跟送花特效升級是同一套機制，玩法/門檻邏輯完全比照辦理
               </p>
               <Row label="觸發門檻">
-                <input type="number" min={1} value={settings.car_effect_threshold}
-                  onChange={e => setInt("car_effect_threshold", e.target.value)} />
-                <span className="field-note">個{currencyName}（單次送跑車總金額達此門檻，自動加碼全螢幕特效）</span>
+                <input type="number" min={1} value={settings[`${prefix}_effect_threshold`]}
+                  onChange={e => setInt(`${prefix}_effect_threshold`, e.target.value)} />
+                <span className="field-note">個{currencyName}（單次送{noun}總金額達此門檻，自動加碼全螢幕特效）</span>
               </Row>
               <Row label="可連發場次">
-                <input type="number" min={1} max={20} value={settings.car_effect_burst_limit}
-                  onChange={e => setInt("car_effect_burst_limit", e.target.value)} />
+                <input type="number" min={1} max={20} value={settings[`${prefix}_effect_burst_limit`]}
+                  onChange={e => setInt(`${prefix}_effect_burst_limit`, e.target.value)} />
                 <span className="field-note">次（連續觸發到這個次數才會真的進入冷卻分鐘數倒數）</span>
               </Row>
               <Row label="冷卻分鐘數">
-                <input type="number" min={0} max={60} value={settings.car_effect_cooldown_minutes}
-                  onChange={e => setInt("car_effect_cooldown_minutes", e.target.value)} />
+                <input type="number" min={0} max={60} value={settings[`${prefix}_effect_cooldown_minutes`]}
+                  onChange={e => setInt(`${prefix}_effect_cooldown_minutes`, e.target.value)} />
                 <span className="field-note">分鐘（0-60，0 = 不開啟冷卻；冷卻中會直接擋下達門檻的整筆送禮，不扣款也不播特效，門檻以下的一般送禮不受影響）</span>
               </Row>
             </section>
-            )}
+            ))}
 
             {/* ─── 全場金幣雨／發紅包（僅金幣模式） ────────────────────── */}
             {isCoin && (

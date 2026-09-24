@@ -859,32 +859,6 @@ body {
   100% { opacity: 0; }
 }
 
-/* 999 玫瑰滿版特效：圖片改滿版鋪底＋開場爆衝感，比對照煙火再疊一層花瓣雨提升視覺份量。
-   :not(.car-effect-container) 讓這條規則只影響送花、不影響跑車（兩者共用 .flower-effect-container） */
-.flower-effect-container:not(.car-effect-container) .firework-gif {
-  animation: rose-burst-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-
-@keyframes rose-burst-in {
-  0%   { opacity: 0; transform: scale(0.4); }
-  60%  { opacity: 1; transform: scale(1.08); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-.flower-petal-flake {
-  position: absolute;
-  top: -40px;
-  pointer-events: none;
-  animation: flower-petal-fall 2.4s ease-in forwards;
-  filter: drop-shadow(0 0 4px rgba(255, 90, 130, 0.6));
-}
-
-@keyframes flower-petal-fall {
-  0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
-  10%  { opacity: 1; }
-  100% { transform: translateY(110vh) rotate(300deg); opacity: 0; }
-}
-
 /* 跑車全螢幕特效：圖片從畫面外開進來、橫越再開出去，取代原地放大淡出的靜態感 */
 .car-effect-container .firework-gif {
   position: absolute;
