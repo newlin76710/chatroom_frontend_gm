@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import RootErrorBoundary from "./shared/RootErrorBoundary";
 
 // 全域攔截 fetch，偵測後端回 Invalid token 時派送事件
 const _origFetch = window.fetch.bind(window);
@@ -18,6 +19,8 @@ window.fetch = async (...args) => {
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <App />
+    <RootErrorBoundary>
+      <App />
+    </RootErrorBoundary>
   </React.StrictMode>
 );

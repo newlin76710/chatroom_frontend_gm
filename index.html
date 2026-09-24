@@ -10,6 +10,30 @@
 
 <body>
   <div id="root"></div>
+  <noscript>
+    <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#121212;color:#fff;font-family:Arial,sans-serif;text-align:center;padding:24px;">
+      此聊天室需要啟用 JavaScript 才能使用，請開啟瀏覽器的 JavaScript 功能後再試。
+    </div>
+  </noscript>
+  <script>
+    // 保險機制：不管是網路太慢、瀏覽器太舊連降級版都跑不動、或其他未預期狀況，
+    // 只要過一段時間 #root 仍是空的，就顯示提示文字而不是讓畫面一直卡在黑屏。
+    // 這是不含任何新語法的一般 script（非 module），連很舊的瀏覽器都能執行。
+    // 之後只要 React 成功 render，會直接覆蓋掉這裡塞進去的內容，不會互相干擾。
+    (function () {
+      setTimeout(function () {
+        var root = document.getElementById("root");
+        if (root && root.childNodes.length === 0) {
+          root.innerHTML =
+            '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#121212;color:#fff;font-family:Arial,sans-serif;text-align:center;padding:24px;">' +
+            '<div style="font-size:18px;">頁面載入時間過長</div>' +
+            '<div style="font-size:14px;color:#aaa;">請重新整理頁面；若持續發生，建議更新瀏覽器版本後再試一次</div>' +
+            '<button onclick="location.reload()" style="padding:8px 16px;border-radius:4px;border:none;background:#0d6efd;color:#fff;cursor:pointer;">重新整理</button>' +
+            "</div>";
+        }
+      }, 10000);
+    })();
+  </script>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 
