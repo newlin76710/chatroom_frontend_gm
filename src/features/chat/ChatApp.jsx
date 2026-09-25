@@ -1245,6 +1245,31 @@ export default function ChatApp() {
     socket.emit("throwSnowball", { room, from: name, target: targetName });
   }, [socket, room, name]);
 
+  // 「功能選單」項目：新舊介面共用
+  const functionMenuItems = [
+    { label: "站務公告", onClick: () => setShowAnnouncement(true) },
+    { label: "編輯常用詞", onClick: () => setQuickPhraseOpenSignal((n) => n + 1) },
+    {
+      label: hideGameBroadcasts ? "🔊 顯示遊戲推播" : "🙈 隱藏遊戲推播",
+      onClick: () => setHideGameBroadcasts((v) => !v),
+    },
+    {
+      label: hideFxEffects ? "🎆 顯示煙火與雪球特效" : "🚫 隱藏煙火與雪球特效",
+      onClick: () => setHideFxEffects((v) => {
+        const next = !v;
+        sessionStorage.setItem("hideFxEffects", next ? "true" : "false");
+        return next;
+      }),
+    },
+    ...(!invisible ? [
+      { label: "點播歌曲", onClick: () => setShowSongRequestModal(true) },
+      { label: "開始聽", onClick: () => listenerRef.current?.startListen() },
+      { label: "結束聽", onClick: () => listenerRef.current?.stopListen() },
+      { label: "排麥", onClick: () => songRoomRef.current?.startVoice() },
+      { label: "下麥", onClick: () => songRoomRef.current?.stopVoice() },
+    ] : []),
+  ];
+
   // ─── 渲染 ─────────────────────────────────────────────────────────────────
   return (
     <>
@@ -1427,31 +1452,7 @@ export default function ChatApp() {
                   </div>
 
                   <div className="legacy-row">
-                    <FunctionMenuPicker
-                      items={[
-                        { label: "站務公告", onClick: () => setShowAnnouncement(true) },
-                        { label: "編輯常用詞", onClick: () => setQuickPhraseOpenSignal((n) => n + 1) },
-                        {
-                          label: hideGameBroadcasts ? "🔊 顯示遊戲推播" : "🙈 隱藏遊戲推播",
-                          onClick: () => setHideGameBroadcasts((v) => !v),
-                        },
-                        {
-                          label: hideFxEffects ? "🎆 顯示煙火與雪球特效" : "🚫 隱藏煙火與雪球特效",
-                          onClick: () => setHideFxEffects((v) => {
-                            const next = !v;
-                            sessionStorage.setItem("hideFxEffects", next ? "true" : "false");
-                            return next;
-                          }),
-                        },
-                        ...(!invisible ? [
-                          { label: "點播歌曲", onClick: () => setShowSongRequestModal(true) },
-                          { label: "開始聽", onClick: () => listenerRef.current?.startListen() },
-                          { label: "結束聽", onClick: () => listenerRef.current?.stopListen() },
-                          { label: "排麥", onClick: () => songRoomRef.current?.startVoice() },
-                          { label: "下麥", onClick: () => songRoomRef.current?.stopVoice() },
-                        ] : []),
-                      ]}
-                    />
+                    <FunctionMenuPicker items={functionMenuItems} />
                     {level >= ANL && (
                       <select
                         className="legacy-select-blue"
@@ -1557,6 +1558,7 @@ export default function ChatApp() {
                 </div>
               ) : (
                 <div className="chat-input">
+                  <FunctionMenuPicker items={functionMenuItems} triggerClassName="clear-btn" />
                   <button className="clear-btn" onClick={clearMessages}>🧹清空畫面</button>
                   <button
                     className={`clear-btn scroll-lock-btn${scrollLocked ? " active" : ""}`}
@@ -1621,6 +1623,7 @@ export default function ChatApp() {
                   <QuickPhrasePanel
                     token={token}
                     onSelect={(content) => setText((prev) => (prev ? prev + " " : "") + content)}
+                    openSignal={quickPhraseOpenSignal}
                   />
 
                   <label>

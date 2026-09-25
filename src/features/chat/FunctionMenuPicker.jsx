@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useClickOutside } from "../../shared/hooks/useClickOutside";
 
-export default function FunctionMenuPicker({ items }) {
+export default function FunctionMenuPicker({ items, triggerClassName = "legacy-select-pink" }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
   useClickOutside(containerRef, () => setOpen(false), open);
@@ -10,7 +10,7 @@ export default function FunctionMenuPicker({ items }) {
     <div ref={containerRef} style={{ position: "relative", display: "inline-block" }}>
       <button
         type="button"
-        className="legacy-select-pink"
+        className={triggerClassName}
         onClick={() => setOpen((o) => !o)}
         style={{ cursor: "pointer" }}
       >
