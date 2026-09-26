@@ -105,6 +105,7 @@ const DEFAULT = {
   red_envelope_distribution_mode: "even",
   red_envelope_burst_limit: 1,
   red_envelope_cooldown_minutes: 10,
+  red_envelope_max_amount: 10000,
   celebration_amount_options: "100,500,1000",
   celebration_burst_limit: 1,
   celebration_cooldown_minutes: 10,
@@ -1276,11 +1277,28 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
             {isCoin && (
             <section className="settings-section">
               <h4>🧧 全場金幣雨／發紅包</h4>
-              <Row label="金額選單">
-                <input type="text" value={settings.red_envelope_amount_options}
-                  onChange={e => setSettings(p => ({ ...p, red_envelope_amount_options: e.target.value }))}
-                  placeholder="100,500,1000,5000" style={{ width: 180 }} />
-                <span className="field-note">逗號分隔的正整數，玩家發紅包時可選其中一個金額</span>
+              <Row label="快選金額按鈕">
+                {[0, 1, 2, 3].map(idx => {
+                  const parts = String(settings.red_envelope_amount_options || "").split(",").map(x => x.trim());
+                  while (parts.length < 4) parts.push("");
+                  return (
+                    <input key={idx} type="number" min={1} style={{ width: 70 }}
+                      value={parts[idx]}
+                      onChange={e => {
+                        const raw = e.target.value;
+                        if (raw !== "" && (!Number.isFinite(Number(raw)) || Number(raw) < 1)) return;
+                        const next = parts.slice(0, 4);
+                        next[idx] = raw === "" ? "" : String(Math.floor(Number(raw)));
+                        setSettings(p => ({ ...p, red_envelope_amount_options: next.join(",") }));
+                      }} />
+                  );
+                })}
+                <span className="field-note">發紅包彈窗裡的 4 個快選按鈕金額（玩家另外也可以自訂金額）</span>
+              </Row>
+              <Row label="單次發紅包上限">
+                <input type="number" min={1} style={{ width: 100 }} value={settings.red_envelope_max_amount}
+                  onChange={e => setInt("red_envelope_max_amount", e.target.value)} />
+                <span className="field-note">玩家單次發紅包（快選或自訂）不能超過這個金額</span>
               </Row>
               <Row label="分配方式">
                 <select value={settings.red_envelope_distribution_mode}

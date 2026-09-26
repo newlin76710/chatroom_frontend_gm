@@ -14,7 +14,7 @@ const CAKE_VARIANTS = [
 ];
 
 const MULTI_QTY_IDS = ["diamond", "plane", "car", "ball", "rose"];
-const MAX_GIFT_QUANTITY = 999;
+const MAX_GIFT_QUANTITY = 1314;
 
 export default function ShopPanel({ token, myName, myLevel, targetName, open, onClose, title = "商城" }) {
   const [buying, setBuying] = useState(null);

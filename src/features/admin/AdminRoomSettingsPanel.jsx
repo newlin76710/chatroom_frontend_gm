@@ -312,7 +312,7 @@ export default function AdminRoomSettingsPanel({ token }) {
           disabled={!settings.virtual_users_enabled}
           style={{ width: 60, padding: "5px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13 }}
         />
-        <span style={{ fontSize: 12, color: "#888" }}>級（每個假人進房時隨機落在此區間，上下限設一樣就等於統一等級）</span>
+        <span style={{ fontSize: 12, color: "#888" }}>級（每個假人的等級固定綁定暱稱、落在此區間內，每次進房都一樣；暱稱庫寫「暱稱,等級」可直接指定）</span>
       </div>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
         <span style={{ width: 110, fontSize: 13, color: "#444", flexShrink: 0, paddingTop: 5 }}>男性暱稱庫</span>
@@ -320,7 +320,7 @@ export default function AdminRoomSettingsPanel({ token }) {
           value={settings.virtual_user_names_male || ""}
           onChange={e => setSettings(s => ({ ...s, virtual_user_names_male: e.target.value }))}
           rows={5}
-          placeholder={"每行一個暱稱，例如：\n小明\n阿強\n路人甲"}
+          placeholder={"每行一個暱稱，可加「,等級」指定固定等級，例如：\n小明\n阿強,15\n路人甲,8"}
           style={{ flex: 1, padding: "6px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13, fontFamily: "inherit", resize: "vertical" }}
         />
       </div>
@@ -330,12 +330,12 @@ export default function AdminRoomSettingsPanel({ token }) {
           value={settings.virtual_user_names_female || ""}
           onChange={e => setSettings(s => ({ ...s, virtual_user_names_female: e.target.value }))}
           rows={5}
-          placeholder={"每行一個暱稱，例如：\n小美\n阿珍\n路人乙"}
+          placeholder={"每行一個暱稱，可加「,等級」指定固定等級，例如：\n小美\n阿珍,12\n路人乙,6"}
           style={{ flex: 1, padding: "6px 8px", border: "1px solid #ccc", borderRadius: 5, fontSize: 13, fontFamily: "inherit", resize: "vertical" }}
         />
       </div>
       <div style={{ fontSize: 12, color: "#888", marginLeft: 120 }}>
-        虛擬用戶會從男/女暱稱庫隨機抽人加入在線列表，名字跟性別是配對好的（男暱稱庫的名字一定顯示男生），兩邊都填才會有效果。
+        虛擬用戶會從男/女暱稱庫隨機抽人加入在線列表，名字跟性別是配對好的（男暱稱庫的名字一定顯示男生），兩邊都填才會有效果。假人進房時會同步出現在在線名單。
       </div>
 
       <button

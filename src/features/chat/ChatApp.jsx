@@ -195,6 +195,8 @@ export default function ChatApp() {
   const [hideGameBroadcasts, setHideGameBroadcasts] = useState(false);
   // 隱藏全螢幕煙火/雪球特效（有人反應打殭屍時會被擋住畫面而失敗），存在 sessionStorage 讓偏好留到下次重整
   const [hideFxEffects, setHideFxEffects] = useState(() => sessionStorage.getItem("hideFxEffects") === "true");
+  // 送花/跑車/飛機/鑽石/紅包雨/慶典等全螢幕特效畫面，跟煙火雪球分開各自開關
+  const [hideGiftFx, setHideGiftFx] = useState(() => sessionStorage.getItem("hideGiftFx") === "true");
   const [currentSinger, setCurrentSinger] = useState(null);
   const [convertTC, setConvertTC] = useState(true);
   const [appleAmount, setAppleAmount] = useState(1);
@@ -306,6 +308,8 @@ export default function ChatApp() {
   // 給 socket handler 讀最新值用（見下方 handleFirework/showSnowballEffect），避免因為這個偏好改變就要重新掛一次 socket 監聽
   const hideFxEffectsRef = useRef(hideFxEffects);
   useEffect(() => { hideFxEffectsRef.current = hideFxEffects; }, [hideFxEffects]);
+  const hideGiftFxRef = useRef(hideGiftFx);
+  useEffect(() => { hideGiftFxRef.current = hideGiftFx; }, [hideGiftFx]);
 
   // ─── 初始化 ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -762,7 +766,7 @@ export default function ChatApp() {
     // payload.effect 決定播哪一組（99 花瓣雨/520 愛心花束/999 經典大花/1314 一生一世，
     // 見 giftEffects.js），跟原本的禮物訊息（giftMessage）並存，這裡只負責疊加全螢幕特效。
     const playGiftEffect = (build) => (data) => {
-      if (hideFxEffectsRef.current) return;
+      if (hideGiftFxRef.current) return; // 功能選單「隱藏特效畫面」
       enqueueEffect((done) => {
         const { node, duration } = build(data, { room });
         document.body.appendChild(node);
@@ -777,7 +781,7 @@ export default function ChatApp() {
     // 跑車全螢幕特效（本房間獨家、僅金幣模式）：跟送花特效同一套模式，差別是畫面上會
     // 帶房號＋品牌名，防止被其他房間直接盜用同一支特效當自己的賣點。
     const handleCarEffect = (data) => {
-      if (hideFxEffectsRef.current) return;
+      if (hideGiftFxRef.current) return; // 功能選單「隱藏特效畫面」
       enqueueEffect((done) => {
         const container = document.createElement("div");
         container.className = "firework-container flower-effect-container car-effect-container";
@@ -819,7 +823,7 @@ export default function ChatApp() {
     // 多少金幣，是透過既有的 goldAwarded 事件（source="system_red_envelope"）另外顯示，
     // 這裡只負責播放動畫本身。
     const handleRedEnvelope = (data) => {
-      if (hideFxEffectsRef.current) return;
+      if (hideGiftFxRef.current) return; // 功能選單「隱藏特效畫面」
       enqueueEffect((done) => {
         const container = document.createElement("div");
         container.className = "firework-container red-envelope-container";
@@ -865,7 +869,7 @@ export default function ChatApp() {
 
     // 專屬慶典模式（僅金幣模式）：玩家選主題+扣款發起，全場飄落主題特效 + 頂端祝福語 + 簽名
     const handleCelebration = (data) => {
-      if (hideFxEffectsRef.current) return;
+      if (hideGiftFxRef.current) return; // 功能選單「隱藏特效畫面」
       enqueueEffect((done) => {
         const container = document.createElement("div");
         // 每個主題疊一個對應的底色 class，讓聖誕/新年等主題除了粒子 emoji 之外，
@@ -1258,6 +1262,14 @@ export default function ChatApp() {
       onClick: () => setHideFxEffects((v) => {
         const next = !v;
         sessionStorage.setItem("hideFxEffects", next ? "true" : "false");
+        return next;
+      }),
+    },
+    {
+      label: hideGiftFx ? "✨ 顯示特效畫面" : "🚫 隱藏特效畫面",
+      onClick: () => setHideGiftFx((v) => {
+        const next = !v;
+        sessionStorage.setItem("hideGiftFx", next ? "true" : "false");
         return next;
       }),
     },

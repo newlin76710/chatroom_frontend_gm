@@ -34,6 +34,8 @@ const _cfg = {
   baccarat_enabled:    true,
   race_enabled:        true,
   zombie_enabled:      true,
+  red_envelope_amount_options: "100,500,1000,5000",
+  red_envelope_max_amount: 10000,
 };
 
 export const roomConfig = _cfg;

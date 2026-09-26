@@ -5,8 +5,8 @@ import { useState } from "react";
 import "./QuickRoseButton.css";
 import { BACKEND, RN, roomConfig } from "../../shared/roomConfig";
 
-const QUANTITY_PRESETS = [1, 10, 99, 520, 999];
-const MAX_QUANTITY = 999;
+const QUANTITY_PRESETS = [1, 10, 99, 520, 999, 1314];
+const MAX_QUANTITY = 1314;
 
 // hidden：另一顆左下角按鈕（紅包/慶典）展開時，這顆連同它的面板整個不渲染，避免蓋到對方的介面；
 // isOpen/onOpenChange：面板開關狀態交給 ChatApp.jsx 統一管理，才能跟另外兩顆互斥

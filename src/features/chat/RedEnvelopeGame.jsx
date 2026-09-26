@@ -14,6 +14,7 @@ import { useDraggableWindow } from "../../shared/hooks/useDraggableWindow";
 export default function RedEnvelopeGame({ socket, token, name, apples, hidden, isOpen, onOpenChange }) {
   const { windowRef, onPointerDown } = useDraggableWindow();
   const [selected, setSelected] = useState(null);
+  const [customAmount, setCustomAmount] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [sending, setSending] = useState(false);
   const tokenRef = useRef(token);
@@ -26,6 +27,7 @@ export default function RedEnvelopeGame({ socket, token, name, apples, hidden, i
       setSending(false);
       onOpenChange(false);
       setSelected(null);
+      setCustomAmount("");
       setErrorMsg("");
     };
     const onError = ({ reason } = {}) => {
@@ -40,12 +42,16 @@ export default function RedEnvelopeGame({ socket, token, name, apples, hidden, i
     };
   }, [socket, name, onOpenChange]);
 
+  const maxAmount = Math.max(1, Number(roomConfig.red_envelope_max_amount) || 10000);
+
   const send = useCallback(() => {
     if (!selected || sending) return;
+    if (selected > maxAmount) { setErrorMsg(`單次發紅包上限為 ${maxAmount}`); return; }
+    if (apples != null && selected > apples) { setErrorMsg(`${roomConfig.currency_name}不足`); return; }
     setSending(true);
     setErrorMsg("");
     socket.emit("startRedEnvelope", { token: tokenRef.current, room: RN, amount: selected });
-  }, [socket, selected, sending]);
+  }, [socket, selected, sending, maxAmount, apples]);
 
   if (roomConfig.currency_name !== "金幣") return null;
   if (hidden) return null;
@@ -53,7 +59,8 @@ export default function RedEnvelopeGame({ socket, token, name, apples, hidden, i
   const options = String(roomConfig.red_envelope_amount_options || "100,500,1000,5000")
     .split(",")
     .map((s) => Math.floor(Number(s.trim())))
-    .filter((n) => Number.isFinite(n) && n > 0);
+    .filter((n) => Number.isFinite(n) && n > 0)
+    .slice(0, 4); // 後台設定 4 個快選金額按鈕
 
   return (
     <div className="reg-corner">
@@ -65,22 +72,41 @@ export default function RedEnvelopeGame({ socket, token, name, apples, hidden, i
             <span className="reg-title">🧧 發紅包</span>
             <button className="reg-close" onClick={() => { onOpenChange(false); setErrorMsg(""); }}>✖</button>
           </div>
-          <p className="reg-desc">選擇要發放的金額，全場在線玩家均分/隨機領取</p>
+          <p className="reg-desc">選擇或輸入要發放的金額，全場在線玩家均分/隨機領取</p>
           <div className="reg-options">
             {options.map((opt) => (
               <button
                 key={opt}
                 className={`reg-option-btn${selected === opt ? " reg-option-selected" : ""}`}
                 disabled={apples != null && opt > apples}
-                onClick={() => setSelected(opt)}
+                onClick={() => { setSelected(opt); setCustomAmount(""); setErrorMsg(""); }}
               >
                 {opt}
               </button>
             ))}
           </div>
+          <input
+            type="number"
+            className="reg-custom-input"
+            min={1}
+            max={maxAmount}
+            placeholder={`自訂金額（上限 ${maxAmount}）`}
+            value={customAmount}
+            onChange={(e) => {
+              const raw = e.target.value;
+              setErrorMsg("");
+              if (raw === "") { setCustomAmount(""); setSelected(null); return; }
+              const n = Math.floor(Number(raw));
+              if (!Number.isFinite(n) || n < 1) return;
+              const clamped = Math.min(n, maxAmount);
+              if (n > maxAmount) setErrorMsg(`單次發紅包上限為 ${maxAmount}`);
+              setCustomAmount(String(clamped));
+              setSelected(clamped);
+            }}
+          />
           {errorMsg && <p className="reg-error">{errorMsg}</p>}
           <button className="reg-send-btn" disabled={!selected || sending} onClick={send}>
-            {sending ? "發放中…" : "確定發放"}
+            {sending ? "發放中…" : selected ? `確定發放 ${selected}` : "確定發放"}
           </button>
         </div>
       )}

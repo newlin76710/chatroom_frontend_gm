@@ -100,6 +100,19 @@
   border-color: transparent;
 }
 
+.reg-custom-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  font-size: 0.82rem;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 107, 107, 0.4);
+  border-radius: 6px;
+}
+.reg-custom-input::placeholder { color: #bbb; }
+
 .reg-error {
   font-size: 0.72rem;
   color: #ffb3b3;
