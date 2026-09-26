@@ -93,6 +93,8 @@ const DEFAULT = {
     { effect: "classic_rose",  threshold: 999,  burst_limit: 1, cooldown_minutes: 5,  enabled: true },
     { effect: "lifetime",      threshold: 1314, burst_limit: 1, cooldown_minutes: 10, enabled: true },
   ],
+  // 送禮扣除比例（系統回收 %）：對應後端 share/giftDeduction.js 的 DEFAULT_GIFT_DEDUCTION_PCT
+  gift_deduction_pct: { rose: 30, chocolate: 100, cake: 100, diamond: 0, plane: 0, car: 0 },
   plane_effect_enabled: true,
   plane_effect_threshold: 999,
   plane_effect_burst_limit: 1,
@@ -340,6 +342,16 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
     const n = Number(raw);
     if (Number.isNaN(n) || n < 0) return;
     setTier(idx, key, Math.floor(n));
+  };
+
+  // 送禮扣除比例：物件欄位，一樣允許暫時清空成 "" 方便重打，儲存前再轉回整數
+  const setDeductionPct = (id, raw) => {
+    if (raw !== "") {
+      const n = Number(raw);
+      if (Number.isNaN(n) || n < 0 || n > 100) return;
+      raw = Math.floor(n);
+    }
+    setSettings(p => ({ ...p, gift_deduction_pct: { ...(p.gift_deduction_pct || DEFAULT.gift_deduction_pct), [id]: raw } }));
   };
 
   if (!open) return null;
@@ -1191,6 +1203,28 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
               </Row>
             </section>
             )}
+
+            {/* ─── 送禮扣除比例（系統金幣回收） ─────────────────────────── */}
+            <section className="settings-section">
+              <h4>🎁 送禮扣除比例</h4>
+              {[
+                ...(isCoin ? [
+                  { id: "rose",      label: "🌹 玫瑰" },
+                  { id: "chocolate", label: "🍫 巧克力" },
+                  { id: "cake",      label: "🎂 蛋糕" },
+                ] : []),
+                { id: "diamond", label: "💎 鑽石" },
+                { id: "plane",   label: "✈️ 飛機" },
+                { id: "car",     label: "🚗 跑車" },
+              ].map(({ id, label }) => (
+                <Row key={id} label={label}>
+                  <input type="number" min={0} max={100} style={{ width: 70 }}
+                    value={(settings.gift_deduction_pct || DEFAULT.gift_deduction_pct)[id] ?? ""}
+                    onChange={e => setDeductionPct(id, e.target.value)} />
+                  <span className="field-note">%（0 = 全額給會員，10 = 扣 10% 由系統回收，100 = 會員拿不到{currencyName}）</span>
+                </Row>
+              ))}
+            </section>
 
             {/* ─── 送花特效分級（僅金幣模式） ──────────────────────────── */}
             {isCoin && (
