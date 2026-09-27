@@ -1446,7 +1446,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                     onChange={e => setBool("fishing_gift_bonus_enabled", e.target.checked)} />
                   {" "}開啟
                 </label>
-                <span className="field-note">開啟後，玩家每送出一筆下列禮物（不論一次送幾個），就獲得對應次數的免費釣魚（以初級竿出竿、不扣{currencyName}）</span>
+                <span className="field-note">開啟後，送禮的人按顆數自動累計，每送滿下列設定的數量就換 1 次免費釣魚（以初級竿出竿、不扣{currencyName}）。例如鑽石填 3：送 6 顆換 2 次，送 7 顆換 2 次、多的 1 顆留到下次繼續累計</span>
               </Row>
               {settings.fishing_gift_bonus_enabled === true && [
                 { id: "diamond", label: "💎 鑽石" }, { id: "plane", label: "✈️ 飛機" },
@@ -1457,7 +1457,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                   <input type="number" min={0} max={1000} style={{ width: 70 }}
                     value={(settings.fishing_gift_bonus || DEFAULT.fishing_gift_bonus)[id] ?? ""}
                     onChange={e => setGiftBonus(id, e.target.value)} />
-                  <span className="field-note">次（0 = 不贈送）</span>
+                  <span className="field-note">個換 1 次（0 = 不贈送）</span>
                 </Row>
               ))}
             </section>

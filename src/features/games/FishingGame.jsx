@@ -171,18 +171,31 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
   }, [open, minimized, syncFishList]);
 
   // ── 加入/離開觀戰頻道 ──
-  // 伺服器沒回快照（例如後端還沒更新到有捕魚遊戲的版本）時，6 秒後顯示原因，並每 5 秒自動重試
+  // 伺服器沒回快照時每 3 秒自動重試，6 秒後顯示原因（例如後端還沒更新到有捕魚遊戲的版本）。
+  // 斷線重連（例如後端重新部署）時一定要重新加入：伺服器重啟後記憶體裡的 token 會清空，
+  // 要等聊天室的 joinRoom 重新登記 token 之後 fishingJoin 才會被受理，所以重連後先標記成
+  // 「未連線」、稍等一下再加入，沒成功就交給重試機制，不會再出現「魚游完就沒有新魚」卡住的情況
   useEffect(() => {
     if (!open) return;
     const join = () => socket.emit("fishingJoin", { token: tokenRef.current, room: RN });
+    let slowTimer = setTimeout(() => setJoinSlow(true), 6000);
+    const onReconnect = () => {
+      connectedRef.current = false;
+      setConnected(false);
+      clearTimeout(slowTimer);
+      slowTimer = setTimeout(() => setJoinSlow(true), 8000);
+      setTimeout(join, 1000);
+    };
+    const onDisconnect = () => { connectedRef.current = false; setConnected(false); };
     join();
-    socket.on("connect", join);
-    const slowTimer = setTimeout(() => setJoinSlow(true), 6000);
-    const retryTimer = setInterval(() => { if (!connectedRef.current) join(); }, 5000);
+    socket.on("connect", onReconnect);
+    socket.on("disconnect", onDisconnect);
+    const retryTimer = setInterval(() => { if (!connectedRef.current) join(); }, 3000);
     return () => {
       clearTimeout(slowTimer);
       clearInterval(retryTimer);
-      socket.off("connect", join);
+      socket.off("connect", onReconnect);
+      socket.off("disconnect", onDisconnect);
       socket.emit("fishingLeave", { room: RN });
       setConnected(false);
       setJoinSlow(false);
