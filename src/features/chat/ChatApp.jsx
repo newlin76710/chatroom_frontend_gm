@@ -40,7 +40,7 @@ import { Converter } from "opencc-js";
 // ─── 環境設定 ────────────────────────────────────────────────────────────────
 import { roomConfig, loadRoomConfig, BACKEND, RN } from "../../shared/roomConfig";
 import { BRAND_NAME } from "../../shared/brand";
-import { buildFlowerEffect, buildPlaneEffect, buildDiamondEffect, buildCruiseEffect } from "./giftEffects";
+import { buildFlowerEffect, buildPlaneEffect, buildDiamondEffect, buildCruiseEffect, buildFishingJackpotEffect } from "./giftEffects";
 loadRoomConfig();
 const FRONTEND_VERSION = import.meta.env.VITE_APP_VERSION || "dev";
 
@@ -92,6 +92,7 @@ const DigTreasureGame = lazy(() => import("../games/DigTreasureGame"));
 const MarqueeGame = lazy(() => import("../games/MarqueeGame"));
 const PushCardGame = lazy(() => import("../games/PushCardGame"));
 const LittleMaryGame = lazy(() => import("../games/LittleMaryGame"));
+const FishingGame = lazy(() => import("../games/FishingGame"));
 const RedEnvelopeGame = lazy(() => import("./RedEnvelopeGame"));
 const CelebrationModeGame = lazy(() => import("./CelebrationModeGame"));
 const QuickRoseButton = lazy(() => import("./QuickRoseButton"));
@@ -218,6 +219,7 @@ export default function ChatApp() {
   // 三顆裡面同時只能展開一個的面板：展開其中一個時，另外兩顆連按鈕本體都隱藏，
   // 避免面板被旁邊還留著的觸發按鈕蓋到
   const [activeGiftTool, setActiveGiftTool] = useState(null); // null | "redEnvelope" | "celebration" | "rose"
+  const [showFishing, setShowFishing] = useState(false); // 多人共用血池捕魚彈窗（僅金幣模式）
   const [perTransferLimit, setPerTransferLimit] = useState(0); // 0 = 不限制
   const [scrollLocked, setScrollLocked] = useState(false);
   const scrollLockedRef = useRef(false); // 同步更新，避免 useLayoutEffect 讀到過期值
@@ -664,6 +666,7 @@ export default function ChatApp() {
         case "system_online": return "🕒 在線獎勵";
         case "system_littlemary": return "🎡 小瑪莉";
         case "system_red_envelope": return "🧧 金幣雨";
+        case "system_fishing": return "🎣 捕魚";
         default: return roomConfig.currency_name;
       }
     };
@@ -779,6 +782,8 @@ export default function ChatApp() {
     const handleDiamondEffect = playGiftEffect(buildDiamondEffect);
     // 獨家郵輪（金幣房間專屬）
     const handleCruiseEffect = playGiftEffect(buildCruiseEffect);
+    // 捕魚遊戲 BOSS 被擊殺：突破彈窗，全大廳霸屏金幣雨（不播聲音，避免干擾麥上歌手）
+    const handleFishingJackpot = playGiftEffect(buildFishingJackpotEffect);
 
     // 跑車全螢幕特效（本房間獨家、僅金幣模式）：跟送花特效同一套模式，差別是畫面上會
     // 帶房號＋品牌名，防止被其他房間直接盜用同一支特效當自己的賣點。
@@ -810,7 +815,7 @@ export default function ChatApp() {
 
         const signature = document.createElement("div");
         signature.className = "flower-effect-signature";
-        signature.textContent = `${data?.brand || BRAND_NAME} × 房間${data?.room || room} 獨家呈現`;
+        signature.textContent = `${data?.brand || BRAND_NAME} 獨家呈現`;
 
         streaks.forEach((s) => container.appendChild(s));
         container.appendChild(img);
@@ -1020,6 +1025,7 @@ export default function ChatApp() {
     socket.on("planeEffectShow", handlePlaneEffect);
     socket.on("diamondEffectShow", handleDiamondEffect);
     socket.on("cruiseEffectShow", handleCruiseEffect);
+    socket.on("fishingJackpot", handleFishingJackpot);
     socket.on("redEnvelopeStart", handleRedEnvelope);
     socket.on("celebrationStart", handleCelebration);
     return () => {
@@ -1033,6 +1039,7 @@ export default function ChatApp() {
       socket.off("planeEffectShow", handlePlaneEffect);
       socket.off("diamondEffectShow", handleDiamondEffect);
       socket.off("cruiseEffectShow", handleCruiseEffect);
+      socket.off("fishingJackpot", handleFishingJackpot);
       socket.off("redEnvelopeStart", handleRedEnvelope);
       socket.off("celebrationStart", handleCelebration);
     };
@@ -1852,6 +1859,15 @@ export default function ChatApp() {
                             : "🎡 小瑪莉"}
                       </button>
                     )}
+                    {roomConfig.currency_name === "金幣" && roomConfig.fishing_enabled !== false && (
+                      <button
+                        className="admin-btn fishing-open-btn"
+                        onClick={() => setShowFishing((v) => !v)}
+                        title="多人共用血池捕魚"
+                      >
+                        {showFishing ? "🎣 捕魚中" : "🎣 捕魚"}
+                      </button>
+                    )}
                     {roomConfig.currency_name === "金蘋果" && <SurpriseHistoryPanel token={token} />}
                     {roomConfig.currency_name === "金蘋果" && <>{roomConfig.currency_name}樂園{" "}</>}
                     <img src={`/gifts/${roomConfig.currency_icon}`} alt={roomConfig.currency_name} style={{ width: 20, height: 20, marginTop: -5 }} />{" "}
@@ -2085,6 +2101,22 @@ export default function ChatApp() {
       {/* 小瑪莉跑馬燈押注（僅金幣模式；管理員手動觸發或後端無人值守自動開局）。跟推牌/跑馬燈
           不同，這張卡片可以用滑鼠拖曳移動（見 LittleMaryGame.jsx 的 useDraggableWindow），
           所以自己獨立定位、不放進上面的 .right-status-stack，預設位置刻意跟那個堆疊錯開 */}
+      {/* 多人共用血池捕魚（僅金幣模式）：常駐掛載（彈窗沒開時只負責接收「黃金巨龍現身」的大廳提示），
+          點上面那排的「🎣 捕魚」才打開大彈窗、加入魚池 */}
+      {roomConfig.currency_name === "金幣" && roomConfig.fishing_enabled !== false && (
+        <DeferredPanel>
+          <FishingGame
+            socket={socket}
+            token={token}
+            name={name}
+            apples={apples}
+            setApples={setApples}
+            open={showFishing}
+            onOpenChange={setShowFishing}
+          />
+        </DeferredPanel>
+      )}
+
       {roomConfig.currency_name === "金幣" && (
         <DeferredPanel>
           <LittleMaryGame

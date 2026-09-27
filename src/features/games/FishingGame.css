@@ -1,0 +1,628 @@
+/* FishingGame.css — 多人共用血池捕魚（見 FishingGame.jsx） */
+
+.fg-window {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(96vw, 940px);
+  height: min(86vh, 640px);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  z-index: 3000;
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(4, 18, 40, 0.86);
+  border: 2px solid rgba(90, 200, 255, 0.55);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(60, 170, 255, 0.35);
+  backdrop-filter: blur(3px);
+  color: #fff;
+  user-select: none;
+}
+.fg-window *, .fg-window *::before, .fg-window *::after { box-sizing: border-box; }
+.fg-window.fg-hidden { display: none; }
+.fg-window.fg-boss-mode {
+  border-color: rgba(255, 200, 60, 0.85);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 36px rgba(255, 190, 40, 0.55);
+}
+
+/* ── 標題列 ── */
+.fg-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: linear-gradient(90deg, rgba(10, 60, 120, 0.95), rgba(20, 110, 170, 0.9), rgba(10, 60, 120, 0.95));
+  border-bottom: 1px solid rgba(120, 210, 255, 0.4);
+  cursor: move;
+  touch-action: none;
+}
+.fg-title { font-weight: 800; font-size: 1rem; white-space: nowrap; text-shadow: 0 0 8px rgba(120, 210, 255, 0.8); }
+.fg-pool {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+.fg-pool-label { font-size: 0.75rem; color: #ffd98a; }
+.fg-pool-amount {
+  font-size: clamp(1rem, 3.4vw, 1.45rem);
+  font-weight: 900;
+  background: linear-gradient(180deg, #fff6c9, #ffd700 55%, #d99a00);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 6px rgba(255, 200, 0, 0.7));
+  white-space: nowrap;
+}
+.fg-header-btns { display: flex; gap: 6px; }
+.fg-header-btns button {
+  width: 30px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+}
+.fg-header-btns button:hover { background: rgba(255, 255, 255, 0.18); }
+
+/* ── 池塘 ── */
+.fg-pond {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(120, 220, 255, 0.45) 0%, transparent 55%),
+    linear-gradient(180deg, #0a5a8f 0%, #06406e 40%, #032a4d 75%, #021a33 100%);
+  cursor: crosshair;
+  touch-action: manipulation;
+}
+.fg-boss-mode .fg-pond {
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(255, 180, 40, 0.25) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% -10%, rgba(120, 220, 255, 0.35) 0%, transparent 55%),
+    linear-gradient(180deg, #2a1b55 0%, #0d2f63 45%, #03203f 100%);
+}
+.fg-rays {
+  position: absolute;
+  inset: -20% -10% 30%;
+  background: repeating-linear-gradient(100deg, rgba(255, 255, 255, 0.07) 0 40px, transparent 40px 110px);
+  animation: fg-rays 9s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes fg-rays {
+  from { transform: translateX(-4%) skewX(-6deg); opacity: 0.7; }
+  to   { transform: translateX(4%) skewX(6deg); opacity: 1; }
+}
+.fg-bubbles span {
+  position: absolute;
+  bottom: -20px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(200, 240, 255, 0.6);
+  background: rgba(200, 240, 255, 0.12);
+  animation: fg-bubble linear infinite;
+  pointer-events: none;
+}
+@keyframes fg-bubble {
+  0%   { transform: translate(0, 0) scale(0.6); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translate(18px, -110vh) scale(1.3); opacity: 0; }
+}
+.fg-seabed {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  font-size: 26px;
+  letter-spacing: 1.8em;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  opacity: 0.75;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(80, 60, 30, 0.45));
+  padding-top: 8px;
+}
+
+/* ── 魚 ── */
+.fg-fish {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  will-change: transform;
+  z-index: 2;
+}
+.fg-fish-emoji { display: block; line-height: 1; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45)); }
+.fg-tier-small .fg-fish-emoji { font-size: 38px; }
+.fg-tier-mid .fg-fish-emoji { font-size: 58px; filter: drop-shadow(0 0 10px rgba(140, 220, 255, 0.8)); }
+.fg-tier-large .fg-fish-emoji {
+  font-size: 92px;
+  filter: drop-shadow(0 0 16px rgba(255, 120, 200, 0.85)) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
+  animation: fg-large-glow 1.4s ease-in-out infinite alternate;
+}
+@keyframes fg-large-glow {
+  from { filter: drop-shadow(0 0 10px rgba(255, 120, 200, 0.6)) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5)); }
+  to   { filter: drop-shadow(0 0 24px rgba(255, 180, 90, 0.95)) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5)); }
+}
+.fg-fish-mult {
+  font-size: 11px;
+  font-weight: 800;
+  color: #ffe38a;
+  text-shadow: 0 0 4px #000, 0 0 2px #000;
+  margin-top: -2px;
+}
+.fg-tier-large .fg-fish-mult { font-size: 14px; color: #ffb3e6; }
+.fg-fish-hp {
+  width: 56px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  margin-bottom: 2px;
+  order: -1;
+}
+.fg-tier-large .fg-fish-hp { width: 90px; height: 7px; }
+.fg-fish-hp i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #ff3b3b, #ffb13b, #7dff5c);
+  transition: width 0.2s;
+}
+/* 被打中的白光閃一下：套在外層（.fg-fish/.fg-boss），不能套在 emoji 本身——
+   否則會蓋掉 BOSS 的黃金濾鏡、大型魚的光暈跟漂浮動畫 */
+.fg-hit { animation: fg-hit 0.18s ease; }
+@keyframes fg-hit {
+  0%   { filter: brightness(2.6); }
+  100% { filter: brightness(1); }
+}
+
+/* ── BOSS ── */
+.fg-boss {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  cursor: pointer;
+  will-change: transform;
+}
+.fg-boss-emoji {
+  position: relative;
+  display: block;
+  font-size: clamp(110px, 17vw, 170px);
+  line-height: 1;
+  filter: sepia(1) saturate(4) hue-rotate(-10deg) brightness(1.15) drop-shadow(0 0 22px rgba(255, 200, 40, 0.95));
+  animation: fg-boss-float 2.2s ease-in-out infinite alternate;
+}
+@keyframes fg-boss-float {
+  from { transform: rotate(-4deg) scale(1); }
+  to   { transform: rotate(4deg) scale(1.06); }
+}
+.fg-boss-aura {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 260px;
+  height: 260px;
+  margin: -130px 0 0 -130px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(rgba(255, 215, 0, 0.35) 0 10deg, transparent 10deg 30deg);
+  -webkit-mask-image: radial-gradient(circle, #000 25%, transparent 70%);
+  mask-image: radial-gradient(circle, #000 25%, transparent 70%);
+  animation: fg-spin 6s linear infinite;
+  pointer-events: none;
+}
+@keyframes fg-spin { to { transform: rotate(360deg); } }
+.fg-boss-bar {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  transform: translateX(-50%);
+  width: min(80%, 560px);
+  z-index: 6;
+  text-align: center;
+  pointer-events: none;
+}
+.fg-boss-bar-name {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #ffe08a;
+  text-shadow: 0 0 6px #000;
+  margin-bottom: 3px;
+}
+.fg-boss-bar-track {
+  display: block;
+  height: 14px;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid #ffcf40;
+  overflow: hidden;
+  box-shadow: 0 0 14px rgba(255, 190, 40, 0.7);
+}
+.fg-boss-bar-track i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #b3001b, #ff3b3b 50%, #ff9a3b);
+  transition: width 0.25s;
+}
+
+/* BOSS 登場警告 */
+.fg-warning {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background: rgba(160, 0, 0, 0.25);
+  animation: fg-warning-bg 0.5s ease-in-out infinite alternate;
+}
+@keyframes fg-warning-bg { from { background: rgba(160, 0, 0, 0.12); } to { background: rgba(200, 0, 0, 0.38); } }
+.fg-warning-text {
+  font-size: clamp(2rem, 8vw, 4.2rem);
+  font-weight: 900;
+  color: #ff3b3b;
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 20px #ff0000, 0 0 4px #fff;
+  border-top: 4px solid #ff3b3b;
+  border-bottom: 4px solid #ff3b3b;
+  padding: 4px 24px;
+}
+.fg-warning-sub {
+  margin-top: 8px;
+  font-size: clamp(1.2rem, 4vw, 2rem);
+  font-weight: 900;
+  color: #ffd700;
+  text-shadow: 0 0 12px #ff8c00, 0 2px 0 #000;
+}
+
+/* ── 砲台 / 特效 ── */
+.fg-cannon {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  transform: translateX(-50%);
+  transform-origin: 50% 90%;
+  font-size: 44px;
+  z-index: 7;
+  transition: transform 0.08s ease-out;
+  filter: drop-shadow(0 0 10px rgba(120, 220, 255, 0.9));
+  pointer-events: none;
+}
+.fg-fx { position: absolute; inset: 0; pointer-events: none; z-index: 9; }
+.fg-fx > div { position: absolute; transform: translate(-50%, -50%); }
+
+.fg-bullet {
+  font-size: 26px;
+  transition: transform 0.18s linear, opacity 0.18s linear;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9));
+}
+.fg-bullet-3 { font-size: 34px; filter: drop-shadow(0 0 14px rgba(255, 215, 0, 1)); }
+
+.fg-net {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: 3px solid rgba(180, 240, 255, 0.95);
+  background:
+    repeating-linear-gradient(45deg, rgba(200, 245, 255, 0.5) 0 2px, transparent 2px 10px),
+    repeating-linear-gradient(-45deg, rgba(200, 245, 255, 0.5) 0 2px, transparent 2px 10px);
+  box-shadow: 0 0 16px rgba(120, 220, 255, 0.9);
+  animation: fg-net 0.5s ease-out forwards;
+}
+.fg-net-1 { border-color: #7dff9c; box-shadow: 0 0 18px rgba(80, 255, 140, 0.9); }
+.fg-net-2 { width: 90px; height: 90px; border-color: #c28bff; box-shadow: 0 0 22px rgba(180, 120, 255, 0.95); }
+.fg-net-3 { width: 120px; height: 120px; border-color: #ffd700; box-shadow: 0 0 30px rgba(255, 200, 0, 1); }
+.fg-net-other { width: 40px; height: 40px; opacity: 0.55; }
+@keyframes fg-net {
+  0%   { transform: translate(-50%, -50%) scale(0.2) rotate(0deg); opacity: 1; }
+  60%  { transform: translate(-50%, -50%) scale(1.1) rotate(40deg); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.25) rotate(60deg); opacity: 0; }
+}
+
+.fg-dmg {
+  font-size: 15px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 0 4px #000, 0 0 2px #000;
+  animation: fg-float-up 0.9s ease-out forwards;
+}
+.fg-dmg-mine { color: #ffe066; font-size: 19px; }
+.fg-dmg-king { color: #ff8a3b; font-size: 24px; }
+@keyframes fg-float-up {
+  0%   { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
+  20%  { transform: translate(-50%, -80%) scale(1.25); opacity: 1; }
+  100% { transform: translate(-50%, -260%) scale(1); opacity: 0; }
+}
+
+.fg-coin {
+  animation: fg-coin 1.1s cubic-bezier(0.2, 0.7, 0.4, 1) forwards;
+  opacity: 0;
+}
+/* 金幣用 CSS 畫（🪙 emoji 在舊系統會變方框） */
+.fg-coin-disc {
+  width: var(--size, 16px);
+  height: var(--size, 16px);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fffbe0 0%, #ffd700 35%, #d99a00 75%, #8a5a00 100%);
+  border: 1px solid #b07800;
+  box-shadow: 0 0 8px rgba(255, 210, 60, 0.9), inset 0 0 0 2px rgba(255, 240, 170, 0.5);
+}
+@keyframes fg-coin {
+  0%   { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+  60%  { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.1) rotate(200deg); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) + 60px)) scale(0.8) rotate(360deg); opacity: 0; }
+}
+
+.fg-splash {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(255, 230, 120, 0.7) 30%, rgba(120, 220, 255, 0.3) 60%, transparent 72%);
+  animation: fg-splash 0.8s ease-out forwards;
+}
+.fg-splash-big { width: 200px; height: 200px; }
+@keyframes fg-splash {
+  0%   { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+}
+
+.fg-payout {
+  font-size: 18px;
+  font-weight: 900;
+  color: #ffe066;
+  text-shadow: 0 0 6px #000, 0 0 3px #000;
+  white-space: nowrap;
+  animation: fg-payout 1.6s ease-out forwards;
+}
+.fg-payout-mine { font-size: 24px; color: #fff3a0; filter: drop-shadow(0 0 8px rgba(255, 200, 0, 0.9)); }
+.fg-payout-big { font-size: 32px; }
+@keyframes fg-payout {
+  0%   { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+  18%  { transform: translate(-50%, -70%) scale(1.35); opacity: 1; }
+  30%  { transform: translate(-50%, -75%) scale(1); }
+  100% { transform: translate(-50%, -180%) scale(1); opacity: 0; }
+}
+
+.fg-catch-banner {
+  padding: 10px 26px;
+  border-radius: 40px;
+  background: linear-gradient(90deg, rgba(120, 0, 60, 0.9), rgba(220, 40, 120, 0.9), rgba(120, 0, 60, 0.9));
+  border: 2px solid #ffd24a;
+  box-shadow: 0 0 24px rgba(255, 120, 200, 0.8);
+  font-size: clamp(1rem, 3.4vw, 1.6rem);
+  font-weight: 900;
+  color: #fff3c4;
+  white-space: nowrap;
+  text-shadow: 0 0 6px #000;
+  animation: fg-banner 2.2s ease forwards;
+}
+.fg-catch-boss {
+  background: linear-gradient(90deg, rgba(120, 70, 0, 0.95), rgba(230, 170, 20, 0.95), rgba(120, 70, 0, 0.95));
+  font-size: clamp(1.2rem, 4.4vw, 2.2rem);
+  box-shadow: 0 0 40px rgba(255, 200, 0, 1);
+  animation-duration: 3.2s;
+}
+@keyframes fg-banner {
+  0%   { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+  12%  { transform: translate(-50%, -50%) scale(0.95); opacity: 1; }
+  18%  { transform: translate(-50%, -50%) scale(1.04); }
+  24%  { transform: translate(-50%, -50%) scale(1); }
+  85%  { opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
+
+.fg-boss-explode {
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 220, 80, 0.9) 22%, rgba(255, 120, 0, 0.6) 45%, transparent 70%);
+  animation: fg-boss-explode 1.5s ease-out forwards;
+}
+@keyframes fg-boss-explode {
+  0%   { transform: translate(-50%, -50%) scale(0.1); opacity: 1; }
+  40%  { opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(2.6); opacity: 0; }
+}
+
+.fg-shake { animation: fg-shake 0.45s ease; }
+.fg-shake-strong { animation: fg-shake-strong 0.7s ease; }
+@keyframes fg-shake {
+  0%, 100% { margin-left: 0; margin-top: 0; }
+  20% { margin-left: -6px; margin-top: 3px; }
+  40% { margin-left: 6px; margin-top: -3px; }
+  60% { margin-left: -4px; margin-top: 2px; }
+  80% { margin-left: 4px; margin-top: -2px; }
+}
+@keyframes fg-shake-strong {
+  0%, 100% { margin-left: 0; margin-top: 0; }
+  10% { margin-left: -14px; margin-top: 6px; }
+  25% { margin-left: 14px; margin-top: -6px; }
+  40% { margin-left: -10px; margin-top: 5px; }
+  55% { margin-left: 10px; margin-top: -4px; }
+  70% { margin-left: -6px; margin-top: 3px; }
+  85% { margin-left: 4px; margin-top: -2px; }
+}
+
+.fg-loading, .fg-toast {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.75);
+  font-size: 0.9rem;
+  pointer-events: none;
+  white-space: nowrap;
+  max-width: calc(100% - 24px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fg-loading { top: 45%; }
+.fg-toast { bottom: 70px; color: #ffd0d0; border: 1px solid rgba(255, 120, 120, 0.6); }
+
+/* ── 底部操作列 ── */
+.fg-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 4px;
+  background: linear-gradient(180deg, rgba(6, 30, 60, 0.95), rgba(3, 16, 34, 0.98));
+  border-top: 1px solid rgba(120, 210, 255, 0.35);
+  flex-wrap: wrap;
+}
+.fg-rods { display: flex; gap: 6px; flex: 1 1 auto; min-width: 0; }
+.fg-rod {
+  flex: 1 1 0;
+  min-width: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 2px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.fg-rod:hover:not(:disabled) { transform: translateY(-2px); }
+.fg-rod:disabled { opacity: 0.35; cursor: not-allowed; }
+.fg-rod-icon { font-size: 20px; line-height: 1.1; }
+.fg-rod-name { font-size: 0.7rem; opacity: 0.85; }
+.fg-rod-bet { font-size: 0.85rem; font-weight: 900; color: #ffe066; }
+.fg-rod-active.fg-rod-0 { border-color: #7fd8ff; background: rgba(60, 170, 255, 0.3); box-shadow: 0 0 12px rgba(80, 190, 255, 0.8); }
+.fg-rod-active.fg-rod-1 { border-color: #7dff9c; background: rgba(60, 220, 120, 0.28); box-shadow: 0 0 12px rgba(80, 255, 140, 0.8); }
+.fg-rod-active.fg-rod-2 { border-color: #c28bff; background: rgba(160, 90, 255, 0.3); box-shadow: 0 0 14px rgba(180, 120, 255, 0.85); }
+.fg-rod-active.fg-rod-3 {
+  border-color: #ffd700;
+  background: linear-gradient(180deg, rgba(255, 210, 60, 0.45), rgba(180, 110, 0, 0.45));
+  box-shadow: 0 0 18px rgba(255, 200, 0, 1);
+}
+.fg-side { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fg-bait {
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 180, 120, 0.6);
+  background: rgba(255, 140, 60, 0.15);
+  color: #ffd9b8;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.fg-bait:disabled { opacity: 0.4; cursor: not-allowed; }
+.fg-bait-active { background: rgba(255, 140, 60, 0.55); color: #fff; box-shadow: 0 0 12px rgba(255, 150, 60, 0.9); }
+.fg-boss-progress { display: flex; flex-direction: column; gap: 2px; font-size: 0.72rem; color: #ffe08a; min-width: 96px; }
+.fg-boss-progress-track { height: 6px; border-radius: 3px; background: rgba(0, 0, 0, 0.5); overflow: hidden; }
+.fg-boss-progress-track i { display: block; height: 100%; background: linear-gradient(90deg, #ffb300, #ff5722); }
+.fg-admin { display: flex; gap: 6px; }
+.fg-admin button {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #ffcf40;
+  background: rgba(120, 80, 0, 0.5);
+  color: #ffe9a0;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.fg-admin button:disabled { opacity: 0.4; cursor: not-allowed; }
+.fg-hint {
+  font-size: 0.68rem;
+  color: rgba(200, 225, 255, 0.7);
+  text-align: center;
+  padding: 0 10px 6px;
+  background: rgba(3, 16, 34, 0.98);
+}
+
+/* ── 收合後的懸浮圖示 ── */
+.fg-mini {
+  position: fixed;
+  right: 16px;
+  bottom: 96px;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 16px;
+  border: 2px solid rgba(90, 200, 255, 0.8);
+  background: rgba(4, 30, 60, 0.92);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 0 18px rgba(60, 170, 255, 0.6);
+  animation: fg-mini-bob 1.6s ease-in-out infinite alternate;
+}
+.fg-mini-icon { font-size: 28px; line-height: 1; }
+.fg-mini-pool { font-size: 0.72rem; font-weight: 800; color: #ffe066; }
+@keyframes fg-mini-bob { from { transform: translateY(0); } to { transform: translateY(-5px); } }
+
+/* ── 大廳：BOSS 出現提示 ── */
+.fg-lobby-alert {
+  position: fixed;
+  left: 50%;
+  top: 70px;
+  transform: translateX(-50%);
+  z-index: 2900;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 32px);
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, rgba(120, 60, 0, 0.95), rgba(200, 130, 0, 0.95));
+  border: 2px solid #ffe066;
+  box-shadow: 0 0 24px rgba(255, 190, 40, 0.8);
+  color: #fff;
+  font-weight: 800;
+  animation: fg-alert-in 0.4s ease, fg-alert-pulse 1s ease-in-out 0.4s infinite alternate;
+}
+.fg-lobby-alert button {
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: none;
+  background: #fff3c4;
+  color: #6a3a00;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.fg-lobby-alert .fg-lobby-alert-close { background: transparent; color: #fff; padding: 4px; }
+@keyframes fg-alert-in { from { transform: translate(-50%, -20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+@keyframes fg-alert-pulse { from { box-shadow: 0 0 14px rgba(255, 190, 40, 0.6); } to { box-shadow: 0 0 30px rgba(255, 220, 80, 1); } }
+
+@media (max-width: 600px) {
+  .fg-window { width: calc(100vw - 8px); height: 88vh; border-radius: 12px; }
+  .fg-header { gap: 6px; padding: 6px 8px; }
+  .fg-title { font-size: 0.8rem; }
+  .fg-pool-label { display: none; }
+  .fg-rods { flex-basis: 100%; }
+  .fg-rod { min-width: 0; }
+  .fg-rod-bet { font-size: 0.78rem; }
+  .fg-side { width: 100%; justify-content: space-between; }
+  .fg-rod-name { display: none; }
+  .fg-tier-small .fg-fish-emoji { font-size: 32px; }
+  .fg-tier-mid .fg-fish-emoji { font-size: 46px; }
+  .fg-tier-large .fg-fish-emoji { font-size: 70px; }
+  .fg-seabed { font-size: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fg-rays, .fg-bubbles span, .fg-boss-aura, .fg-mini { animation: none; }
+}

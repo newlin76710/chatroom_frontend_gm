@@ -117,6 +117,26 @@ const DEFAULT = {
   celebration_amount_options: "100,500,1000",
   celebration_burst_limit: 1,
   celebration_cooldown_minutes: 10,
+  // 多人共用血池捕魚（對應後端 game/fishingGame.js 的預設值）
+  fishing_enabled: true,
+  fishing_rod_bets: "100,500,1000,5000",
+  fishing_seed_pool: 10000,
+  fishing_pool_rate: 80,
+  fishing_fish_rtp: 60,
+  fishing_boss_payout_pct: 80,
+  fishing_boss_threshold: 50000,
+  fishing_boss_hp: 300,
+  fishing_fish_types: [
+    { key: "clownfish", name: "小丑魚", emoji: "🐠", tier: "small", min: 1.2, max: 2,  weight: 30 },
+    { key: "puffer",    name: "河豚",   emoji: "🐡", tier: "small", min: 2,   max: 3,  weight: 24 },
+    { key: "turtle",    name: "海龜",   emoji: "🐢", tier: "small", min: 3,   max: 5,  weight: 18 },
+    { key: "swordfish", name: "劍魚",   emoji: "🐟", tier: "mid",   min: 8,   max: 12, weight: 9 },
+    { key: "octopus",   name: "章魚",   emoji: "🐙", tier: "mid",   min: 10,  max: 15, weight: 7 },
+    { key: "shark",     name: "大白鯊", emoji: "🦈", tier: "large", min: 20,  max: 40, weight: 2.5 },
+    { key: "whale",     name: "藍鯨",   emoji: "🐋", tier: "large", min: 30,  max: 50, weight: 1.5 },
+  ],
+  fishing_gift_bonus_enabled: false,
+  fishing_gift_bonus: { diamond: 0, plane: 0, car: 0, cruise: 0, rose: 0, chocolate: 0, cake: 0 },
   surprise_reward:      10,
   game1_enabled:        true,
   game1_hour:           20,
@@ -358,6 +378,23 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
       raw = Math.floor(n);
     }
     setSettings(p => ({ ...p, gift_deduction_pct: { ...(p.gift_deduction_pct || DEFAULT.gift_deduction_pct), [id]: raw } }));
+  };
+
+  // 捕魚：魚種倍率表（允許小數，暫存字串，儲存時由後端驗證/轉數字）
+  const setFishType = (idx, key, raw) => setSettings(p => {
+    const list = (p.fishing_fish_types || DEFAULT.fishing_fish_types).map(f => ({ ...f }));
+    if (raw !== "" && (Number.isNaN(Number(raw)) || Number(raw) < 0)) return p;
+    list[idx][key] = raw;
+    return { ...p, fishing_fish_types: list };
+  });
+  // 捕魚：送禮贈送免費魚餌次數
+  const setGiftBonus = (id, raw) => {
+    if (raw !== "") {
+      const n = Number(raw);
+      if (Number.isNaN(n) || n < 0 || n > 1000) return;
+      raw = Math.floor(n);
+    }
+    setSettings(p => ({ ...p, fishing_gift_bonus: { ...(p.fishing_gift_bonus || DEFAULT.fishing_gift_bonus), [id]: raw } }));
   };
 
   if (!open) return null;
@@ -1319,6 +1356,112 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
               </Row>
             </section>
             ))}
+
+            {/* ─── 多人共用血池捕魚（僅金幣模式） ────────────────────────── */}
+            {isCoin && (
+            <section className="settings-section">
+              <h4>
+                🎣 多人共用血池捕魚
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={settings.fishing_enabled !== false}
+                    onChange={e => setBool("fishing_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+              <p className="field-note" style={{ margin: "0 0 8px" }}>
+                全房間共用魚的血量，打出最後一擊（尾刀）的人獨得「竿注 × 倍率」，獎金由血池支付（血池不足時以血池餘額為上限，系統不會倒貼）。
+                {settings.fishing_pool_now != null && <> 目前血池：<b>{Number(settings.fishing_pool_now).toLocaleString("en-US")}</b> 個{currencyName}。</>}
+              </p>
+              <Row label="釣竿金額">
+                {["初級", "中級", "高級", "王者"].map((label, idx) => {
+                  const parts = String(settings.fishing_rod_bets || "").split(",").map(x => x.trim());
+                  while (parts.length < 4) parts.push("");
+                  return (
+                    <span key={idx} style={{ display: "inline-flex", alignItems: "center", gap: 2, marginRight: 6 }}>
+                      <span style={{ fontSize: 12 }}>{label}</span>
+                      <input type="number" min={1} style={{ width: 72 }}
+                        value={parts[idx]}
+                        onChange={e => {
+                          const next = [...parts];
+                          next[idx] = e.target.value === "" ? "" : String(Math.max(1, Math.floor(Number(e.target.value)) || 1));
+                          setSettings(p => ({ ...p, fishing_rod_bets: next.join(",") }));
+                        }} />
+                    </span>
+                  );
+                })}
+                <span className="field-note">每竿扣的{currencyName}，竿等級越高傷害越高（傷害差距刻意壓小，主要差在中獎金額）</span>
+              </Row>
+              <Row label="保底血池金額">
+                <input type="number" min={0} style={{ width: 100 }} value={settings.fishing_seed_pool}
+                  onChange={e => setInt("fishing_seed_pool", e.target.value)} />
+                <span className="field-note">個{currencyName}（血池第一次建立時的金額；活動加碼時改這裡，再到捕魚視窗按「♻ 重設血池」即可把血池設為此金額）</span>
+              </Row>
+              <Row label="下注滾入血池">
+                <input type="number" min={0} max={100} style={{ width: 70 }} value={settings.fishing_pool_rate}
+                  onChange={e => setInt("fishing_pool_rate", e.target.value)} />
+                <span className="field-note">%（每竿下注有多少 % 進血池，其餘由系統回收抗通膨；預設 80）</span>
+              </Row>
+              <Row label="魚種回饋率">
+                <input type="number" min={1} max={100} style={{ width: 70 }} value={settings.fishing_fish_rtp}
+                  onChange={e => setInt("fishing_fish_rtp", e.target.value)} />
+                <span className="field-note">%（一般魚的期望回饋，決定魚的血量：越高魚越好打死。要低於「下注滾入血池」，血池才會慢慢累積到 BOSS 門檻；預設 60）</span>
+              </Row>
+              <Row label="BOSS 大獎比例">
+                <input type="number" min={1} max={100} style={{ width: 70 }} value={settings.fishing_boss_payout_pct}
+                  onChange={e => setInt("fishing_boss_payout_pct", e.target.value)} />
+                <span className="field-note">%（擊殺黃金巨龍的玩家獨得血池的這個比例，其餘留在血池當下一輪的底；預設 80）</span>
+              </Row>
+              <Row label="BOSS 自動召喚門檻">
+                <input type="number" min={0} style={{ width: 100 }} value={settings.fishing_boss_threshold}
+                  onChange={e => setInt("fishing_boss_threshold", e.target.value)} />
+                <span className="field-note">個{currencyName}（血池累積到這個金額時自動召喚黃金巨龍；0 = 只能由管理員在捕魚視窗手動召喚）</span>
+              </Row>
+              <Row label="BOSS 血量">
+                <input type="number" min={10} max={100000} style={{ width: 90 }} value={settings.fishing_boss_hp}
+                  onChange={e => setInt("fishing_boss_hp", e.target.value)} />
+                <span className="field-note">以初級竿計算約要打幾竿才能打倒黃金巨龍；打 BOSS 的傷害跟竿注成正比（例如王者竿 5000 一竿 = 初級竿 100 的 50 竿），避免大家用最便宜的竿搶尾刀；預設 300</span>
+              </Row>
+              <div className="field-note" style={{ margin: "8px 0 4px", fontWeight: 700 }}>魚種倍率／出現權重</div>
+              <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ textAlign: "left", color: "#888" }}>
+                    <th>魚種</th><th>最低倍率</th><th>最高倍率</th><th>出現權重</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(settings.fishing_fish_types || DEFAULT.fishing_fish_types).map((f, idx) => (
+                    <tr key={f.key}>
+                      <td>{f.emoji} {f.name}<span style={{ color: "#999", fontSize: 11 }}>（{f.tier === "small" ? "小" : f.tier === "mid" ? "中" : "大"}）</span></td>
+                      <td><input type="number" min={1} step={0.1} style={{ width: 64 }} value={f.min} onChange={e => setFishType(idx, "min", e.target.value)} /></td>
+                      <td><input type="number" min={1} step={0.1} style={{ width: 64 }} value={f.max} onChange={e => setFishType(idx, "max", e.target.value)} /></td>
+                      <td><input type="number" min={0} step={0.5} style={{ width: 64 }} value={f.weight} onChange={e => setFishType(idx, "weight", e.target.value)} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="field-note" style={{ margin: "4px 0 8px" }}>每條魚出現時在最低～最高倍率之間隨機；權重越高越常出現（0 = 不出現）。大型魚被釣起時會在聊天室小廣播。</p>
+              <Row label="送禮贈送魚餌">
+                <label className="toggle-label">
+                  <input type="checkbox" checked={settings.fishing_gift_bonus_enabled === true}
+                    onChange={e => setBool("fishing_gift_bonus_enabled", e.target.checked)} />
+                  {" "}開啟
+                </label>
+                <span className="field-note">開啟後，玩家每送出一筆下列禮物（不論一次送幾個），就獲得對應次數的免費釣魚（以初級竿出竿、不扣{currencyName}）</span>
+              </Row>
+              {settings.fishing_gift_bonus_enabled === true && [
+                { id: "diamond", label: "💎 鑽石" }, { id: "plane", label: "✈️ 飛機" },
+                { id: "car", label: "🚗 跑車" }, { id: "cruise", label: "🛳️ 郵輪" },
+                { id: "rose", label: "🌹 玫瑰" }, { id: "chocolate", label: "🍫 巧克力" }, { id: "cake", label: "🎂 蛋糕" },
+              ].map(({ id, label }) => (
+                <Row key={id} label={label}>
+                  <input type="number" min={0} max={1000} style={{ width: 70 }}
+                    value={(settings.fishing_gift_bonus || DEFAULT.fishing_gift_bonus)[id] ?? ""}
+                    onChange={e => setGiftBonus(id, e.target.value)} />
+                  <span className="field-note">次（0 = 不贈送）</span>
+                </Row>
+              ))}
+            </section>
+            )}
 
             {/* ─── 全場金幣雨／發紅包（僅金幣模式） ────────────────────── */}
             {isCoin && (

@@ -644,3 +644,104 @@
 @media (prefers-reduced-motion: reduce) {
   .gift-fx-cruise-wave, .gift-fx-cruise-ship, .gift-fx-cruise-smoke { animation: none; }
 }
+
+/* ── 捕魚 BOSS 大獎（全大廳霸屏） ─────────────────────────────── */
+.gift-fx-fishing {
+  animation-duration: 7s;
+  background: radial-gradient(ellipse at center, rgba(120, 70, 0, 0.55) 0%, rgba(20, 8, 0, 0.7) 70%, rgba(0, 0, 0, 0.6) 100%);
+}
+.gift-fx-fishing-rays {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 180vmax;
+  height: 180vmax;
+  margin: -90vmax 0 0 -90vmax;
+  background: repeating-conic-gradient(rgba(255, 215, 0, 0.2) 0deg 7deg, transparent 7deg 20deg);
+  animation: gift-fx-fishing-spin 10s linear infinite;
+}
+@keyframes gift-fx-fishing-spin { to { transform: rotate(360deg); } }
+.gift-fx-fishing-coin {
+  position: absolute;
+  top: -60px;
+  z-index: 3;
+  opacity: 0;
+  animation-name: gift-fx-fishing-coin;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.9));
+}
+.gift-fx-fishing-disc {
+  width: var(--size, 26px);
+  height: var(--size, 26px);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fffbe0 0%, #ffd700 35%, #d99a00 75%, #8a5a00 100%);
+  border: 1px solid #b07800;
+  box-shadow: inset 0 0 0 3px rgba(255, 240, 170, 0.5);
+}
+@keyframes gift-fx-fishing-coin {
+  0%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  8%   { opacity: 1; }
+  100% { transform: translate(var(--drift, 0), 115vh) rotate(540deg); opacity: 0.4; }
+}
+.gift-fx-fishing-stage {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 16px;
+}
+.gift-fx-fishing-dragon {
+  font-size: clamp(120px, 26vw, 240px);
+  line-height: 1;
+  filter: sepia(1) saturate(4) hue-rotate(-10deg) brightness(1.2) drop-shadow(0 0 30px rgba(255, 200, 40, 1));
+  animation: gift-fx-fishing-dragon 7s ease forwards;
+}
+@keyframes gift-fx-fishing-dragon {
+  0%   { transform: scale(0.2) rotate(-30deg); opacity: 0; }
+  12%  { transform: scale(1.15) rotate(6deg); opacity: 1; }
+  18%  { transform: scale(1) rotate(0deg); }
+  50%  { transform: scale(1.06) rotate(-3deg); }
+  88%  { opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 0; }
+}
+.gift-fx-fishing-label {
+  margin-top: 14px;
+  font-size: clamp(1.1rem, 4.5vw, 2rem);
+  font-weight: 900;
+  color: #fff3c4;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 10px #ff8c00, 0 2px 0 #000;
+}
+.gift-fx-fishing-amount {
+  font-size: clamp(2.6rem, 13vw, 6.5rem);
+  font-weight: 900;
+  line-height: 1.05;
+  background: linear-gradient(180deg, #fffbe0 0%, #ffd700 45%, #c88a00 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 22px rgba(255, 200, 0, 1)) drop-shadow(0 5px 0 rgba(90, 50, 0, 0.9));
+  animation: gift-fx-fishing-amount 7s ease forwards;
+}
+@keyframes gift-fx-fishing-amount {
+  0%, 10% { transform: scale(3); opacity: 0; }
+  20%     { transform: scale(0.92); opacity: 1; }
+  25%     { transform: scale(1.06); }
+  30%     { transform: scale(1); }
+  88%     { opacity: 1; }
+  100%    { opacity: 0; }
+}
+.gift-fx-fishing-winner {
+  margin-top: 8px;
+  padding: 8px 22px;
+  border-radius: 30px;
+  background: rgba(120, 0, 30, 0.85);
+  border: 2px solid #ffd24a;
+  font-size: clamp(1rem, 3.8vw, 1.6rem);
+  font-weight: 800;
+  color: #fff;
+  box-shadow: 0 0 20px rgba(255, 190, 40, 0.8);
+}

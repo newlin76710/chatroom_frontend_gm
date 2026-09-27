@@ -1,0 +1,481 @@
+// FishingGame.jsx — 多人共用血池捕魚（僅金幣模式）。
+// 大尺寸半透明彈窗，可拖曳、可收合成右下角懸浮圖示（邊玩邊看歌詞/聽歌）。
+// 魚群由後端 fishingGame.js 產生，前端只拿到每條魚的 spawnAt/duration/方向/高度，
+// 用 requestAnimationFrame 自己算座標（不需要伺服器每幀廣播）。點魚 = 開一竿，扣款/傷害/
+// 尾刀判定/派彩全部由伺服器決定，這裡只負責畫面與打擊感特效。
+// BOSS 被擊殺的全大廳霸屏金幣雨在 ChatApp.jsx（fishingJackpot 事件），這裡只放彈窗內的爆炸特效。
+
+import { useState, useEffect, useRef, useCallback } from "react";
+import "./FishingGame.css";
+import { RN, roomConfig } from "../../shared/roomConfig";
+import { useDraggableWindow } from "../../shared/hooks/useDraggableWindow";
+
+const CLIENT_SHOT_COOLDOWN = 180;
+// 只用舊版 Windows/Android 也有的 emoji（🪝🪱🪸🪨🪙 這類 Emoji 13+ 在舊系統會變方框）
+const ROD_ICONS = ["🎣", "⚓", "🔱", "👑"];
+const fmt = (n) => Number(n || 0).toLocaleString("en-US");
+
+function fishPos(f, now) {
+  const p = (now - f.spawnAt) / f.duration;
+  const x = f.dir === 1 ? -0.12 + 1.24 * p : 1.12 - 1.24 * p;
+  const y = (f.y + f.amp * Math.sin(p * Math.PI * 4)) / 100;
+  return { p, x, y };
+}
+
+function bossPos(now) {
+  return { x: 0.5 + 0.26 * Math.sin(now / 5200), y: 0.4 + 0.1 * Math.sin(now / 3100) };
+}
+
+// demo：/fishing-demo 展示頁用，略過「僅金幣房間」的顯示條件
+export default function FishingGame({ socket, token, name, apples, setApples, open, onOpenChange, demo = false }) {
+  const [minimized, setMinimized] = useState(false);
+  const [fishList, setFishList] = useState([]);
+  const [boss, setBoss] = useState(null);
+  const [poolAmount, setPoolAmount] = useState(0);
+  const [rodBets, setRodBets] = useState(() => String(roomConfig.fishing_rod_bets || "100,500,1000,5000").split(",").map(Number));
+  const [rodNames, setRodNames] = useState(["初級竿", "中級竿", "高級竿", "王者竿"]);
+  const [rod, setRod] = useState(0);
+  const [freeShots, setFreeShots] = useState(0);
+  const [useBait, setUseBait] = useState(false);
+  const [bossThreshold, setBossThreshold] = useState(0);
+  const [bossPayoutPct, setBossPayoutPct] = useState(80);
+  const [perms, setPerms] = useState({ canSummon: false, canResetPool: false, seedPool: 0 });
+  const [toast, setToast] = useState("");
+  const [warning, setWarning] = useState(false);
+  const [lobbyAlert, setLobbyAlert] = useState(null); // { pool }
+  const [connected, setConnected] = useState(false);
+
+  const { windowRef, onPointerDown } = useDraggableWindow();
+  const pondRef = useRef(null);
+  const fxRef = useRef(null);
+  const cannonRef = useRef(null);
+  const fishDataRef = useRef(new Map()); // id → fish
+  const fishElRef = useRef(new Map());   // id → element
+  const bossRef = useRef(null);
+  const bossElRef = useRef(null);
+  const offsetRef = useRef(0);
+  const lastShotRef = useRef(0);
+  const sizeRef = useRef({ w: 800, h: 450 });
+  const tokenRef = useRef(token);
+  const nameRef = useRef(name);
+  const openRef = useRef(open);
+  const toastTimer = useRef(null);
+
+  useEffect(() => { tokenRef.current = token; }, [token]);
+  useEffect(() => { nameRef.current = name; }, [name]);
+  useEffect(() => { openRef.current = open; }, [open]);
+
+  const showToast = useCallback((msg) => {
+    setToast(msg);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(""), 2200);
+  }, []);
+
+  const serverNow = () => Date.now() + offsetRef.current;
+
+  const syncFishList = useCallback(() => {
+    setFishList(Array.from(fishDataRef.current.values()).map((f) => ({ ...f })));
+  }, []);
+
+  // ── 特效工具（直接操作 DOM，避免每個粒子都觸發 React 重繪） ──
+  const spawnFx = useCallback((className, x, y, text, life = 1000, style = {}) => {
+    const layer = fxRef.current;
+    if (!layer) return null;
+    const el = document.createElement("div");
+    el.className = className;
+    if (text !== undefined) el.textContent = text;
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    Object.assign(el.style, style);
+    layer.appendChild(el);
+    setTimeout(() => el.remove(), life);
+    return el;
+  }, []);
+
+  const coinBurst = useCallback((x, y, count, big = false) => {
+    for (let i = 0; i < count; i++) {
+      const ang = Math.random() * Math.PI * 2;
+      const dist = (big ? 90 : 50) + Math.random() * (big ? 160 : 70);
+      const sparkle = Math.random() < 0.2;
+      spawnFx(sparkle ? "fg-coin fg-coin-sparkle" : "fg-coin fg-coin-disc", x, y, sparkle ? "✨" : "", 1100, {
+        "--dx": `${Math.cos(ang) * dist}px`,
+        "--dy": `${Math.sin(ang) * dist - (big ? 40 : 20)}px`,
+        "--size": `${(big ? 18 : 12) + Math.random() * (big ? 14 : 8)}px`,
+        fontSize: `${(big ? 20 : 14) + Math.random() * (big ? 16 : 8)}px`,
+        animationDelay: `${Math.random() * 0.12}s`,
+      });
+    }
+  }, [spawnFx]);
+
+  const targetScreenPos = useCallback((fishId) => {
+    const { w, h } = sizeRef.current;
+    const now = serverNow();
+    if (fishId === "boss") {
+      const b = bossPos(now);
+      return { x: b.x * w, y: b.y * h };
+    }
+    const f = fishDataRef.current.get(fishId);
+    if (!f) return null;
+    const { x, y } = fishPos(f, now);
+    return { x: x * w, y: y * h };
+  }, []);
+
+  const shake = useCallback((strong) => {
+    const el = windowRef.current;
+    if (!el) return;
+    el.classList.remove("fg-shake", "fg-shake-strong");
+    void el.offsetWidth;
+    el.classList.add(strong ? "fg-shake-strong" : "fg-shake");
+    setTimeout(() => el.classList.remove("fg-shake", "fg-shake-strong"), 700);
+  }, [windowRef]);
+
+  // ── 動畫迴圈：更新每條魚/BOSS 的位置，游出畫面的魚自動移除 ──
+  useEffect(() => {
+    if (!open || minimized) return;
+    let raf;
+    const measure = () => {
+      const r = pondRef.current?.getBoundingClientRect();
+      if (r) sizeRef.current = { w: r.width, h: r.height };
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    const loop = () => {
+      const now = serverNow();
+      const { w, h } = sizeRef.current;
+      let removed = false;
+      for (const [id, f] of fishDataRef.current) {
+        const { p, x, y } = fishPos(f, now);
+        if (p > 1.02) {
+          fishDataRef.current.delete(id);
+          removed = true;
+          continue;
+        }
+        const el = fishElRef.current.get(id);
+        if (el) el.style.transform = `translate(${x * w}px, ${y * h}px) translate(-50%, -50%)`;
+      }
+      if (bossRef.current && bossElRef.current) {
+        const b = bossPos(now);
+        bossElRef.current.style.transform = `translate(${b.x * w}px, ${b.y * h}px) translate(-50%, -50%)`;
+      }
+      if (removed) syncFishList();
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", measure);
+    };
+  }, [open, minimized, syncFishList]);
+
+  // ── 加入/離開觀戰頻道 ──
+  useEffect(() => {
+    if (!open) return;
+    const join = () => socket.emit("fishingJoin", { token: tokenRef.current, room: RN });
+    join();
+    socket.on("connect", join);
+    return () => {
+      socket.off("connect", join);
+      socket.emit("fishingLeave", { room: RN });
+      setConnected(false);
+    };
+  }, [open, socket]);
+
+  // ── Socket 事件 ──
+  useEffect(() => {
+    const onSnapshot = (d) => {
+      offsetRef.current = d.serverNow - Date.now();
+      fishDataRef.current = new Map((d.fish || []).map((f) => [f.id, f]));
+      bossRef.current = d.boss || null;
+      setBoss(d.boss || null);
+      setPoolAmount(d.pool || 0);
+      if (Array.isArray(d.rodBets)) setRodBets(d.rodBets);
+      if (Array.isArray(d.rodNames)) setRodNames(d.rodNames);
+      setFreeShots(d.freeShots || 0);
+      setBossThreshold(d.bossThreshold || 0);
+      setBossPayoutPct(d.bossPayoutPct || 80);
+      setPerms({ canSummon: !!d.canSummon, canResetPool: !!d.canResetPool, seedPool: d.seedPool || 0 });
+      setConnected(true);
+      syncFishList();
+    };
+    const onSpawn = ({ fish, serverNow: sn }) => {
+      if (sn) offsetRef.current = offsetRef.current * 0.8 + (sn - Date.now()) * 0.2;
+      fishDataRef.current.set(fish.id, fish);
+      syncFishList();
+    };
+    const onHit = ({ fishId, shooter, damage, hp, pool, rod: shotRod }) => {
+      setPoolAmount(pool);
+      const mine = shooter === nameRef.current;
+      if (fishId === "boss") {
+        if (bossRef.current) {
+          bossRef.current = { ...bossRef.current, hp };
+          setBoss(bossRef.current);
+        }
+      } else {
+        const f = fishDataRef.current.get(fishId);
+        if (f) {
+          f.hp = hp;
+          syncFishList();
+        }
+      }
+      const pos = targetScreenPos(fishId);
+      if (!pos) return;
+      const el = fishId === "boss" ? bossElRef.current : fishElRef.current.get(fishId);
+      if (el) {
+        el.classList.remove("fg-hit");
+        void el.offsetWidth;
+        el.classList.add("fg-hit");
+      }
+      spawnFx(`fg-dmg${mine ? " fg-dmg-mine" : ""}${shotRod >= 3 ? " fg-dmg-king" : ""}`, pos.x + (Math.random() * 30 - 15), pos.y - 20, `-${damage}`, 900);
+      if (!mine) spawnFx("fg-net fg-net-other", pos.x, pos.y, undefined, 500);
+    };
+    const onCatch = ({ fishId, shooter, payout, isBoss, name: fname, emoji, mult, tier }) => {
+      const pos = targetScreenPos(fishId) || { x: sizeRef.current.w / 2, y: sizeRef.current.h / 2 };
+      const mine = shooter === nameRef.current;
+      if (isBoss) {
+        bossRef.current = null;
+        setBoss(null);
+        spawnFx("fg-boss-explode", pos.x, pos.y, undefined, 1600);
+        coinBurst(pos.x, pos.y, 60, true);
+        spawnFx("fg-catch-banner fg-catch-boss", sizeRef.current.w / 2, sizeRef.current.h * 0.42,
+          `🐉 ${shooter} 斬殺黃金巨龍！+${fmt(payout)}`, 3200);
+        shake(true);
+      } else {
+        fishDataRef.current.delete(fishId);
+        syncFishList();
+        const big = tier === "large";
+        spawnFx(`fg-splash${big ? " fg-splash-big" : ""}`, pos.x, pos.y, undefined, 900);
+        coinBurst(pos.x, pos.y, big ? 36 : tier === "mid" ? 18 : 9, big);
+        spawnFx(`fg-payout${mine ? " fg-payout-mine" : ""}${big ? " fg-payout-big" : ""}`, pos.x, pos.y - 30,
+          `${emoji} +${fmt(payout)}`, 1600);
+        if (big || (mine && tier === "mid")) {
+          spawnFx("fg-catch-banner", sizeRef.current.w / 2, sizeRef.current.h * 0.3,
+            `${mine ? "大豐收！" : `${shooter} 釣起`} ${emoji}${fname} ×${mult}`, 2200);
+          if (big) shake(false);
+        }
+      }
+    };
+    const onBossSpawn = ({ boss: b }) => {
+      bossRef.current = b;
+      setBoss(b);
+      setWarning(true);
+      shake(true);
+      setTimeout(() => setWarning(false), 2600);
+    };
+    const onShotFail = ({ reason, balance, freeShots: fs }) => {
+      if (reason) showToast(reason);
+      if (typeof balance === "number") { setApples?.(balance); sessionStorage.setItem("apples", balance); }
+      if (typeof fs === "number") setFreeShots(fs);
+    };
+    const onShotAck = ({ balance, freeShots: fs }) => {
+      if (typeof balance === "number") { setApples?.(balance); sessionStorage.setItem("apples", balance); }
+      if (typeof fs === "number") {
+        setFreeShots(fs);
+        if (fs === 0) setUseBait(false);
+      }
+    };
+    const onPool = ({ pool }) => setPoolAmount(pool);
+    const onError = ({ reason }) => showToast(reason || "發生錯誤");
+    const onFreeShots = ({ freeShots: fs }) => setFreeShots(fs);
+    const onBossAlert = ({ pool }) => {
+      if (openRef.current) return;
+      setLobbyAlert({ pool });
+      setTimeout(() => setLobbyAlert(null), 9000);
+    };
+
+    socket.on("fishingSnapshot", onSnapshot);
+    socket.on("fishingSpawn", onSpawn);
+    socket.on("fishingHit", onHit);
+    socket.on("fishingCatch", onCatch);
+    socket.on("fishingBossSpawn", onBossSpawn);
+    socket.on("fishingShotFail", onShotFail);
+    socket.on("fishingShotAck", onShotAck);
+    socket.on("fishingPool", onPool);
+    socket.on("fishingError", onError);
+    socket.on("fishingFreeShots", onFreeShots);
+    socket.on("fishingBossAlert", onBossAlert);
+    return () => {
+      socket.off("fishingSnapshot", onSnapshot);
+      socket.off("fishingSpawn", onSpawn);
+      socket.off("fishingHit", onHit);
+      socket.off("fishingCatch", onCatch);
+      socket.off("fishingBossSpawn", onBossSpawn);
+      socket.off("fishingShotFail", onShotFail);
+      socket.off("fishingShotAck", onShotAck);
+      socket.off("fishingPool", onPool);
+      socket.off("fishingError", onError);
+      socket.off("fishingFreeShots", onFreeShots);
+      socket.off("fishingBossAlert", onBossAlert);
+    };
+  }, [socket, setApples, syncFishList, targetScreenPos, spawnFx, coinBurst, shake, showToast]);
+
+  // ── 開竿 ──
+  const shoot = (fishId, e) => {
+    e.stopPropagation();
+    const now = Date.now();
+    if (now - lastShotRef.current < CLIENT_SHOT_COOLDOWN) return;
+    const baiting = useBait && freeShots > 0;
+    if (!baiting && apples != null && apples < rodBets[rod]) {
+      showToast(`金幣不足，${rodNames[rod]}每竿需 ${fmt(rodBets[rod])}`);
+      return;
+    }
+    lastShotRef.current = now;
+    const rect = pondRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    // 砲台轉向 + 發射軌跡 + 網子
+    const cx = rect.width / 2;
+    const cy = rect.height;
+    const angle = Math.atan2(y - cy, x - cx) * (180 / Math.PI) + 90;
+    if (cannonRef.current) cannonRef.current.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+    const shotRod = baiting ? 0 : rod;
+    const bullet = spawnFx(`fg-bullet fg-bullet-${shotRod}`, cx, cy - 30, ROD_ICONS[shotRod], 400);
+    if (bullet) {
+      requestAnimationFrame(() => {
+        bullet.style.transform = `translate(${x - cx}px, ${y - cy + 30}px) translate(-50%, -50%) scale(1.2)`;
+        bullet.style.opacity = "0.2";
+      });
+    }
+    setTimeout(() => spawnFx(`fg-net fg-net-${shotRod}`, x, y, undefined, 600), 160);
+    socket.emit("fishingShoot", { token: tokenRef.current, room: RN, fishId, rod: shotRod, useBait: baiting });
+  };
+
+  if (!demo && (roomConfig.currency_name !== "金幣" || roomConfig.fishing_enabled === false)) return null;
+
+  const bossProgress = bossThreshold > 0 ? Math.min(1, poolAmount / bossThreshold) : 0;
+
+  return (
+    <>
+      {/* 大廳提示：黃金巨龍出現（彈窗沒開時） */}
+      {lobbyAlert && !open && (
+        <div className="fg-lobby-alert">
+          <span>🐉 黃金巨龍現身捕魚池！血池 {fmt(lobbyAlert.pool)}</span>
+          <button onClick={() => { setLobbyAlert(null); setMinimized(false); onOpenChange(true); }}>前往屠龍</button>
+          <button className="fg-lobby-alert-close" onClick={() => setLobbyAlert(null)}>✖</button>
+        </div>
+      )}
+
+      {open && minimized && (
+        <button className="fg-mini" onClick={() => setMinimized(false)} title="展開捕魚池">
+          <span className="fg-mini-icon">{boss ? "🐉" : "🎣"}</span>
+          <span className="fg-mini-pool">💰{fmt(poolAmount)}</span>
+        </button>
+      )}
+
+      {open && (
+        <div className={`fg-window${minimized ? " fg-hidden" : ""}${boss ? " fg-boss-mode" : ""}`} ref={windowRef}>
+          <div className="fg-header" onPointerDown={onPointerDown} title="按住拖曳">
+            <span className="fg-title">🎣 深海捕魚・共用血池</span>
+            <div className="fg-pool">
+              <span className="fg-pool-label">血池</span>
+              <span className="fg-pool-amount">💰 {fmt(poolAmount)}</span>
+            </div>
+            <div className="fg-header-btns">
+              <button onClick={() => setMinimized(true)} title="收合">—</button>
+              <button onClick={() => { setMinimized(false); onOpenChange(false); }} title="關閉">✖</button>
+            </div>
+          </div>
+
+          <div className="fg-pond" ref={pondRef}>
+            <div className="fg-rays" />
+            <div className="fg-bubbles">
+              {Array.from({ length: 14 }).map((_, i) => (
+                <span key={i} style={{ left: `${(i * 7.3) % 100}%`, animationDelay: `${(i * 0.9) % 6}s`, animationDuration: `${5 + (i % 5)}s` }} />
+              ))}
+            </div>
+            <div className="fg-seabed">🌿 🐚 🦀 🌾 ⭐ 🌿 🐚 🌾 🦀 🌿</div>
+
+            {fishList.map((f) => (
+              <div
+                key={f.id}
+                className={`fg-fish fg-tier-${f.tier}`}
+                ref={(el) => { if (el) fishElRef.current.set(f.id, el); else fishElRef.current.delete(f.id); }}
+                onPointerDown={(e) => shoot(f.id, e)}
+              >
+                <span className="fg-fish-emoji" style={{ transform: f.dir === 1 ? "scaleX(-1)" : "none" }}>{f.emoji}</span>
+                {f.tier !== "small" && (
+                  <span className="fg-fish-hp"><i style={{ width: `${(f.hp / f.maxHp) * 100}%` }} /></span>
+                )}
+                <span className="fg-fish-mult">×{f.mult}</span>
+              </div>
+            ))}
+
+            {boss && (
+              <div className="fg-boss" ref={bossElRef} onPointerDown={(e) => shoot("boss", e)}>
+                <span className="fg-boss-aura" />
+                <span className="fg-boss-emoji">{boss.emoji}</span>
+              </div>
+            )}
+
+            {boss && (
+              <div className="fg-boss-bar">
+                <span className="fg-boss-bar-name">🐉 {boss.name}・尾刀獨得血池 {bossPayoutPct}%</span>
+                <span className="fg-boss-bar-track"><i style={{ width: `${(boss.hp / boss.maxHp) * 100}%` }} /></span>
+              </div>
+            )}
+
+            {warning && (
+              <div className="fg-warning">
+                <div className="fg-warning-text">⚠ WARNING ⚠</div>
+                <div className="fg-warning-sub">黃金巨龍來襲！</div>
+              </div>
+            )}
+
+            <div className="fg-fx" ref={fxRef} />
+            <div className="fg-cannon" ref={cannonRef}>{ROD_ICONS[useBait && freeShots > 0 ? 0 : rod]}</div>
+
+            {!connected && <div className="fg-loading">連線到捕魚池中…</div>}
+            {toast && <div className="fg-toast">{toast}</div>}
+          </div>
+
+          <div className="fg-footer">
+            <div className="fg-rods">
+              {rodBets.map((bet, i) => (
+                <button
+                  key={i}
+                  className={`fg-rod fg-rod-${i}${rod === i && !(useBait && freeShots > 0) ? " fg-rod-active" : ""}`}
+                  disabled={apples != null && apples < bet}
+                  onClick={() => { setRod(i); setUseBait(false); }}
+                >
+                  <span className="fg-rod-icon">{ROD_ICONS[i]}</span>
+                  <span className="fg-rod-name">{rodNames[i]}</span>
+                  <span className="fg-rod-bet">{fmt(bet)}</span>
+                </button>
+              ))}
+            </div>
+            <div className="fg-side">
+              <button
+                className={`fg-bait${useBait && freeShots > 0 ? " fg-bait-active" : ""}`}
+                disabled={freeShots <= 0}
+                onClick={() => setUseBait((v) => !v)}
+                title="免費魚餌：以初級竿傷害出竿，不扣金幣"
+              >
+                🍤 免費魚餌 ×{freeShots}
+              </button>
+              {bossThreshold > 0 && !boss && (
+                <div className="fg-boss-progress" title="血池累積到門檻時自動召喚黃金巨龍">
+                  <span>🐉 召喚 {Math.floor(bossProgress * 100)}%</span>
+                  <span className="fg-boss-progress-track"><i style={{ width: `${bossProgress * 100}%` }} /></span>
+                </div>
+              )}
+              {(perms.canSummon || perms.canResetPool) && (
+                <div className="fg-admin">
+                  {perms.canSummon && (
+                    <button disabled={!!boss} onClick={() => socket.emit("fishingSummonBoss", { token: tokenRef.current, room: RN })}>🐉 召喚BOSS</button>
+                  )}
+                  {perms.canResetPool && (
+                    <button onClick={() => {
+                      if (window.confirm(`確定把血池重設為保底金額 ${fmt(perms.seedPool)}？`)) {
+                        socket.emit("fishingResetPool", { token: tokenRef.current, room: RN });
+                      }
+                    }}>♻ 重設血池</button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="fg-hint">點魚開竿・大家共用魚的血量，打出最後一擊（尾刀）的人獨得「竿注 × 倍率」，獎金由血池支付</div>
+        </div>
+      )}
+    </>
+  );
+}

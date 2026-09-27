@@ -203,7 +203,7 @@ export function buildPlaneEffect(data, { room } = {}) {
     maxDelay: 2.5, minSize: 12, maxSize: 24,
   });
   container.appendChild(headline(`✈️ ${data?.sender || ""} 送給 ${data?.target || ""} ${data?.quantity || ""} 架飛機！`));
-  container.appendChild(signature(`${data?.brand || BRAND_NAME} × 房間${data?.room || room || ""} 獨家呈現`));
+  container.appendChild(signature(`${data?.brand || BRAND_NAME} 獨家呈現`));
   return { node: container, duration: 5000 };
 }
 
@@ -235,7 +235,7 @@ export function buildDiamondEffect(data, { room } = {}) {
 
   container.appendChild(el("div", "gift-fx-diamond-title", station));
   container.appendChild(headline(`💎 ${data?.sender || ""} 獻給 ${data?.target || ""} ${data?.quantity || ""} 顆鑽石！`));
-  container.appendChild(signature(`${data?.brand || BRAND_NAME} × 房間${data?.room || room || ""} 獨家呈現`));
+  container.appendChild(signature(`${data?.brand || BRAND_NAME} 獨家呈現`));
   return { node: container, duration: 5000 };
 }
 
@@ -315,6 +315,37 @@ export function buildCruiseEffect(data, { room } = {}) {
 
   container.appendChild(el("div", "gift-fx-cruise-title", station));
   container.appendChild(headline(`🛳️ ${data?.sender || ""} 送給 ${data?.target || ""} ${data?.quantity || ""} 艘郵輪！`));
-  container.appendChild(signature(`${data?.brand || BRAND_NAME} × 房間${data?.room || room || ""} 獨家呈現`));
+  container.appendChild(signature(`${data?.brand || BRAND_NAME} 獨家呈現`));
+  return { node: container, duration: 7000 };
+}
+
+// ── 捕魚 BOSS 大獎：全大廳霸屏（金色巨龍 + 金幣雨 + 大獎金額），突破捕魚彈窗限制 ─────────────
+export function buildFishingJackpotEffect(data) {
+  const container = baseContainer("gift-fx-fishing");
+  container.appendChild(el("div", "gift-fx-fishing-rays"));
+
+  const COINS = 90;
+  for (let i = 0; i < COINS; i++) {
+    // 金幣大多用 CSS 畫的圓幣（🪙 emoji 在舊系統會變方框），穿插少量 💰✨💎
+    const disc = Math.random() < 0.7;
+    const c = el("span", `gift-fx-fishing-coin${disc ? " gift-fx-fishing-disc" : ""}`, disc ? "" : pick(["💰", "✨", "💎"]));
+    c.style.left = `${rand(0, 100).toFixed(1)}%`;
+    c.style.animationDelay = `${rand(0, 3.2).toFixed(2)}s`;
+    c.style.animationDuration = `${rand(2.2, 3.4).toFixed(2)}s`;
+    c.style.fontSize = `${rand(20, 44).toFixed(0)}px`;
+    c.style.setProperty("--size", `${rand(18, 38).toFixed(0)}px`);
+    c.style.setProperty("--drift", `${rand(-8, 8).toFixed(1)}vw`);
+    container.appendChild(c);
+  }
+
+  const stage = el("div", "gift-fx-fishing-stage");
+  stage.appendChild(el("div", "gift-fx-fishing-dragon", "🐉"));
+  stage.appendChild(el("div", "gift-fx-fishing-label", "黃金巨龍・血池大獎"));
+  const amount = el("div", "gift-fx-fishing-amount", `+${Number(data?.amount || 0).toLocaleString("en-US")}`);
+  stage.appendChild(amount);
+  stage.appendChild(el("div", "gift-fx-fishing-winner", `🎉 恭喜 ${data?.winner || ""} 打出尾刀抱走大獎！`));
+  container.appendChild(stage);
+
+  container.appendChild(signature(`${data?.brand || BRAND_NAME} 🎣 深海捕魚`));
   return { node: container, duration: 7000 };
 }
