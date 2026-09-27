@@ -44,6 +44,7 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
   const [warning, setWarning] = useState(false);
   const [lobbyAlert, setLobbyAlert] = useState(null); // { pool }
   const [connected, setConnected] = useState(false);
+  const [joinSlow, setJoinSlow] = useState(false); // 送出加入後遲遲等不到伺服器快照
 
   const { windowRef, onPointerDown } = useDraggableWindow();
   const pondRef = useRef(null);
@@ -60,10 +61,12 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
   const nameRef = useRef(name);
   const openRef = useRef(open);
   const toastTimer = useRef(null);
+  const connectedRef = useRef(false);
 
   useEffect(() => { tokenRef.current = token; }, [token]);
   useEffect(() => { nameRef.current = name; }, [name]);
   useEffect(() => { openRef.current = open; }, [open]);
+  useEffect(() => { connectedRef.current = connected; if (connected) setJoinSlow(false); }, [connected]);
 
   const showToast = useCallback((msg) => {
     setToast(msg);
@@ -168,15 +171,21 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
   }, [open, minimized, syncFishList]);
 
   // ── 加入/離開觀戰頻道 ──
+  // 伺服器沒回快照（例如後端還沒更新到有捕魚遊戲的版本）時，6 秒後顯示原因，並每 5 秒自動重試
   useEffect(() => {
     if (!open) return;
     const join = () => socket.emit("fishingJoin", { token: tokenRef.current, room: RN });
     join();
     socket.on("connect", join);
+    const slowTimer = setTimeout(() => setJoinSlow(true), 6000);
+    const retryTimer = setInterval(() => { if (!connectedRef.current) join(); }, 5000);
     return () => {
+      clearTimeout(slowTimer);
+      clearInterval(retryTimer);
       socket.off("connect", join);
       socket.emit("fishingLeave", { room: RN });
       setConnected(false);
+      setJoinSlow(false);
     };
   }, [open, socket]);
 
@@ -423,7 +432,11 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
             <div className="fg-fx" ref={fxRef} />
             <div className="fg-cannon" ref={cannonRef}>{ROD_ICONS[useBait && freeShots > 0 ? 0 : rod]}</div>
 
-            {!connected && <div className="fg-loading">連線到捕魚池中…</div>}
+            {!connected && (
+              <div className={`fg-loading${joinSlow ? " fg-loading-slow" : ""}`}>
+                {joinSlow ? "捕魚池伺服器沒有回應（伺服器可能尚未更新），自動重試中…" : "連線到捕魚池中…"}
+              </div>
+            )}
             {toast && <div className="fg-toast">{toast}</div>}
           </div>
 

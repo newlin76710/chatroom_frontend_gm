@@ -474,6 +474,7 @@
   text-overflow: ellipsis;
 }
 .fg-loading { top: 45%; }
+.fg-loading-slow { white-space: normal; text-align: center; color: #ffd98a; border: 1px solid rgba(255, 200, 100, 0.5); }
 .fg-toast { bottom: 70px; color: #ffd0d0; border: 1px solid rgba(255, 120, 120, 0.6); }
 
 /* ── 底部操作列 ── */
