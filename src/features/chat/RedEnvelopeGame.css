@@ -68,6 +68,11 @@
 }
 .reg-close:hover { color: #fff; }
 
+.reg-mode-tag {
+  color: #ffd166;
+  margin: 0 2px;
+}
+
 .reg-desc {
   font-size: 0.75rem;
   color: #ddd;

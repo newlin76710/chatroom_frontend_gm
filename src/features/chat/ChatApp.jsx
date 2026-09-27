@@ -40,7 +40,7 @@ import { Converter } from "opencc-js";
 // ─── 環境設定 ────────────────────────────────────────────────────────────────
 import { roomConfig, loadRoomConfig, BACKEND, RN } from "../../shared/roomConfig";
 import { BRAND_NAME } from "../../shared/brand";
-import { buildFlowerEffect, buildPlaneEffect, buildDiamondEffect } from "./giftEffects";
+import { buildFlowerEffect, buildPlaneEffect, buildDiamondEffect, buildCruiseEffect } from "./giftEffects";
 loadRoomConfig();
 const FRONTEND_VERSION = import.meta.env.VITE_APP_VERSION || "dev";
 
@@ -777,6 +777,8 @@ export default function ChatApp() {
     // 獨家飛機/鑽石全螢幕特效（本房間獨家、僅金幣模式）：比照跑車特效，畫面帶電台橫幅＋房號
     const handlePlaneEffect = playGiftEffect(buildPlaneEffect);
     const handleDiamondEffect = playGiftEffect(buildDiamondEffect);
+    // 獨家郵輪（金幣房間專屬）
+    const handleCruiseEffect = playGiftEffect(buildCruiseEffect);
 
     // 跑車全螢幕特效（本房間獨家、僅金幣模式）：跟送花特效同一套模式，差別是畫面上會
     // 帶房號＋品牌名，防止被其他房間直接盜用同一支特效當自己的賣點。
@@ -832,6 +834,21 @@ export default function ChatApp() {
         message.className = "firework-message";
         message.textContent = `🧧 ${data?.sender || ""} 發放紅包 ${data?.amount || ""} 個${roomConfig.currency_name}！`;
 
+        // 分配方式直接寫在畫面上：均分顯示「N 人平均分，每人約 M 個」，隨機顯示「N 人隨機搶」
+        const recipients = Array.isArray(data?.recipients) ? data.recipients : [];
+        const modeLine = document.createElement("div");
+        modeLine.className = "red-envelope-mode";
+        if (data?.mode === "random") {
+          modeLine.textContent = `🎲 全場 ${recipients.length} 人隨機搶`;
+        } else {
+          const total = Number(data?.amount) || 0;
+          const n = recipients.length;
+          const per = n ? Math.floor(total / n) : 0;
+          // 除不盡時餘數會隨機多給部分人 1 個（見後端 splitEven），所以顯示成區間
+          const perText = n && total % n !== 0 ? `${per}～${per + 1}` : `${per}`;
+          modeLine.textContent = `⚖️ 全場 ${n} 人平均分，每人 ${perText} 個${roomConfig.currency_name}`;
+        }
+
         const signature = document.createElement("div");
         signature.className = "flower-effect-signature";
         signature.textContent = `${data?.brand || BRAND_NAME} 恭賀`;
@@ -861,51 +878,135 @@ export default function ChatApp() {
         }
 
         container.appendChild(message);
+        container.appendChild(modeLine);
         container.appendChild(signature);
         document.body.appendChild(container);
         setTimeout(() => { container.remove(); done(); }, 5000);
       });
     };
 
-    // 專屬慶典模式（僅金幣模式）：玩家選主題+扣款發起，全場飄落主題特效 + 頂端祝福語 + 簽名
+    // 專屬慶典模式（僅金幣模式）：玩家選主題+扣款發起，全場飄落主題特效 + 頂端祝福語 + 簽名。
+    // 依金額分三級（後端依金額在後台選項中的排名給 tier）：
+    //   1 基礎：主題粒子飄落
+    //   2 華麗：粒子加倍 + 彩帶 + 數處星光爆發 + 流光橫幅
+    //   3 豪華霸屏：開場閃光 + 暗幕旋轉光芒 + 連環煙火 + 滿屏粒子/彩帶 + 金色「豪華慶典」大字
+    // 「自訂慶祝」另外有自己的彩虹主題（彩虹底色、彩虹流光祝福語、多色粒子），任何等級都適用。
     const handleCelebration = (data) => {
       if (hideGiftFxRef.current) return; // 功能選單「隱藏特效畫面」
+      // 舊版後端沒有 tier 時，用金額粗估（相容部署時間差）
+      const amt = Number(data?.amount) || 0;
+      const tier = [1, 2, 3].includes(Number(data?.tier))
+        ? Number(data.tier)
+        : amt >= 1000 ? 3 : amt >= 500 ? 2 : 1;
+      const theme = data?.theme || "festival";
+      const TIER_CFG = {
+        1: { particles: 26, confetti: 0, bursts: 0, duration: 6000 },
+        2: { particles: 50, confetti: 40, bursts: 4, duration: 7000 },
+        3: { particles: 80, confetti: 90, bursts: 9, duration: 9000 },
+      };
+      const cfg = TIER_CFG[tier];
+
       enqueueEffect((done) => {
         const container = document.createElement("div");
         // 每個主題疊一個對應的底色 class，讓聖誕/新年等主題除了粒子 emoji 之外，
         // 整個全螢幕特效還有自己專屬的色調氛圍，不會四個主題看起來都一樣
-        container.className = `firework-container celebration-container celebration-theme-${data?.theme || "festival"}`;
+        container.className = `firework-container celebration-container celebration-theme-${theme} celebration-tier-${tier}`;
+        container.style.setProperty("--cel-duration", `${cfg.duration}ms`);
+
+        if (theme === "custom") {
+          const rainbow = document.createElement("div");
+          rainbow.className = "celebration-rainbow-bg";
+          container.appendChild(rainbow);
+        }
+
+        if (tier === 3) {
+          const flash = document.createElement("div");
+          flash.className = "celebration-flash";
+          container.appendChild(flash);
+          const rays = document.createElement("div");
+          rays.className = "celebration-rays";
+          container.appendChild(rays);
+        }
+
+        const THEME_PARTICLES = {
+          valentine: ["💕", "💖", "🌹"],
+          birthday: ["🎈", "🎂", "🎁"],
+          festival: ["🎉", "✨", "🎊"],
+          christmas: ["🎄", "❄️", "🎁", "🔔"],
+          newyear: ["🎆", "🎊", "🧧", "✨"],
+          custom: ["✨", "🌟", "💖", "🎉", "🎊", "🌈", "💫", "🎇", "🦋", "🌸"],
+        };
+        const particlePool = THEME_PARTICLES[theme] || ["✨"];
+        const spread = tier === 3 ? 3 : tier === 2 ? 2.2 : 1.5;
+        for (let i = 0; i < cfg.particles; i++) {
+          const particle = document.createElement("span");
+          particle.className = "celebration-flake";
+          particle.textContent = particlePool[Math.floor(Math.random() * particlePool.length)];
+          particle.style.left = `${Math.random() * 100}%`;
+          particle.style.animationDelay = `${(Math.random() * spread).toFixed(2)}s`;
+          particle.style.fontSize = `${16 + Math.random() * (tier === 3 ? 34 : 22)}px`;
+          container.appendChild(particle);
+        }
+
+        // 彩帶：小色塊一邊旋轉一邊飄落；自訂慶祝用全彩虹色，其他主題用暖色系
+        for (let i = 0; i < cfg.confetti; i++) {
+          const c = document.createElement("span");
+          c.className = "celebration-confetti";
+          const hue = theme === "custom" ? Math.floor(Math.random() * 360) : [0, 45, 330, 200, 280][i % 5];
+          c.style.background = `hsl(${hue}, 90%, 60%)`;
+          c.style.left = `${Math.random() * 100}%`;
+          c.style.animationDelay = `${(Math.random() * spread).toFixed(2)}s`;
+          c.style.animationDuration = `${(3 + Math.random() * 2).toFixed(2)}s`;
+          c.style.setProperty("--cel-drift", `${Math.round(Math.random() * 160 - 80)}px`);
+          container.appendChild(c);
+        }
+
+        // 星光/煙火爆發：從隨機點往外放射的一圈 emoji；豪華級錯開時間連環施放
+        const BURST_ICONS = theme === "custom" ? ["💫", "🌟", "✨", "💖"] : ["✨", "🌟", "💥"];
+        for (let b = 0; b < cfg.bursts; b++) {
+          const burst = document.createElement("div");
+          burst.className = "celebration-burst";
+          burst.style.left = `${12 + Math.random() * 76}%`;
+          burst.style.top = `${18 + Math.random() * 55}%`;
+          const delay = (tier === 3 ? b * 0.7 : b * 0.9) + Math.random() * 0.3;
+          const RAYS = tier === 3 ? 12 : 8;
+          const dist = tier === 3 ? 130 : 90;
+          for (let r = 0; r < RAYS; r++) {
+            const spark = document.createElement("span");
+            spark.className = "celebration-spark";
+            spark.textContent = BURST_ICONS[r % BURST_ICONS.length];
+            const ang = (Math.PI * 2 * r) / RAYS;
+            spark.style.setProperty("--cel-dx", `${Math.round(Math.cos(ang) * dist)}px`);
+            spark.style.setProperty("--cel-dy", `${Math.round(Math.sin(ang) * dist)}px`);
+            spark.style.animationDelay = `${delay.toFixed(2)}s`;
+            burst.appendChild(spark);
+          }
+          container.appendChild(burst);
+        }
+
+        if (tier === 3) {
+          const crown = document.createElement("div");
+          crown.className = "celebration-luxury-title";
+          crown.textContent = `👑 豪華慶典 👑`;
+          const sub = document.createElement("div");
+          sub.className = "celebration-luxury-sub";
+          sub.textContent = `${data?.sender || ""} 霸氣發起`;
+          crown.appendChild(sub);
+          container.appendChild(crown);
+        }
 
         const message = document.createElement("div");
-        message.className = "firework-message";
+        message.className = `firework-message celebration-message${tier >= 2 ? " celebration-message-shine" : ""}${theme === "custom" ? " celebration-message-rainbow" : ""}`;
         message.textContent = `${data?.themeLabel || "🎉"} ${data?.text || ""}`;
 
         const signature = document.createElement("div");
         signature.className = "flower-effect-signature";
         signature.textContent = `${data?.brand || BRAND_NAME} 呈獻（由 ${data?.sender || ""} 發起）`;
 
-        const PARTICLE_COUNT = 26;
-        const THEME_PARTICLES = {
-          valentine: ["💕"],
-          birthday: ["🎈"],
-          christmas: ["🎄", "❄️", "🎁", "🔔"],
-          newyear: ["🎆", "🎊", "🧧", "✨"],
-        };
-        const particlePool = THEME_PARTICLES[data?.theme] || ["✨"];
-        for (let i = 0; i < PARTICLE_COUNT; i++) {
-          const particle = document.createElement("span");
-          particle.className = "celebration-flake";
-          particle.textContent = particlePool[Math.floor(Math.random() * particlePool.length)];
-          particle.style.left = `${Math.random() * 100}%`;
-          particle.style.animationDelay = `${(Math.random() * 1.5).toFixed(2)}s`;
-          particle.style.fontSize = `${16 + Math.random() * 22}px`;
-          container.appendChild(particle);
-        }
-
         container.appendChild(message);
         container.appendChild(signature);
         document.body.appendChild(container);
-        setTimeout(() => { container.remove(); done(); }, 6000);
+        setTimeout(() => { container.remove(); done(); }, cfg.duration);
       });
     };
 
@@ -918,6 +1019,7 @@ export default function ChatApp() {
     socket.on("carEffectShow", handleCarEffect);
     socket.on("planeEffectShow", handlePlaneEffect);
     socket.on("diamondEffectShow", handleDiamondEffect);
+    socket.on("cruiseEffectShow", handleCruiseEffect);
     socket.on("redEnvelopeStart", handleRedEnvelope);
     socket.on("celebrationStart", handleCelebration);
     return () => {
@@ -930,6 +1032,7 @@ export default function ChatApp() {
       socket.off("carEffectShow", handleCarEffect);
       socket.off("planeEffectShow", handlePlaneEffect);
       socket.off("diamondEffectShow", handleDiamondEffect);
+      socket.off("cruiseEffectShow", handleCruiseEffect);
       socket.off("redEnvelopeStart", handleRedEnvelope);
       socket.off("celebrationStart", handleCelebration);
     };

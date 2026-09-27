@@ -112,6 +112,14 @@
   border-radius: 6px;
   cursor: pointer;
 }
+.cmg-tier-label {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 600;
+  opacity: 0.8;
+  margin-top: 1px;
+}
+
 .cmg-option-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .cmg-option-selected {
   background: linear-gradient(180deg, #d9a3e6 0%, #ba68c8 100%);

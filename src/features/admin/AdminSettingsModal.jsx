@@ -15,6 +15,7 @@ const EXCLUSIVE_GIFT_EFFECTS = [
   { prefix: "car",     title: "🚗 跑車全螢幕特效",     noun: "跑車", desc: "跑車橫越全螢幕＋車速殘影" },
   { prefix: "plane",   title: "✈️ 獨家飛機全螢幕特效", noun: "飛機", desc: "飛機帶光軌斜向飛越全螢幕，後方拉出電台專屬橫幅" },
   { prefix: "diamond", title: "💎 獨家鑽石全螢幕特效", noun: "鑽石", desc: "巨鑽在中央閃耀旋轉＋星光爆發，附電台專屬金色字樣" },
+  { prefix: "cruise",  title: "🛳️ 獨家郵輪全螢幕特效", noun: "郵輪", desc: "巨型郵輪在夜海上駛過、煙囪冒煙＋汽笛聲波，天空連環煙火，船尾拉出電台專屬橫幅" },
 ];
 
 const DEFAULT = {
@@ -94,7 +95,12 @@ const DEFAULT = {
     { effect: "lifetime",      threshold: 1314, burst_limit: 1, cooldown_minutes: 10, enabled: true },
   ],
   // 送禮扣除比例（系統回收 %）：對應後端 share/giftDeduction.js 的 DEFAULT_GIFT_DEDUCTION_PCT
-  gift_deduction_pct: { rose: 30, chocolate: 100, cake: 100, diamond: 0, plane: 0, car: 0 },
+  // *_combo：連送組合（單次送出總金額達獨家特效門檻）改用的扣除比例
+  gift_deduction_pct: { rose: 30, chocolate: 100, cake: 100, diamond: 0, plane: 0, car: 0, cruise: 0, diamond_combo: 0, plane_combo: 0, car_combo: 0, cruise_combo: 0 },
+  cruise_effect_enabled: true,
+  cruise_effect_threshold: 999,
+  cruise_effect_burst_limit: 1,
+  cruise_effect_cooldown_minutes: 5,
   plane_effect_enabled: true,
   plane_effect_threshold: 999,
   plane_effect_burst_limit: 1,
@@ -1216,6 +1222,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                 { id: "diamond", label: "💎 鑽石" },
                 { id: "plane",   label: "✈️ 飛機" },
                 { id: "car",     label: "🚗 跑車" },
+                ...(isCoin ? [{ id: "cruise", label: "🛳️ 郵輪" }] : []),
               ].map(({ id, label }) => (
                 <Row key={id} label={label}>
                   <input type="number" min={0} max={100} style={{ width: 70 }}
@@ -1293,6 +1300,12 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                 <input type="number" min={1} value={settings[`${prefix}_effect_threshold`]}
                   onChange={e => setInt(`${prefix}_effect_threshold`, e.target.value)} />
                 <span className="field-note">個{currencyName}（單次送{noun}總金額達此門檻，自動加碼全螢幕特效）</span>
+              </Row>
+              <Row label="連送組合扣除">
+                <input type="number" min={0} max={100} style={{ width: 70 }}
+                  value={(settings.gift_deduction_pct || DEFAULT.gift_deduction_pct)[`${prefix}_combo`] ?? ""}
+                  onChange={e => setDeductionPct(`${prefix}_combo`, e.target.value)} />
+                <span className="field-note">%（單次送{noun}總金額達上面的觸發門檻時，改用這個比例扣除由系統回收；門檻以下的一般送{noun}照「送禮扣除比例」計算。不論特效是否啟用都會套用）</span>
               </Row>
               <Row label="可連發場次">
                 <input type="number" min={1} max={20} value={settings[`${prefix}_effect_burst_limit`]}

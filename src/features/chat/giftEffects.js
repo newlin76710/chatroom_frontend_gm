@@ -1,8 +1,8 @@
 // giftEffects.js — 送花特效分級（99 花瓣雨/520 愛心花束/999 經典大花/1314 一生一世）＋
-// 獨家賣場禮物特效（飛機/鑽石）的全螢幕 DOM 特效產生器。
+// 獨家賣場禮物特效（飛機/鑽石/郵輪）的全螢幕 DOM 特效產生器。
 // 每個 builder 回傳 { node, duration }：由 ChatApp.jsx 的 enqueueEffect 排隊掛到 body、
 // duration 毫秒後移除，跟煙火/跑車特效同一套佇列，不會同時疊好幾個全螢幕特效。
-// 後端事件：flowerEffectShow（payload.effect 決定用哪一組）、planeEffectShow、diamondEffectShow。
+// 後端事件：flowerEffectShow（payload.effect 決定用哪一組）、planeEffectShow、diamondEffectShow、cruiseEffectShow。
 import "./giftEffects.css";
 import { BRAND_NAME, BRAND_STATION } from "../../shared/brand";
 
@@ -237,4 +237,84 @@ export function buildDiamondEffect(data, { room } = {}) {
   container.appendChild(headline(`💎 ${data?.sender || ""} 獻給 ${data?.target || ""} ${data?.quantity || ""} 顆鑽石！`));
   container.appendChild(signature(`${data?.brand || BRAND_NAME} × 房間${data?.room || room || ""} 獨家呈現`));
   return { node: container, duration: 5000 };
+}
+
+// ── 獨家郵輪（金幣房間專屬）：夜空海面上巨型郵輪緩緩駛過、船身起伏，煙囪冒煙、
+// 汽笛聲波擴散，天空連環煙火＋彩帶，船尾拖著電台專屬橫幅，最後金色大字收尾 ─────────────
+export function buildCruiseEffect(data, { room } = {}) {
+  const container = baseContainer("gift-fx-cruise");
+  const station = data?.station || BRAND_STATION;
+
+  // 天空煙火：錯開時間在上半部隨機位置炸開
+  const FIREWORKS = 6;
+  for (let i = 0; i < FIREWORKS; i++) {
+    const fw = el("div", "gift-fx-cruise-firework");
+    fw.style.left = `${rand(8, 92).toFixed(1)}%`;
+    fw.style.top = `${rand(6, 38).toFixed(1)}%`;
+    const delay = 0.6 + i * 0.75 + rand(0, 0.3);
+    const hue = Math.floor(rand(0, 360));
+    const SPARKS = 14;
+    for (let k = 0; k < SPARKS; k++) {
+      const spark = el("span", "gift-fx-cruise-spark");
+      const ang = (k / SPARKS) * Math.PI * 2;
+      const dist = rand(60, 110);
+      spark.style.setProperty("--dx", `${(Math.cos(ang) * dist).toFixed(0)}px`);
+      spark.style.setProperty("--dy", `${(Math.sin(ang) * dist).toFixed(0)}px`);
+      spark.style.background = `hsl(${hue + rand(-20, 20)}, 100%, 65%)`;
+      spark.style.boxShadow = `0 0 8px hsl(${hue}, 100%, 60%)`;
+      spark.style.animationDelay = `${delay.toFixed(2)}s`;
+      fw.appendChild(spark);
+    }
+    container.appendChild(fw);
+  }
+
+  // 海面：三層波浪往不同方向流動
+  const sea = el("div", "gift-fx-cruise-sea");
+  ["back", "mid", "front"].forEach((layer) => sea.appendChild(el("div", `gift-fx-cruise-wave gift-fx-cruise-wave-${layer}`)));
+
+  // 郵輪整組（橫幅＋繩子＋船）從左往右駛過，船本身上下起伏
+  const voyage = el("div", "gift-fx-cruise-voyage");
+  const banner = el("div", "gift-fx-cruise-banner");
+  banner.appendChild(el("span", "gift-fx-cruise-banner-text", `🛳️ ${station} 獨家呈現`));
+  voyage.appendChild(banner);
+  voyage.appendChild(el("div", "gift-fx-cruise-rope"));
+  const ship = el("div", "gift-fx-cruise-ship");
+  const img = el("img", "gift-fx-cruise-img");
+  img.src = "/gifts/cruise.svg";
+  img.alt = "";
+  ship.appendChild(img);
+  // 煙囪冒煙
+  for (let i = 0; i < 6; i++) {
+    const puff = el("span", "gift-fx-cruise-smoke");
+    puff.style.left = `${i % 2 === 0 ? 38 : 49}%`;
+    puff.style.animationDelay = `${(i * 0.45).toFixed(2)}s`;
+    ship.appendChild(puff);
+  }
+  // 汽笛聲波
+  for (let i = 0; i < 3; i++) {
+    const horn = el("span", "gift-fx-cruise-horn");
+    horn.style.animationDelay = `${(1.4 + i * 0.35).toFixed(2)}s`;
+    ship.appendChild(horn);
+  }
+  ship.appendChild(el("div", "gift-fx-cruise-wake"));
+  voyage.appendChild(ship);
+  sea.appendChild(voyage);
+  container.appendChild(sea);
+
+  // 彩帶飄落
+  const COLORS = ["#ffd24a", "#ff5c8a", "#4fc3f7", "#81c784", "#ffffff", "#ff9f43"];
+  for (let i = 0; i < 40; i++) {
+    const c = el("span", "gift-fx-cruise-confetti");
+    c.style.left = `${rand(0, 100).toFixed(1)}%`;
+    c.style.background = pick(COLORS);
+    c.style.animationDelay = `${rand(0.3, 3.5).toFixed(2)}s`;
+    c.style.animationDuration = `${rand(2.8, 4.2).toFixed(2)}s`;
+    c.style.setProperty("--drift", `${rand(-10, 10).toFixed(1)}vw`);
+    container.appendChild(c);
+  }
+
+  container.appendChild(el("div", "gift-fx-cruise-title", station));
+  container.appendChild(headline(`🛳️ ${data?.sender || ""} 送給 ${data?.target || ""} ${data?.quantity || ""} 艘郵輪！`));
+  container.appendChild(signature(`${data?.brand || BRAND_NAME} × 房間${data?.room || room || ""} 獨家呈現`));
+  return { node: container, duration: 7000 };
 }

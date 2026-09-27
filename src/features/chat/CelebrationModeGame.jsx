@@ -76,6 +76,16 @@ export default function CelebrationModeGame({ socket, token, name, apples, hidde
     .map((s) => Math.floor(Number(s.trim())))
     .filter((n) => Number.isFinite(n) && n > 0);
 
+  // 跟後端 celebrationMode.js 的 tierForAmount 同一套：最便宜=基礎、最貴=豪華、中間=華麗
+  const sortedOpts = [...new Set(options)].sort((a, b) => a - b);
+  const tierLabel = (opt) => {
+    if (sortedOpts.length <= 1) return "華麗";
+    const idx = sortedOpts.indexOf(opt);
+    if (idx <= 0) return "基礎";
+    if (idx === sortedOpts.length - 1) return "👑豪華";
+    return "華麗";
+  };
+
   return (
     <div className="cmg-corner">
       {!isOpen ? (
@@ -119,6 +129,7 @@ export default function CelebrationModeGame({ socket, token, name, apples, hidde
                 onClick={() => setSelectedAmount(opt)}
               >
                 {opt}
+                <span className="cmg-tier-label">{tierLabel(opt)}</span>
               </button>
             ))}
           </div>

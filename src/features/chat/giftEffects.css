@@ -415,3 +415,232 @@
     gift-fx-title-in 0.8s ease 1s forwards,
     gift-fx-gold-shimmer 2.5s linear 1s infinite;
 }
+
+/* ── 獨家郵輪（金幣房間專屬） ─────────────────────────────────── */
+.gift-fx-cruise {
+  animation-duration: 7s;
+  background: linear-gradient(180deg, rgba(8, 14, 48, 0.72) 0%, rgba(30, 40, 110, 0.5) 55%, rgba(0, 40, 80, 0.3) 100%);
+}
+
+.gift-fx-cruise-sea {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 42vh;
+}
+.gift-fx-cruise-wave {
+  position: absolute;
+  left: -50%;
+  width: 200%;
+  height: 100%;
+  background-repeat: repeat-x;
+  background-size: 50% 100%;
+}
+.gift-fx-cruise-wave-back {
+  bottom: 14vh;
+  height: 10vh;
+  background-image: radial-gradient(ellipse 50% 60% at 50% 100%, rgba(40, 110, 200, 0.55) 60%, transparent 62%);
+  animation: gift-fx-cruise-wave-move 6s linear infinite reverse;
+  z-index: 1;
+}
+.gift-fx-cruise-wave-mid {
+  bottom: 0;
+  height: 18vh;
+  background:
+    radial-gradient(ellipse 50% 40% at 50% 0%, rgba(120, 190, 255, 0.55) 55%, transparent 57%) repeat-x 0 0 / 25% 5vh,
+    linear-gradient(180deg, rgba(20, 90, 180, 0.8), rgba(5, 30, 80, 0.95));
+  animation: gift-fx-cruise-wave-move 4s linear infinite;
+  z-index: 2;
+}
+.gift-fx-cruise-wave-front {
+  bottom: 0;
+  height: 9vh;
+  background:
+    radial-gradient(ellipse 50% 45% at 50% 0%, rgba(200, 235, 255, 0.7) 55%, transparent 57%) repeat-x 0 0 / 16% 4vh,
+    linear-gradient(180deg, rgba(10, 60, 140, 0.9), rgba(2, 18, 50, 1));
+  animation: gift-fx-cruise-wave-move 2.6s linear infinite reverse;
+  z-index: 4;
+}
+@keyframes gift-fx-cruise-wave-move {
+  from { transform: translateX(0); }
+  to   { transform: translateX(25%); }
+}
+
+/* 整組從左往右駛過（船身停在海面線上） */
+.gift-fx-cruise-voyage {
+  position: absolute;
+  left: 0;
+  bottom: 12vh;
+  display: flex;
+  align-items: center;
+  z-index: 3;
+  animation: gift-fx-cruise-sail 6.4s cubic-bezier(0.3, 0.1, 0.6, 0.95) 0.2s both;
+}
+@keyframes gift-fx-cruise-sail {
+  from { transform: translateX(-105%); }
+  to   { transform: translateX(105vw); }
+}
+
+.gift-fx-cruise-ship {
+  position: relative;
+  animation: gift-fx-cruise-bob 1.6s ease-in-out infinite alternate;
+}
+@keyframes gift-fx-cruise-bob {
+  from { transform: translateY(0) rotate(-1deg); }
+  to   { transform: translateY(8px) rotate(1deg); }
+}
+.gift-fx-cruise-img {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: min(70vw, 460px);
+  height: auto;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 18px rgba(255, 230, 150, 0.35));
+}
+
+/* 船尾浪花 */
+.gift-fx-cruise-wake {
+  position: absolute;
+  right: 92%;
+  bottom: 6%;
+  width: 40vw;
+  height: 14px;
+  border-radius: 7px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.85));
+  filter: blur(2px);
+  z-index: 1;
+}
+
+.gift-fx-cruise-smoke {
+  position: absolute;
+  top: 6%;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(235, 235, 245, 0.9) 0%, rgba(200, 200, 215, 0.4) 60%, transparent 72%);
+  opacity: 0;
+  z-index: 1;
+  animation: gift-fx-cruise-smoke 2.4s ease-out infinite;
+}
+@keyframes gift-fx-cruise-smoke {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0.5); }
+  15%  { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(-70px, -90px) scale(2.6); }
+}
+
+.gift-fx-cruise-horn {
+  position: absolute;
+  left: 44%;
+  top: 4%;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border: 3px solid rgba(255, 240, 180, 0.9);
+  border-radius: 50%;
+  opacity: 0;
+  z-index: 3;
+  animation: gift-fx-cruise-horn 1.4s ease-out forwards;
+}
+@keyframes gift-fx-cruise-horn {
+  0%   { opacity: 0.95; transform: scale(0.3); }
+  100% { opacity: 0; transform: scale(4); }
+}
+
+.gift-fx-cruise-rope {
+  width: 50px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 3;
+}
+.gift-fx-cruise-banner {
+  position: relative;
+  z-index: 3;
+  padding: 10px 26px 10px 18px;
+  background: linear-gradient(90deg, #0a2a6b, #1565c0 45%, #29b6f6);
+  border: 2px solid #ffd24a;
+  border-radius: 4px 14px 14px 4px;
+  box-shadow: 0 0 18px rgba(255, 210, 74, 0.6);
+  transform-origin: right center;
+  animation: gift-fx-banner-wave 0.7s ease-in-out infinite alternate;
+  white-space: nowrap;
+}
+.gift-fx-cruise-banner-text {
+  font-size: clamp(1rem, 4vw, 1.6rem);
+  font-weight: 700;
+  color: #ffe9a0;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+  letter-spacing: 0.06em;
+}
+
+.gift-fx-cruise-firework {
+  position: absolute;
+  width: 0;
+  height: 0;
+  z-index: 1;
+}
+.gift-fx-cruise-spark {
+  position: absolute;
+  left: -3px;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  opacity: 0;
+  animation: gift-fx-cruise-spark 1.4s ease-out forwards;
+}
+@keyframes gift-fx-cruise-spark {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0.4); }
+  12%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), calc(var(--dy) + 30px)) scale(1); }
+}
+
+.gift-fx-cruise-confetti {
+  position: absolute;
+  top: -20px;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0;
+  z-index: 5;
+  animation-name: gift-fx-cruise-confetti;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+@keyframes gift-fx-cruise-confetti {
+  0%   { opacity: 0; transform: translate(0, 0) rotate(0deg) rotateY(0deg); }
+  8%   { opacity: 1; }
+  100% { opacity: 0.2; transform: translate(var(--drift, 0), 112vh) rotate(600deg) rotateY(480deg); }
+}
+
+/* 金色電台字樣：船駛過後放大浮現 */
+.gift-fx-cruise-title {
+  position: absolute;
+  top: 22%;
+  left: 12px;
+  right: 12px;
+  z-index: 5;
+  text-align: center;
+  font-size: clamp(1.8rem, 8vw, 4rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  background: linear-gradient(180deg, #fff6c9 0%, #ffd700 45%, #c88a00 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 16px rgba(255, 200, 0, 0.85)) drop-shadow(0 3px 0 rgba(90, 50, 0, 0.8));
+  opacity: 0;
+  animation: gift-fx-cruise-title 7s ease forwards;
+}
+@keyframes gift-fx-cruise-title {
+  0%, 30% { opacity: 0; transform: scale(2); }
+  40%     { opacity: 1; transform: scale(0.96); }
+  45%     { transform: scale(1.03); }
+  50%     { transform: scale(1); }
+  88%     { opacity: 1; }
+  100%    { opacity: 0; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gift-fx-cruise-wave, .gift-fx-cruise-ship, .gift-fx-cruise-smoke { animation: none; }
+}

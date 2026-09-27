@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 260" width="560" height="260">
+  <defs>
+    <linearGradient id="hull" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#dfe6ee"/>
+    </linearGradient>
+    <linearGradient id="bottom" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1f3f7a"/>
+      <stop offset="1" stop-color="#0d1f45"/>
+    </linearGradient>
+    <linearGradient id="deck" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#e8edf3"/>
+    </linearGradient>
+    <linearGradient id="funnel" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#b3121f"/>
+      <stop offset="0.5" stop-color="#e53935"/>
+      <stop offset="1" stop-color="#9a0f1a"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#c8900a"/>
+      <stop offset="0.5" stop-color="#ffd966"/>
+      <stop offset="1" stop-color="#c8900a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 船身（船頭朝右） -->
+  <path d="M20 150 L520 150 L548 150 Q540 190 505 222 L70 222 Q40 200 20 150 Z" fill="url(#hull)" stroke="#9fb0c4" stroke-width="2"/>
+  <path d="M44 196 L528 196 Q518 212 505 222 L70 222 Q55 212 44 196 Z" fill="url(#bottom)"/>
+  <rect x="34" y="186" width="498" height="6" fill="url(#gold)"/>
+  <!-- 船身舷窗 -->
+  <g fill="#1f3f7a">
+    <circle cx="80" cy="170" r="4"/><circle cx="110" cy="170" r="4"/><circle cx="140" cy="170" r="4"/>
+    <circle cx="170" cy="170" r="4"/><circle cx="200" cy="170" r="4"/><circle cx="230" cy="170" r="4"/>
+    <circle cx="260" cy="170" r="4"/><circle cx="290" cy="170" r="4"/><circle cx="320" cy="170" r="4"/>
+    <circle cx="350" cy="170" r="4"/><circle cx="380" cy="170" r="4"/><circle cx="410" cy="170" r="4"/>
+    <circle cx="440" cy="170" r="4"/><circle cx="470" cy="170" r="4"/><circle cx="500" cy="170" r="4"/>
+  </g>
+
+  <!-- 甲板層 -->
+  <path d="M60 150 L60 124 L480 124 Q500 130 510 150 Z" fill="url(#deck)" stroke="#9fb0c4" stroke-width="1.5"/>
+  <path d="M100 124 L100 100 L440 100 Q458 106 466 124 Z" fill="url(#deck)" stroke="#9fb0c4" stroke-width="1.5"/>
+  <path d="M150 100 L150 78 L400 78 Q414 84 420 100 Z" fill="url(#deck)" stroke="#9fb0c4" stroke-width="1.5"/>
+  <!-- 駕駛艙 -->
+  <path d="M340 78 L340 62 L392 62 Q402 68 406 78 Z" fill="url(#deck)" stroke="#9fb0c4" stroke-width="1.5"/>
+  <rect x="348" y="66" width="46" height="6" rx="2" fill="#2a5aa8"/>
+
+  <!-- 甲板窗戶帶 -->
+  <rect x="70" y="132" width="420" height="8" rx="2" fill="#2a5aa8"/>
+  <rect x="110" y="108" width="340" height="7" rx="2" fill="#2a5aa8"/>
+  <rect x="160" y="85" width="236" height="7" rx="2" fill="#2a5aa8"/>
+  <g stroke="#ffffff" stroke-width="2">
+    <line x1="100" y1="132" x2="100" y2="140"/><line x1="140" y1="132" x2="140" y2="140"/><line x1="180" y1="132" x2="180" y2="140"/>
+    <line x1="220" y1="132" x2="220" y2="140"/><line x1="260" y1="132" x2="260" y2="140"/><line x1="300" y1="132" x2="300" y2="140"/>
+    <line x1="340" y1="132" x2="340" y2="140"/><line x1="380" y1="132" x2="380" y2="140"/><line x1="420" y1="132" x2="420" y2="140"/>
+    <line x1="460" y1="132" x2="460" y2="140"/>
+    <line x1="150" y1="108" x2="150" y2="115"/><line x1="200" y1="108" x2="200" y2="115"/><line x1="250" y1="108" x2="250" y2="115"/>
+    <line x1="300" y1="108" x2="300" y2="115"/><line x1="350" y1="108" x2="350" y2="115"/><line x1="400" y1="108" x2="400" y2="115"/>
+  </g>
+  <!-- 救生艇 -->
+  <g fill="#ff8f00" stroke="#c56000" stroke-width="1">
+    <rect x="120" y="116" width="34" height="8" rx="4"/><rect x="200" y="116" width="34" height="8" rx="4"/>
+    <rect x="280" y="116" width="34" height="8" rx="4"/><rect x="360" y="116" width="34" height="8" rx="4"/>
+  </g>
+
+  <!-- 煙囪 -->
+  <path d="M200 78 L206 36 L246 36 L244 78 Z" fill="url(#funnel)"/>
+  <rect x="205" y="36" width="42" height="8" fill="#1a1a1a"/>
+  <rect x="206" y="54" width="39" height="5" fill="url(#gold)"/>
+  <path d="M262 78 L268 44 L304 44 L302 78 Z" fill="url(#funnel)"/>
+  <rect x="267" y="44" width="38" height="7" fill="#1a1a1a"/>
+  <rect x="268" y="60" width="35" height="4" fill="url(#gold)"/>
+
+  <!-- 桅杆與彩旗：桅杆立在駕駛艙頂上 -->
+  <line x1="372" y1="63" x2="372" y2="18" stroke="#8a97a8" stroke-width="3"/>
+  <path d="M372 20 L404 28 L372 36 Z" fill="#e53935"/>
+  <path d="M60 124 L372 20 L520 150" fill="none" stroke="#8a97a8" stroke-width="1" stroke-dasharray="2 4"/>
+  <g>
+    <circle cx="120" cy="104" r="3" fill="#ffd600"/><circle cx="180" cy="84" r="3" fill="#e53935"/>
+    <circle cx="240" cy="64" r="3" fill="#43a047"/><circle cx="300" cy="44" r="3" fill="#1e88e5"/>
+    <circle cx="420" cy="62" r="3" fill="#ffd600"/><circle cx="470" cy="106" r="3" fill="#e53935"/>
+  </g>
+</svg>

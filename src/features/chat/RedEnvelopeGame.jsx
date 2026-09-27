@@ -72,7 +72,13 @@ export default function RedEnvelopeGame({ socket, token, name, apples, hidden, i
             <span className="reg-title">🧧 發紅包</span>
             <button className="reg-close" onClick={() => { onOpenChange(false); setErrorMsg(""); }}>✖</button>
           </div>
-          <p className="reg-desc">選擇或輸入要發放的金額，全場在線玩家均分/隨機領取</p>
+          <p className="reg-desc">
+            選擇或輸入要發放的金額，全場在線玩家
+            <strong className="reg-mode-tag">
+              {roomConfig.red_envelope_distribution_mode === "random" ? "🎲 隨機搶" : "⚖️ 平均分"}
+            </strong>
+            （發起人自己不算）
+          </p>
           <div className="reg-options">
             {options.map((opt) => (
               <button

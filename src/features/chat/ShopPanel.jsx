@@ -13,7 +13,7 @@ const CAKE_VARIANTS = [
   { id: "cupcake",        emoji: "🧁", name: "杯子蛋糕",   image: "/gifts/cake_cupcake.gif" },
 ];
 
-const MULTI_QTY_IDS = ["diamond", "plane", "car", "ball", "rose"];
+const MULTI_QTY_IDS = ["diamond", "plane", "car", "cruise", "ball", "rose"];
 const MAX_GIFT_QUANTITY = 1314;
 
 export default function ShopPanel({ token, myName, myLevel, targetName, open, onClose, title = "商城" }) {
@@ -33,8 +33,10 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
   };
 
   // 玫瑰送禮只留在商城，賣場不再提供（改走左下角的送花快捷按鈕/商城）
+  // 郵輪只在金幣房間開放（後端 shop/buy 也會擋）
+  const isCoinRoom = roomConfig.currency_name === "金幣";
   const GIFT_IDS = isMarket
-    ? ["diamond", "plane", "car"]
+    ? ["diamond", "plane", "car", ...(isCoinRoom ? ["cruise"] : [])]
     : ["rose", "chocolate", "cake"];
 
   const items = isMarket
@@ -42,6 +44,7 @@ export default function ShopPanel({ token, myName, myLevel, targetName, open, on
         { id: "diamond",  name: "💎 鑽石(送禮)", price: 5 },
         { id: "plane",    name: "✈️ 飛機(送禮)", price: 5 },
         { id: "car",      name: "🚗 跑車(送禮)", price: 5 },
+        ...(isCoinRoom ? [{ id: "cruise", name: "🛳️ 郵輪(送禮)", price: 5 }] : []),
         { id: "firework", name: "🎆 放煙火(全場特效)", price: 15 },
         { id: "ball",     name: "🔮 積分球(+1000積分)", price: 30 },
         { id: "rename",   name: "✏️ 升級卡(+1級)",  price: 1000 },
