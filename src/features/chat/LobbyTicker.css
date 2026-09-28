@@ -1,0 +1,49 @@
+.lobby-ticker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 6px;
+  overflow: hidden;
+  background: linear-gradient(90deg, #3a1d00, #6b3a00 50%, #3a1d00);
+  border-top: 1px solid #d4af37;
+  border-bottom: 1px solid #d4af37;
+  color: #ffe38a;
+  font-weight: 700;
+  font-size: 0.9rem;
+  animation: lobby-ticker-in 0.3s ease-out;
+}
+.lobby-ticker--fishing {
+  background: linear-gradient(90deg, #04264a, #0b4f8a 50%, #04264a);
+  border-color: #ffd700;
+  color: #fff3b0;
+}
+.lobby-ticker-badge { flex: 0 0 auto; font-size: 1rem; }
+.lobby-ticker-viewport { position: relative; flex: 1 1 auto; overflow: hidden; height: 100%; }
+.lobby-ticker-track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  white-space: nowrap;
+  text-shadow: 0 0 6px rgba(255, 200, 0, 0.8);
+  animation-name: lobby-ticker-scroll;
+  animation-timing-function: linear;
+}
+.lobby-ticker-close {
+  flex: 0 0 auto;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  opacity: 0.7;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.lobby-ticker-close:hover { opacity: 1; }
+@keyframes lobby-ticker-scroll {
+  from { left: 100%; transform: translate(0, -50%); }
+  to { left: 0; transform: translate(-100%, -50%); }
+}
+@keyframes lobby-ticker-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .lobby-ticker-track { animation-name: none; transform: translate(0, -50%); }
+}

@@ -119,13 +119,19 @@ const DEFAULT = {
   celebration_cooldown_minutes: 10,
   // 多人共用血池捕魚（對應後端 game/fishingGame.js 的預設值）
   fishing_enabled: true,
-  fishing_rod_bets: "100,500,1000,5000",
+  fishing_rod_bets: "100,500,1000,5000,10000",
   fishing_seed_pool: 10000,
-  fishing_pool_rate: 80,
+  fishing_pool_rate: 30,
   fishing_fish_rtp: 60,
   fishing_boss_payout_pct: 80,
   fishing_boss_threshold: 50000,
   fishing_boss_hp: 300,
+  fishing_boss_tiers: [
+    { name: "巨型魷魚王", emoji: "🦑", threshold: 5000,   hp: 100,  payout_pct: 20 },
+    { name: "鋼牙鱷王",   emoji: "🐊", threshold: 20000,  hp: 300,  payout_pct: 30 },
+    { name: "遠古海龍",   emoji: "🦖", threshold: 50000,  hp: 800,  payout_pct: 50 },
+    { name: "黃金巨龍",   emoji: "🐉", threshold: 100000, hp: 1500, payout_pct: 80 },
+  ],
   fishing_fish_types: [
     { key: "clownfish", name: "小丑魚", emoji: "🐠", tier: "small", min: 1.2, max: 2,  weight: 30 },
     { key: "puffer",    name: "河豚",   emoji: "🐡", tier: "small", min: 2,   max: 3,  weight: 24 },
@@ -386,6 +392,17 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
     if (raw !== "" && (Number.isNaN(Number(raw)) || Number(raw) < 0)) return p;
     list[idx][key] = raw;
     return { ...p, fishing_fish_types: list };
+  });
+  // 捕魚：四級 BOSS 的門檻/血量/大獎比例（整數，暫存空字串，儲存時由後端驗證）
+  const setBossTier = (idx, key, raw) => setSettings(p => {
+    const list = (p.fishing_boss_tiers || DEFAULT.fishing_boss_tiers).map(t => ({ ...t }));
+    if (raw !== "") {
+      const n = Number(raw);
+      if (Number.isNaN(n) || n < 0) return p;
+      raw = Math.floor(n);
+    }
+    list[idx][key] = raw;
+    return { ...p, fishing_boss_tiers: list };
   });
   // 捕魚：送禮贈送免費魚餌次數
   const setGiftBonus = (id, raw) => {
@@ -1369,13 +1386,13 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                 </label>
               </h4>
               <p className="field-note" style={{ margin: "0 0 8px" }}>
-                全房間共用魚的血量，打出最後一擊（尾刀）的人獨得「竿注 × 倍率」，獎金由血池支付（血池不足時以血池餘額為上限，系統不會倒貼）。
+                全房間共用魚的血量，打出最後一擊（尾刀）的人獨得「竿注 × 倍率」，一般魚的獎金由系統直接發放、不動血池；血池只有打死 BOSS 才能抱走。
                 {settings.fishing_pool_now != null && <> 目前血池：<b>{Number(settings.fishing_pool_now).toLocaleString("en-US")}</b> 個{currencyName}。</>}
               </p>
               <Row label="釣竿金額">
-                {["初級", "中級", "高級", "王者"].map((label, idx) => {
+                {["初級", "中級", "高級", "王者", "帝王神竿"].map((label, idx) => {
                   const parts = String(settings.fishing_rod_bets || "").split(",").map(x => x.trim());
-                  while (parts.length < 4) parts.push("");
+                  while (parts.length < 5) parts.push("");
                   return (
                     <span key={idx} style={{ display: "inline-flex", alignItems: "center", gap: 2, marginRight: 6 }}>
                       <span style={{ fontSize: 12 }}>{label}</span>
@@ -1399,28 +1416,60 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
               <Row label="下注滾入血池">
                 <input type="number" min={0} max={100} style={{ width: 70 }} value={settings.fishing_pool_rate}
                   onChange={e => setInt("fishing_pool_rate", e.target.value)} />
-                <span className="field-note">%（每竿下注有多少 % 進血池，其餘由系統回收抗通膨；預設 80）</span>
+                <span className="field-note">%（每竿下注有多少 % 進血池，血池的錢最後會全部透過 BOSS 發回玩家；預設 30）</span>
               </Row>
               <Row label="魚種回饋率">
                 <input type="number" min={1} max={100} style={{ width: 70 }} value={settings.fishing_fish_rtp}
                   onChange={e => setInt("fishing_fish_rtp", e.target.value)} />
-                <span className="field-note">%（一般魚的期望回饋，決定魚的血量：越高魚越好打死。要低於「下注滾入血池」，血池才會慢慢累積到 BOSS 門檻；預設 60）</span>
+                <span className="field-note">%（一般魚的期望回饋，決定魚的血量：越高魚越好打死；由系統直接發放；預設 60）</span>
               </Row>
-              <Row label="BOSS 大獎比例">
-                <input type="number" min={1} max={100} style={{ width: 70 }} value={settings.fishing_boss_payout_pct}
-                  onChange={e => setInt("fishing_boss_payout_pct", e.target.value)} />
-                <span className="field-note">%（擊殺黃金巨龍的玩家獨得血池的這個比例，其餘留在血池當下一輪的底；預設 80）</span>
-              </Row>
-              <Row label="BOSS 自動召喚門檻">
-                <input type="number" min={0} style={{ width: 100 }} value={settings.fishing_boss_threshold}
-                  onChange={e => setInt("fishing_boss_threshold", e.target.value)} />
-                <span className="field-note">個{currencyName}（血池累積到這個金額時自動召喚黃金巨龍；0 = 只能由管理員在捕魚視窗手動召喚）</span>
-              </Row>
-              <Row label="BOSS 血量">
-                <input type="number" min={10} max={100000} style={{ width: 90 }} value={settings.fishing_boss_hp}
-                  onChange={e => setInt("fishing_boss_hp", e.target.value)} />
-                <span className="field-note">以初級竿計算約要打幾竿才能打倒黃金巨龍；打 BOSS 的傷害跟竿注成正比（例如王者竿 5000 一竿 = 初級竿 100 的 50 竿），避免大家用最便宜的竿搶尾刀；預設 300</span>
-              </Row>
+              {(() => {
+                // 整體回饋率上限 ≈ 魚種回饋率 × 最高竿係數（帝王神竿 1.25）+ 滾入比例（對應後端 fishingGame.js）
+                const rtp = Number(settings.fishing_fish_rtp) || 0;
+                const rate = Number(settings.fishing_pool_rate) || 0;
+                const low = rtp + rate;
+                const high = Math.round(rtp * 1.25 + rate);
+                const bad = high >= 100;
+                return (
+                  <div style={{
+                    margin: "4px 0 8px", padding: "6px 10px", borderRadius: 6, fontSize: 13,
+                    background: bad ? "#ffe5e5" : "#e8f7ea", color: bad ? "#b00020" : "#1b6e2a",
+                    border: `1px solid ${bad ? "#ff9a9a" : "#9fd8aa"}`,
+                  }}>
+                    {bad ? "⚠️ " : "✅ "}預估整體回饋率上限：<b>{low}%～{high}%</b>（魚種回饋率 × 竿係數 + 滾入血池）。
+                    {bad
+                      ? "已達 100% 以上，系統會倒貼！請調低「下注滾入血池」或「魚種回饋率」。"
+                      : `系統理論上最少回收約 ${100 - high}%。`}
+                    <span style={{ display: "block", fontSize: 12, opacity: 0.8 }}>
+                      一般魚常常在打死前就游走，實際回饋會比理論值更低；上面是保守估算的上限。
+                    </span>
+                  </div>
+                );
+              })()}
+              <div className="field-note" style={{ margin: "8px 0 4px", fontWeight: 700 }}>BOSS 階梯召喚（一級 → 二級 → 三級 → 終極 → 一級…輪替）</div>
+              <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ textAlign: "left", color: "#888" }}>
+                    <th>BOSS</th><th>召喚門檻</th><th>血量</th><th>大獎比例 %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(settings.fishing_boss_tiers || DEFAULT.fishing_boss_tiers).map((t, idx) => (
+                    <tr key={idx}>
+                      <td>{t.emoji || DEFAULT.fishing_boss_tiers[idx].emoji} {["一級", "二級", "三級", "終極"][idx]}・{t.name || DEFAULT.fishing_boss_tiers[idx].name}</td>
+                      <td><input type="number" min={0} style={{ width: 90 }} value={t.threshold} onChange={e => setBossTier(idx, "threshold", e.target.value)} /></td>
+                      <td><input type="number" min={10} max={100000} style={{ width: 72 }} value={t.hp} onChange={e => setBossTier(idx, "hp", e.target.value)} /></td>
+                      <td><input type="number" min={1} max={100} style={{ width: 60 }} value={t.payout_pct} onChange={e => setBossTier(idx, "payout_pct", e.target.value)} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="field-note" style={{ margin: "4px 0 8px" }}>
+                血池累積到「下一級」的召喚門檻時自動召喚，打死後換下一級；門檻填 0 = 跳過該級。
+                打出尾刀的玩家獨得血池的「大獎比例」，其餘留在血池當下一輪的底——低級 BOSS 比例要設低，血池才漲得到高級 BOSS 的門檻。
+                血量以初級竿計算約要打幾竿；打 BOSS 的傷害跟竿注成正比（帝王神竿 10000 一竿 = 初級竿 100 的 100 竿），避免大家用最便宜的竿搶尾刀。
+                擊殺任一級 BOSS 都會觸發大廳跑馬燈與聊天室推播。
+              </p>
               <div className="field-note" style={{ margin: "8px 0 4px", fontWeight: 700 }}>魚種倍率／出現權重</div>
               <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
                 <thead>

@@ -6,6 +6,7 @@ import AdminIPPanel from "./AdminIPPanel";
 import AdminOnlineIPPanel from "./AdminOnlineIPPanel";
 import AdminNicknamePanel from "./AdminNicknamePanel";
 import AdminAdjustmentLogPanel from "./AdminAdjustmentLogPanel";
+import AdminFishingLogPanel from "./AdminFishingLogPanel";
 import AdminRoomSettingsPanel from "./AdminRoomSettingsPanel";
 import "./AdminToolPanel.css";
 
@@ -105,6 +106,14 @@ export default function AdminToolPanel({ myName, myLevel, token, userList, initi
                 >
                   調整紀錄
                 </button>
+                {roomConfig.currency_name === "金幣" && (
+                  <button
+                    className={tab === "fishing" ? "active" : ""}
+                    onClick={() => setTab("fishing")}
+                  >
+                    捕魚紀錄
+                  </button>
+                )}
               </>
             )}
 
@@ -145,6 +154,7 @@ export default function AdminToolPanel({ myName, myLevel, token, userList, initi
             {tab === "ip" && <AdminIPPanel token={token} myLevel={myLevel} />}
             {tab === "onlineip" && <AdminOnlineIPPanel token={token} myLevel={myLevel} />}
             {tab === "adjustment" && <AdminAdjustmentLogPanel token={token} />}
+            {tab === "fishing" && <AdminFishingLogPanel token={token} />}
             {tab === "nickname" && <AdminNicknamePanel myLevel={myLevel} token={token} myName={myName} />}
           </div>
         </div>

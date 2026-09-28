@@ -319,7 +319,7 @@ export function buildCruiseEffect(data, { room } = {}) {
   return { node: container, duration: 7000 };
 }
 
-// ── 捕魚 BOSS 大獎：全大廳霸屏（金色巨龍 + 金幣雨 + 大獎金額），突破捕魚彈窗限制 ─────────────
+// ── 捕魚 BOSS 大獎：全大廳霸屏（BOSS 圖示 + 金幣雨 + 大獎金額），突破捕魚彈窗限制 ─────────────
 export function buildFishingJackpotEffect(data) {
   const container = baseContainer("gift-fx-fishing");
   container.appendChild(el("div", "gift-fx-fishing-rays"));
@@ -339,8 +339,9 @@ export function buildFishingJackpotEffect(data) {
   }
 
   const stage = el("div", "gift-fx-fishing-stage");
-  stage.appendChild(el("div", "gift-fx-fishing-dragon", "🐉"));
-  stage.appendChild(el("div", "gift-fx-fishing-label", "黃金巨龍・血池大獎"));
+  stage.appendChild(el("div", "gift-fx-fishing-dragon", data?.bossEmoji || "🐉"));
+  const bossTitle = data?.bossName ? `${data.tierLabel ? `${data.tierLabel} BOSS・` : ""}${data.bossName}` : "黃金巨龍";
+  stage.appendChild(el("div", "gift-fx-fishing-label", `${bossTitle}・血池大獎`));
   const amount = el("div", "gift-fx-fishing-amount", `+${Number(data?.amount || 0).toLocaleString("en-US")}`);
   stage.appendChild(amount);
   stage.appendChild(el("div", "gift-fx-fishing-winner", `🎉 恭喜 ${data?.winner || ""} 打出尾刀抱走大獎！`));

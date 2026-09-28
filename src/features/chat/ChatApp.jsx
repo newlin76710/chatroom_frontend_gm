@@ -41,6 +41,7 @@ import { Converter } from "opencc-js";
 import { roomConfig, loadRoomConfig, BACKEND, RN } from "../../shared/roomConfig";
 import { BRAND_NAME } from "../../shared/brand";
 import { buildFlowerEffect, buildPlaneEffect, buildDiamondEffect, buildCruiseEffect, buildFishingJackpotEffect } from "./giftEffects";
+import LobbyTicker from "./LobbyTicker";
 loadRoomConfig();
 const FRONTEND_VERSION = import.meta.env.VITE_APP_VERSION || "dev";
 
@@ -1443,6 +1444,7 @@ export default function ChatApp() {
               )}
             </div>
           </div>
+          <LobbyTicker socket={socket} />
 
           <AnnouncementPanel open={showAnnouncement} onClose={() => setShowAnnouncement(false)} myLevel={level} token={token} />
           {showMessageBoard && (

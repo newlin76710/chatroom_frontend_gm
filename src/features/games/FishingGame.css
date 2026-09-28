@@ -82,6 +82,17 @@
   cursor: crosshair;
   touch-action: manipulation;
 }
+.fg-watermark {
+  position: absolute;
+  left: 10px;
+  top: 8px;
+  max-width: 120px;
+  max-height: 44px;
+  opacity: 0.35;
+  z-index: 1;
+  pointer-events: none;
+  user-select: none;
+}
 .fg-boss-mode .fg-pond {
   background:
     radial-gradient(ellipse at 50% 40%, rgba(255, 180, 40, 0.25) 0%, transparent 60%),
@@ -311,6 +322,7 @@
   filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9));
 }
 .fg-bullet-3 { font-size: 34px; filter: drop-shadow(0 0 14px rgba(255, 215, 0, 1)); }
+.fg-bullet-4 { font-size: 38px; filter: drop-shadow(0 0 16px rgba(120, 240, 255, 1)) drop-shadow(0 0 6px rgba(255, 120, 255, 0.9)); }
 
 .fg-net {
   width: 70px;
@@ -326,6 +338,7 @@
 .fg-net-1 { border-color: #7dff9c; box-shadow: 0 0 18px rgba(80, 255, 140, 0.9); }
 .fg-net-2 { width: 90px; height: 90px; border-color: #c28bff; box-shadow: 0 0 22px rgba(180, 120, 255, 0.95); }
 .fg-net-3 { width: 120px; height: 120px; border-color: #ffd700; box-shadow: 0 0 30px rgba(255, 200, 0, 1); }
+.fg-net-4 { width: 140px; height: 140px; border-color: #7ff6ff; box-shadow: 0 0 34px rgba(120, 240, 255, 1), 0 0 18px rgba(255, 120, 255, 0.9); }
 .fg-net-other { width: 40px; height: 40px; opacity: 0.55; }
 @keyframes fg-net {
   0%   { transform: translate(-50%, -50%) scale(0.2) rotate(0deg); opacity: 1; }
@@ -515,6 +528,11 @@
   background: linear-gradient(180deg, rgba(255, 210, 60, 0.45), rgba(180, 110, 0, 0.45));
   box-shadow: 0 0 18px rgba(255, 200, 0, 1);
 }
+.fg-rod-active.fg-rod-4 {
+  border-color: #7ff6ff;
+  background: linear-gradient(180deg, rgba(120, 240, 255, 0.45), rgba(200, 80, 255, 0.45));
+  box-shadow: 0 0 20px rgba(120, 240, 255, 1), 0 0 10px rgba(255, 120, 255, 0.8);
+}
 .fg-side { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .fg-bait {
   padding: 7px 10px;
@@ -618,6 +636,7 @@
   .fg-rod-bet { font-size: 0.78rem; }
   .fg-side { width: 100%; justify-content: space-between; }
   .fg-rod-name { display: none; }
+  .fg-watermark { max-width: 80px; max-height: 30px; }
   .fg-tier-small .fg-fish-emoji { font-size: 32px; }
   .fg-tier-mid .fg-fish-emoji { font-size: 46px; }
   .fg-tier-large .fg-fish-emoji { font-size: 70px; }

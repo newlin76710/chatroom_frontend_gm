@@ -12,7 +12,9 @@ import { useDraggableWindow } from "../../shared/hooks/useDraggableWindow";
 
 const CLIENT_SHOT_COOLDOWN = 180;
 // 只用舊版 Windows/Android 也有的 emoji（🪝🪱🪸🪨🪙 這類 Emoji 13+ 在舊系統會變方框）
-const ROD_ICONS = ["🎣", "⚓", "🔱", "👑"];
+const ROD_ICONS = ["🎣", "⚓", "🔱", "👑", "💎"];
+// 平台 Logo 浮水印：圖檔放 public/fishing-logo.png，檔案不存在時自動隱藏
+const WATERMARK_SRC = "/fishing-logo.png";
 const fmt = (n) => Number(n || 0).toLocaleString("en-US");
 
 function fishPos(f, now) {
@@ -32,17 +34,17 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
   const [fishList, setFishList] = useState([]);
   const [boss, setBoss] = useState(null);
   const [poolAmount, setPoolAmount] = useState(0);
-  const [rodBets, setRodBets] = useState(() => String(roomConfig.fishing_rod_bets || "100,500,1000,5000").split(",").map(Number));
-  const [rodNames, setRodNames] = useState(["初級竿", "中級竿", "高級竿", "王者竿"]);
+  const [rodBets, setRodBets] = useState(() => String(roomConfig.fishing_rod_bets || "100,500,1000,5000,10000").split(",").map(Number));
+  const [rodNames, setRodNames] = useState(["初級竿", "中級竿", "高級竿", "王者竿", "帝王神竿"]);
   const [rod, setRod] = useState(0);
   const [freeShots, setFreeShots] = useState(0);
   const [useBait, setUseBait] = useState(false);
-  const [bossThreshold, setBossThreshold] = useState(0);
-  const [bossPayoutPct, setBossPayoutPct] = useState(80);
+  const [nextBoss, setNextBoss] = useState(null); // { tierLabel, name, emoji, threshold, payoutPct }：下一隻要召喚的 BOSS
+  const [watermarkOk, setWatermarkOk] = useState(true);
   const [perms, setPerms] = useState({ canSummon: false, canResetPool: false, seedPool: 0 });
   const [toast, setToast] = useState("");
   const [warning, setWarning] = useState(false);
-  const [lobbyAlert, setLobbyAlert] = useState(null); // { pool }
+  const [lobbyAlert, setLobbyAlert] = useState(null); // { pool, boss }
   const [connected, setConnected] = useState(false);
   const [joinSlow, setJoinSlow] = useState(false); // 送出加入後遲遲等不到伺服器快照
 
@@ -213,8 +215,7 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
       if (Array.isArray(d.rodBets)) setRodBets(d.rodBets);
       if (Array.isArray(d.rodNames)) setRodNames(d.rodNames);
       setFreeShots(d.freeShots || 0);
-      setBossThreshold(d.bossThreshold || 0);
-      setBossPayoutPct(d.bossPayoutPct || 80);
+      setNextBoss(d.nextBoss || null);
       setPerms({ canSummon: !!d.canSummon, canResetPool: !!d.canResetPool, seedPool: d.seedPool || 0 });
       setConnected(true);
       syncFishList();
@@ -250,16 +251,17 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
       spawnFx(`fg-dmg${mine ? " fg-dmg-mine" : ""}${shotRod >= 3 ? " fg-dmg-king" : ""}`, pos.x + (Math.random() * 30 - 15), pos.y - 20, `-${damage}`, 900);
       if (!mine) spawnFx("fg-net fg-net-other", pos.x, pos.y, undefined, 500);
     };
-    const onCatch = ({ fishId, shooter, payout, isBoss, name: fname, emoji, mult, tier }) => {
+    const onCatch = ({ fishId, shooter, payout, isBoss, name: fname, emoji, mult, tier, nextBoss: nb }) => {
       const pos = targetScreenPos(fishId) || { x: sizeRef.current.w / 2, y: sizeRef.current.h / 2 };
       const mine = shooter === nameRef.current;
       if (isBoss) {
         bossRef.current = null;
         setBoss(null);
+        if (nb !== undefined) setNextBoss(nb);
         spawnFx("fg-boss-explode", pos.x, pos.y, undefined, 1600);
         coinBurst(pos.x, pos.y, 60, true);
         spawnFx("fg-catch-banner fg-catch-boss", sizeRef.current.w / 2, sizeRef.current.h * 0.42,
-          `🐉 ${shooter} 斬殺黃金巨龍！+${fmt(payout)}`, 3200);
+          `${emoji} ${shooter} 斬殺${fname}！+${fmt(payout)}`, 3200);
         shake(true);
       } else {
         fishDataRef.current.delete(fishId);
@@ -298,9 +300,9 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
     const onPool = ({ pool }) => setPoolAmount(pool);
     const onError = ({ reason }) => showToast(reason || "發生錯誤");
     const onFreeShots = ({ freeShots: fs }) => setFreeShots(fs);
-    const onBossAlert = ({ pool }) => {
+    const onBossAlert = ({ pool, boss: b }) => {
       if (openRef.current) return;
-      setLobbyAlert({ pool });
+      setLobbyAlert({ pool, boss: b });
       setTimeout(() => setLobbyAlert(null), 9000);
     };
 
@@ -363,22 +365,22 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
 
   if (!demo && (roomConfig.currency_name !== "金幣" || roomConfig.fishing_enabled === false)) return null;
 
-  const bossProgress = bossThreshold > 0 ? Math.min(1, poolAmount / bossThreshold) : 0;
+  const bossProgress = nextBoss?.threshold > 0 ? Math.min(1, poolAmount / nextBoss.threshold) : 0;
 
   return (
     <>
-      {/* 大廳提示：黃金巨龍出現（彈窗沒開時） */}
+      {/* 大廳提示：BOSS 出現（彈窗沒開時） */}
       {lobbyAlert && !open && (
         <div className="fg-lobby-alert">
-          <span>🐉 黃金巨龍現身捕魚池！血池 {fmt(lobbyAlert.pool)}</span>
-          <button onClick={() => { setLobbyAlert(null); setMinimized(false); onOpenChange(true); }}>前往屠龍</button>
+          <span>{lobbyAlert.boss?.emoji || "🐉"} {lobbyAlert.boss ? `${lobbyAlert.boss.tierLabel} BOSS「${lobbyAlert.boss.name}」` : "BOSS"}現身捕魚池！血池 {fmt(lobbyAlert.pool)}</span>
+          <button onClick={() => { setLobbyAlert(null); setMinimized(false); onOpenChange(true); }}>前往挑戰</button>
           <button className="fg-lobby-alert-close" onClick={() => setLobbyAlert(null)}>✖</button>
         </div>
       )}
 
       {open && minimized && (
         <button className="fg-mini" onClick={() => setMinimized(false)} title="展開捕魚池">
-          <span className="fg-mini-icon">{boss ? "🐉" : "🎣"}</span>
+          <span className="fg-mini-icon">{boss ? boss.emoji : "🎣"}</span>
           <span className="fg-mini-pool">💰{fmt(poolAmount)}</span>
         </button>
       )}
@@ -399,6 +401,9 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
 
           <div className="fg-pond" ref={pondRef}>
             <div className="fg-rays" />
+            {watermarkOk && (
+              <img className="fg-watermark" src={WATERMARK_SRC} alt="" draggable={false} onError={() => setWatermarkOk(false)} />
+            )}
             <div className="fg-bubbles">
               {Array.from({ length: 14 }).map((_, i) => (
                 <span key={i} style={{ left: `${(i * 7.3) % 100}%`, animationDelay: `${(i * 0.9) % 6}s`, animationDuration: `${5 + (i % 5)}s` }} />
@@ -430,7 +435,7 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
 
             {boss && (
               <div className="fg-boss-bar">
-                <span className="fg-boss-bar-name">🐉 {boss.name}・尾刀獨得血池 {bossPayoutPct}%</span>
+                <span className="fg-boss-bar-name">{boss.emoji} {boss.tierLabel} BOSS・{boss.name}・尾刀獨得血池 {boss.payoutPct}%</span>
                 <span className="fg-boss-bar-track"><i style={{ width: `${(boss.hp / boss.maxHp) * 100}%` }} /></span>
               </div>
             )}
@@ -438,7 +443,7 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
             {warning && (
               <div className="fg-warning">
                 <div className="fg-warning-text">⚠ WARNING ⚠</div>
-                <div className="fg-warning-sub">黃金巨龍來襲！</div>
+                <div className="fg-warning-sub">{boss ? `${boss.tierLabel} BOSS「${boss.name}」來襲！` : "BOSS 來襲！"}</div>
               </div>
             )}
 
@@ -477,9 +482,9 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
               >
                 🍤 免費魚餌 ×{freeShots}
               </button>
-              {bossThreshold > 0 && !boss && (
-                <div className="fg-boss-progress" title="血池累積到門檻時自動召喚黃金巨龍">
-                  <span>🐉 召喚 {Math.floor(bossProgress * 100)}%</span>
+              {nextBoss && !boss && (
+                <div className="fg-boss-progress" title={`血池累積到 ${fmt(nextBoss.threshold)} 時自動召喚${nextBoss.tierLabel} BOSS「${nextBoss.name}」，尾刀獨得血池 ${nextBoss.payoutPct}%`}>
+                  <span>{nextBoss.emoji} {nextBoss.tierLabel}BOSS {Math.floor(bossProgress * 100)}%</span>
                   <span className="fg-boss-progress-track"><i style={{ width: `${bossProgress * 100}%` }} /></span>
                 </div>
               )}
@@ -499,7 +504,7 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
               )}
             </div>
           </div>
-          <div className="fg-hint">點魚開竿・大家共用魚的血量，打出最後一擊（尾刀）的人獨得「竿注 × 倍率」，獎金由血池支付</div>
+          <div className="fg-hint">點魚開竿・大家共用魚的血量，打出最後一擊（尾刀）的人獨得「竿注 × 倍率」；血池大獎只有打死 BOSS 才能抱走</div>
         </div>
       )}
     </>

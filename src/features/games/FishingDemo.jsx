@@ -3,7 +3,7 @@ import FishingGame from "./FishingGame";
 
 // /fishing-demo：純前端假資料展示捕魚彈窗（不連後端），方便單獨調整畫面與特效。
 // 假 socket 在前端模擬後端 fishingGame.js 的行為：生魚、扣傷害、尾刀派彩、BOSS。
-// ?boss=1 一打開就召喚黃金巨龍；?auto=1 自動對隨機的魚開竿（看打擊特效用）。
+// ?boss=1 一打開就召喚 BOSS；?auto=1 自動對隨機的魚開竿（看打擊特效用）。
 const FISH = [
   { key: "clownfish", name: "小丑魚", emoji: "🐠", tier: "small", min: 1.2, max: 2, w: 30 },
   { key: "puffer", name: "河豚", emoji: "🐡", tier: "small", min: 2, max: 3, w: 24 },
@@ -13,14 +13,21 @@ const FISH = [
   { key: "shark", name: "大白鯊", emoji: "🦈", tier: "large", min: 20, max: 40, w: 2.5 },
   { key: "whale", name: "藍鯨", emoji: "🐋", tier: "large", min: 30, max: 50, w: 1.5 },
 ];
-const BETS = [100, 500, 1000, 5000];
+const BETS = [100, 500, 1000, 5000, 10000];
+const BOSSES = [
+  { tierLabel: "一級", name: "巨型魷魚王", emoji: "🦑", threshold: 5000, hp: 100, payoutPct: 20 },
+  { tierLabel: "二級", name: "鋼牙鱷王", emoji: "🐊", threshold: 20000, hp: 300, payoutPct: 30 },
+  { tierLabel: "三級", name: "遠古海龍", emoji: "🦖", threshold: 50000, hp: 800, payoutPct: 50 },
+  { tierLabel: "終極", name: "黃金巨龍", emoji: "🐉", threshold: 100000, hp: 1500, payoutPct: 80 },
+];
+const nextBossOf = (i) => ({ tier: i, ...BOSSES[i] });
 const rand = (a, b) => a + Math.random() * (b - a);
 
 function createFakeServer(me) {
   const listeners = {};
   const fire = (ev, p) => (listeners[ev] || []).forEach((cb) => cb(p));
   const fish = new Map();
-  let seq = 0, pool = 42000, boss = null, timer = null;
+  let seq = 0, pool = 42000, boss = null, timer = null, nextTier = 0;
   const spawn = () => {
     const now = Date.now();
     for (const [id, f] of fish) if (now > f.spawnAt + f.duration) fish.delete(id);
@@ -41,26 +48,29 @@ function createFakeServer(me) {
   };
   const summon = () => {
     if (boss) return;
-    boss = { id: "boss", name: "黃金巨龍", emoji: "🐉", hp: 3000, maxHp: 3000, spawnAt: Date.now() };
+    const b = BOSSES[nextTier];
+    boss = { id: "boss", name: b.name, emoji: b.emoji, tier: nextTier, tierLabel: b.tierLabel, payoutPct: b.payoutPct,
+      hp: b.hp * 10, maxHp: b.hp * 10, spawnAt: Date.now() };
     fire("fishingBossSpawn", { boss, pool });
   };
   const shoot = ({ fishId, rod, useBait }) => {
     const target = fishId === "boss" ? boss : fish.get(fishId);
     if (!target) return;
     const bet = BETS[useBait ? 0 : rod];
-    pool += Math.floor(bet * 0.8);
+    pool += Math.floor(bet * 0.3);
     const dmg = fishId === "boss"
       ? Math.round(10 * (bet / BETS[0]) * rand(0.6, 1.4))
-      : Math.round(10 * [1, 1.05, 1.1, 1.2][rod] * rand(0.6, 1.4));
+      : Math.round(10 * [1, 1.05, 1.1, 1.2, 1.25][rod] * rand(0.6, 1.4));
     target.hp = Math.max(0, target.hp - dmg);
     fire("fishingHit", { fishId, shooter: me, damage: dmg, hp: target.hp, maxHp: target.maxHp, rod, pool });
     fire("fishingShotAck", {});
     if (target.hp <= 0) {
       let payout;
-      if (fishId === "boss") { payout = Math.floor(pool * 0.8); boss = null; }
-      else { payout = Math.min(Math.round(bet * target.mult), pool); fish.delete(fishId); }
-      pool -= payout;
-      fire("fishingCatch", { fishId, shooter: me, payout, isBoss: fishId === "boss", name: target.name, emoji: target.emoji, mult: target.mult, tier: fishId === "boss" ? "boss" : target.tier, pool });
+      const isBoss = fishId === "boss";
+      if (isBoss) { payout = Math.floor((pool * boss.payoutPct) / 100); pool -= payout; nextTier = (boss.tier + 1) % 4; boss = null; }
+      else { payout = Math.round(bet * target.mult); fish.delete(fishId); }
+      fire("fishingCatch", { fishId, shooter: me, payout, isBoss, name: target.name, emoji: target.emoji, mult: target.mult,
+        tier: isBoss ? "boss" : target.tier, pool, nextBoss: isBoss ? nextBossOf(nextTier) : undefined });
     }
   };
   return {
@@ -70,7 +80,7 @@ function createFakeServer(me) {
       if (ev === "fishingJoin") {
         setTimeout(() => {
           fire("fishingSnapshot", { serverNow: Date.now(), fish: [], boss, pool, rodBets: BETS,
-            rodNames: ["初級竿", "中級竿", "高級竿", "王者竿"], bossPayoutPct: 80, bossThreshold: 50000,
+            rodNames: ["初級竿", "中級竿", "高級竿", "王者竿", "帝王神竿"], nextBoss: nextBossOf(nextTier),
             freeShots: 3, canSummon: true, canResetPool: true, seedPool: 10000 });
           if (!timer) spawn();
           if (new URLSearchParams(window.location.search).get("boss") === "1") setTimeout(summon, 400);
@@ -79,7 +89,7 @@ function createFakeServer(me) {
       if (ev === "fishingLeave") { clearTimeout(timer); timer = null; }
       if (ev === "fishingShoot") shoot(p);
       if (ev === "fishingSummonBoss") summon();
-      if (ev === "fishingResetPool") { pool = 10000; fire("fishingPool", { pool }); }
+      if (ev === "fishingResetPool") { pool = 10000; nextTier = 0; fire("fishingPool", { pool }); }
     },
   };
 }
