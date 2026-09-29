@@ -401,8 +401,17 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
 
           <div className="fg-pond" ref={pondRef}>
             <div className="fg-rays" />
-            {watermarkOk && (
+            {watermarkOk ? (
               <img className="fg-watermark" src={WATERMARK_SRC} alt="" draggable={false} onError={() => setWatermarkOk(false)} />
+            ) : (
+              // 尚無正式 Logo 圖檔時的文字版佔位
+              <div className="fg-radio-logo" aria-hidden="true">
+                <span className="fg-radio-logo-icon">📻</span>
+                <span className="fg-radio-logo-text">
+                  <span className="fg-radio-logo-title">忘年音樂電台團隊</span>
+                  <span className="fg-radio-logo-sub">WANGNIAN RADIO TEAM</span>
+                </span>
+              </div>
             )}
             <div className="fg-bubbles">
               {Array.from({ length: 14 }).map((_, i) => (

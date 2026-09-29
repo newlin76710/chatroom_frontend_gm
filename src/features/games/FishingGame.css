@@ -82,16 +82,54 @@
   cursor: crosshair;
   touch-action: manipulation;
 }
+/* Logo 浮水印：右下角、海底水草上方，不擋點擊 */
 .fg-watermark {
   position: absolute;
-  left: 10px;
-  top: 8px;
+  right: 12px;
+  bottom: 50px;
   max-width: 120px;
   max-height: 44px;
-  opacity: 0.35;
+  opacity: 0.4;
   z-index: 1;
   pointer-events: none;
   user-select: none;
+}
+/* 文字版 Logo 佔位（無 /fishing-logo.png 時顯示），復古電台風 */
+.fg-radio-logo {
+  position: absolute;
+  right: 12px;
+  bottom: 50px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 10px;
+  border: 1px solid rgba(255, 215, 120, 0.55);
+  border-radius: 8px;
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 230, 170, 0.06) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, rgba(60, 38, 18, 0.85), rgba(28, 18, 10, 0.85));
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.35), 0 3px 10px rgba(0, 0, 0, 0.35);
+  color: #f0e6d2;
+  opacity: 0.42;
+  z-index: 1;
+  pointer-events: none;
+  user-select: none;
+}
+.fg-radio-logo-icon { font-size: 22px; line-height: 1; filter: sepia(0.4); }
+.fg-radio-logo-text { display: flex; flex-direction: column; line-height: 1.2; }
+.fg-radio-logo-title {
+  font-family: "Noto Serif TC", "PMingLiU", "Songti TC", serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #ffe6a7;
+  text-shadow: 0 0 6px rgba(255, 190, 90, 0.6);
+}
+.fg-radio-logo-sub {
+  font-family: "Courier New", monospace;
+  font-size: 8.5px;
+  letter-spacing: 2px;
+  color: rgba(255, 230, 180, 0.7);
 }
 .fg-boss-mode .fg-pond {
   background:
@@ -636,7 +674,11 @@
   .fg-rod-bet { font-size: 0.78rem; }
   .fg-side { width: 100%; justify-content: space-between; }
   .fg-rod-name { display: none; }
-  .fg-watermark { max-width: 80px; max-height: 30px; }
+  .fg-watermark { max-width: 80px; max-height: 30px; bottom: 40px; right: 8px; }
+  .fg-radio-logo { bottom: 40px; right: 8px; gap: 6px; padding: 4px 8px; }
+  .fg-radio-logo-icon { font-size: 16px; }
+  .fg-radio-logo-title { font-size: 10px; letter-spacing: 1px; }
+  .fg-radio-logo-sub { font-size: 7px; letter-spacing: 1px; }
   .fg-tier-small .fg-fish-emoji { font-size: 32px; }
   .fg-tier-mid .fg-fish-emoji { font-size: 46px; }
   .fg-tier-large .fg-fish-emoji { font-size: 70px; }
