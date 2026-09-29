@@ -16,17 +16,16 @@ const TITLES = [
   { min: 61, max: 70, title: "櫻桃小天使", tone: "angel" },
 ];
 
-// 等級圖案：每一級距一個專屬圖案（50 級起每段都有自己的圖案）
+// 等級圖案：每一級距一個專屬圖案
 const ICONS = [
-  { min: 99, icon: "👑" },
-  { min: 98, icon: "💎" },
-  { min: 97, icon: "🏆" },
-  { min: 96, icon: "🎖️" },
-  { min: 91, icon: "📜" },
-  { min: 81, icon: "🌟" },
-  { min: 71, icon: "😇" },
-  { min: 61, icon: "👼" },
-  { min: 50, icon: "🍒" },
+  { min: 99, icon: "👑" }, // 總站長（原圖案）
+  { min: 98, icon: "💎" }, // 副總站長
+  { min: 97, icon: "🏆" }, // 小站長
+  { min: 91, icon: "🔱" }, // 91–96 書記官/指揮官（原管理員圖案）
+  { min: 81, icon: "⭐" }, // 櫻桃金天使
+  { min: 71, icon: "🌺" }, // 櫻桃大天使
+  { min: 61, icon: "🍒" }, // 櫻桃小天使
+  { min: 50, icon: "🎖️" }, // 50–60 原高級會員獎牌
   { min: 41, icon: "🌸" },
   { min: 31, icon: "🌷" },
   { min: 21, icon: "🌼" },
