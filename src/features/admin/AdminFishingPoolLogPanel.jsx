@@ -1,5 +1,6 @@
-// AdminFishingLogPanel.jsx — 捕魚中獎紀錄（/admin/fishing-logs）：每打死一條魚/BOSS 一筆，
-// 查帳與研究搶尾刀數據用。只有金幣房間有捕魚遊戲，但紀錄查詢不限制（切換過貨幣的房間也看得到舊紀錄）。
+// AdminFishingPoolLogPanel.jsx — 捕魚 BOSS／血池紀錄（/admin/fishing-pool-logs）：BOSS 登場、
+// 擊殺（尾刀玩家＋大獎）、終極 BOSS 全場金幣雨、管理員重設血池，每筆都附異動前後的血池金額。
+// 每一竿滾入血池的小額累積不在這裡，看「甩竿下注明細」的「滾入血池」欄。
 import { useState } from "react";
 import "./AdminLoginLogPanel.css";
 
@@ -7,23 +8,13 @@ import { BACKEND, RN, roomConfig } from "../../shared/roomConfig";
 import DraggablePanel from "../../shared/DraggablePanel";
 
 const PAGE_SIZE = 50;
-export const ROD_NAMES = ["初級竿", "中級竿", "高級竿", "王者竿", "帝王神竿"];
+const EVENT_LABELS = {
+  boss_spawn: "⚠️ BOSS 登場",
+  boss_kill: "💰 BOSS 擊殺",
+  dragon_rain: "🧧 全場金幣雨",
+  pool_reset: "🔄 血池重設",
+};
 const BOSS_LABELS = ["一級", "二級", "三級", "終極"];
-// 篩選用（對應後端 fishingGame.js 的魚種 key；"boss" = 所有 BOSS）
-export const FISH_OPTIONS = [
-  { value: "boss", label: "所有 BOSS" },
-  { value: "boss1", label: "🦑 一級 BOSS" },
-  { value: "boss2", label: "🐊 二級 BOSS" },
-  { value: "boss3", label: "🦖 三級 BOSS" },
-  { value: "boss4", label: "🐉 終極 BOSS" },
-  { value: "clownfish", label: "🐠 小丑魚" },
-  { value: "puffer", label: "🐡 河豚" },
-  { value: "turtle", label: "🐢 海龜" },
-  { value: "swordfish", label: "🐟 劍魚" },
-  { value: "octopus", label: "🐙 章魚" },
-  { value: "shark", label: "🦈 大白鯊" },
-  { value: "whale", label: "🐋 藍鯨" },
-];
 
 const toUtc = (localDatetime) => {
   if (!localDatetime) return undefined;
@@ -32,34 +23,33 @@ const toUtc = (localDatetime) => {
 };
 const fmt = (n) => Number(n || 0).toLocaleString("en-US");
 
-export default function AdminFishingLogPanel({ token }) {
+export default function AdminFishingPoolLogPanel({ token }) {
   const [open, setOpen] = useState(false);
   const [logs, setLogs] = useState([]);
   const [page, setPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [totalPayout, setTotalPayout] = useState(0);
+  const [summary, setSummary] = useState({ total: 0, totalJackpot: 0, totalRain: 0 });
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState("");
-  const [fish, setFish] = useState("");
-  const [rod, setRod] = useState("");
+  const [event, setEvent] = useState("");
+  const [bossTier, setBossTier] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const totalPages = Math.ceil(summary.total / PAGE_SIZE);
 
   const loadLogs = async (pageNum = 1) => {
     setLoading(true);
     try {
       const body = { page: pageNum, pageSize: PAGE_SIZE, room: RN };
       if (username.trim()) body.username = username.trim();
-      if (fish) body.fish = fish;
-      if (rod !== "") body.rod = Number(rod);
+      if (event) body.event = event;
+      if (bossTier) body.bossTier = Number(bossTier);
       const fromUtc = toUtc(fromDate);
       const toUtcDate = toUtc(toDate);
       if (fromUtc) body.from = fromUtc;
       if (toUtcDate) body.to = toUtcDate;
 
-      const res = await fetch(`${BACKEND}/admin/fishing-logs`, {
+      const res = await fetch(`${BACKEND}/admin/fishing-pool-logs`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
@@ -68,11 +58,10 @@ export default function AdminFishingLogPanel({ token }) {
       if (!res.ok) { alert(data.error || "查詢失敗"); return; }
       setLogs(data.logs || []);
       setPage(data.page || 1);
-      setTotalCount(data.total || 0);
-      setTotalPayout(data.totalPayout || 0);
+      setSummary({ total: data.total || 0, totalJackpot: data.totalJackpot || 0, totalRain: data.totalRain || 0 });
     } catch (err) {
       console.error(err);
-      alert("查詢捕魚中獎紀錄失敗");
+      alert("查詢 BOSS／血池紀錄失敗");
     } finally {
       setLoading(false);
     }
@@ -88,19 +77,28 @@ export default function AdminFishingLogPanel({ token }) {
     loadLogs(newPage);
   };
 
-  const fishLabel = (l) => {
-    if (l.is_boss) return `${l.fish_emoji || ""} ${BOSS_LABELS[(l.boss_tier || 1) - 1] || ""} BOSS・${l.fish_name}`;
-    return `${l.fish_emoji || ""} ${l.fish_name}${l.mult != null ? ` ×${Number(l.mult)}` : ""}`;
+  const userLabel = (l) => {
+    if (!l.username) return l.event === "boss_spawn" ? "（自動）" : "—";
+    if (l.event === "boss_spawn") return `${l.username}（召喚）`;
+    if (l.event === "boss_kill" || l.event === "dragon_rain") return `${l.username}（尾刀）`;
+    return l.username;
+  };
+
+  const amountLabel = (l) => {
+    if (l.event === "boss_spawn") return "—";
+    if (l.event === "pool_reset") return `${l.amount >= 0 ? "+" : ""}${fmt(l.amount)}`;
+    if (l.event === "dragon_rain") return `${fmt(l.amount)}（${fmt(l.recipients)} 人均分）`;
+    return fmt(l.amount);
   };
 
   return (
     <>
       <button className="admin-btn" onClick={handleOpen}>
-        🎣 捕魚中獎紀錄
+        🐉 BOSS／血池紀錄
       </button>
 
       {open && (
-        <DraggablePanel title={<h3 style={{ margin: 0 }}>🎣 捕魚中獎紀錄</h3>} onClose={() => setOpen(false)}>
+        <DraggablePanel title={<h3 style={{ margin: 0 }}>🐉 BOSS／血池紀錄</h3>} onClose={() => setOpen(false)}>
           <div className="admin-filter-bar">
             <input
               placeholder="玩家暱稱"
@@ -109,13 +107,13 @@ export default function AdminFishingLogPanel({ token }) {
               onKeyDown={e => e.key === "Enter" && loadLogs(1)}
               style={{ width: "110px" }}
             />
-            <select value={fish} onChange={e => setFish(e.target.value)}>
-              <option value="">全部魚種</option>
-              {FISH_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            <select value={event} onChange={e => setEvent(e.target.value)}>
+              <option value="">全部事件</option>
+              {Object.entries(EVENT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
-            <select value={rod} onChange={e => setRod(e.target.value)}>
-              <option value="">全部釣竿</option>
-              {ROD_NAMES.map((n, i) => <option key={i} value={i}>{n}</option>)}
+            <select value={bossTier} onChange={e => setBossTier(e.target.value)}>
+              <option value="">全部 BOSS</option>
+              {BOSS_LABELS.map((n, i) => <option key={i} value={i + 1}>{n} BOSS</option>)}
             </select>
             <label>
               起：
@@ -128,37 +126,40 @@ export default function AdminFishingLogPanel({ token }) {
             <button className="admin-btn" onClick={() => loadLogs(1)} disabled={loading}>
               {loading ? "載入中…" : "查詢"}
             </button>
-            <span style={{ fontSize: 12, color: "#666", marginLeft: 8 }}>
-              共 {fmt(totalCount)} 筆，合計派彩 {fmt(totalPayout)} {roomConfig.currency_name}
-            </span>
+          </div>
+          <div style={{ fontSize: 12, color: "#666", margin: "4px 0 8px" }}>
+            共 {fmt(summary.total)} 筆・尾刀大獎合計 {fmt(summary.totalJackpot)}・金幣雨合計 {fmt(summary.totalRain)} {roomConfig.currency_name}
           </div>
 
           <div className="admin-table-wrapper">
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>獲獎時間（台灣）</th>
-                  <th>玩家暱稱</th>
-                  <th>擊殺魚種</th>
-                  <th>獲得{roomConfig.currency_name}</th>
-                  <th>使用釣竿</th>
+                  <th>時間（台灣）</th>
+                  <th>事件</th>
+                  <th>BOSS</th>
+                  <th>玩家</th>
+                  <th>金額</th>
+                  <th>血池（前 → 後）</th>
+                  <th>說明</th>
                 </tr>
               </thead>
               <tbody>
                 {logs.length > 0 ? logs.map(l => (
-                  <tr key={l.id} style={l.is_boss ? { background: "#fff6d6", fontWeight: 700 } : undefined}>
+                  <tr key={l.id} style={l.event === "boss_kill" || l.event === "dragon_rain" ? { background: "#fff6d6", fontWeight: 700 } : undefined}>
                     <td>{new Date(l.created_at).toLocaleString("zh-TW", { hour12: false })}</td>
-                    <td>{l.username}</td>
-                    <td>{fishLabel(l)}</td>
-                    <td style={{ textAlign: "right" }}>{fmt(l.payout)}</td>
-                    <td>
-                      {fmt(l.rod_bet)}（{ROD_NAMES[l.rod_idx] || `第 ${l.rod_idx + 1} 支`}）
-                      {l.used_bait && <span style={{ color: "#d9480f" }}>・🍤 免費魚餌</span>}
+                    <td>{EVENT_LABELS[l.event] || l.event}</td>
+                    <td>{l.boss_tier ? `${BOSS_LABELS[l.boss_tier - 1] || ""}・${l.boss_name || ""}` : "—"}</td>
+                    <td>{userLabel(l)}</td>
+                    <td style={{ textAlign: "right" }}>{amountLabel(l)}</td>
+                    <td style={{ textAlign: "right" }}>
+                      {l.pool_before != null ? fmt(l.pool_before) : "—"} → {l.pool_after != null ? fmt(l.pool_after) : "—"}
                     </td>
+                    <td style={{ fontSize: 12 }}>{l.detail || ""}</td>
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={5} style={{ textAlign: "center" }}>無資料</td>
+                    <td colSpan={7} style={{ textAlign: "center" }}>無資料</td>
                   </tr>
                 )}
               </tbody>

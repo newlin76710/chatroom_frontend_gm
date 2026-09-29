@@ -7,6 +7,9 @@ import AdminOnlineIPPanel from "./AdminOnlineIPPanel";
 import AdminNicknamePanel from "./AdminNicknamePanel";
 import AdminAdjustmentLogPanel from "./AdminAdjustmentLogPanel";
 import AdminFishingLogPanel from "./AdminFishingLogPanel";
+import AdminGiftCommissionLogPanel from "./AdminGiftCommissionLogPanel";
+import AdminFishingShotLogPanel from "./AdminFishingShotLogPanel";
+import AdminFishingPoolLogPanel from "./AdminFishingPoolLogPanel";
 import AdminRoomSettingsPanel from "./AdminRoomSettingsPanel";
 import "./AdminToolPanel.css";
 
@@ -154,7 +157,14 @@ export default function AdminToolPanel({ myName, myLevel, token, userList, initi
             {tab === "ip" && <AdminIPPanel token={token} myLevel={myLevel} />}
             {tab === "onlineip" && <AdminOnlineIPPanel token={token} myLevel={myLevel} />}
             {tab === "adjustment" && <AdminAdjustmentLogPanel token={token} />}
-            {tab === "fishing" && <AdminFishingLogPanel token={token} />}
+            {tab === "fishing" && (
+              <>
+                <AdminFishingShotLogPanel token={token} />
+                <AdminFishingLogPanel token={token} />
+                <AdminFishingPoolLogPanel token={token} />
+                <AdminGiftCommissionLogPanel token={token} />
+              </>
+            )}
             {tab === "nickname" && <AdminNicknamePanel myLevel={myLevel} token={token} myName={myName} />}
           </div>
         </div>

@@ -143,6 +143,9 @@ const DEFAULT = {
   ],
   fishing_gift_bonus_enabled: false,
   fishing_gift_bonus: { diamond: 0, plane: 0, car: 0, cruise: 0, rose: 0, chocolate: 0, cake: 0 },
+  fishing_dragon_rain_enabled: false,
+  fishing_dragon_rain_mode: "pct",
+  fishing_dragon_rain_value: 10,
   surprise_reward:      10,
   game1_enabled:        true,
   game1_hour:           20,
@@ -1536,6 +1539,32 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                 血量以初級竿計算約要打幾竿；打 BOSS 的傷害跟竿注成正比（帝王神竿 10000 一竿 = 初級竿 100 的 100 竿），避免大家用最便宜的竿搶尾刀。
                 擊殺任一級 BOSS 都會觸發大廳跑馬燈與聊天室推播。
               </p>
+              <Row label="🐉 終極 BOSS 金幣雨">
+                <label className="toggle-label">
+                  <input type="checkbox" checked={settings.fishing_dragon_rain_enabled === true}
+                    onChange={e => setBool("fishing_dragon_rain_enabled", e.target.checked)} />
+                  {" "}開啟
+                </label>
+                <span className="field-note">擊殺終極 BOSS 時，尾刀大獎發完後，再從剩餘血池撥出下列金額，化為全場紅包雨均分給當下聊天室所有在線玩家（不含 AI、虛擬用戶、隱身者；尾刀玩家也分得到）</span>
+              </Row>
+              {settings.fishing_dragon_rain_enabled === true && (
+                <Row label="撥發金額">
+                  <select value={settings.fishing_dragon_rain_mode || "pct"}
+                    onChange={e => setSettings(p => ({ ...p, fishing_dragon_rain_mode: e.target.value }))}>
+                    <option value="pct">剩餘血池的 %</option>
+                    <option value="amount">固定金額</option>
+                  </select>
+                  {" "}
+                  <input type="number" min={0} max={settings.fishing_dragon_rain_mode === "amount" ? undefined : 100}
+                    style={{ width: 100 }} value={settings.fishing_dragon_rain_value}
+                    onChange={e => setInt("fishing_dragon_rain_value", e.target.value)} />
+                  <span className="field-note">
+                    {settings.fishing_dragon_rain_mode === "amount"
+                      ? `個${currencyName}（剩餘血池不夠時，最多撥完剩餘血池）`
+                      : "%（例如大獎比例 80%、這裡填 50：血池 100000 → 尾刀拿 80000，剩下 20000 撥一半 10000 當金幣雨）"}
+                  </span>
+                </Row>
+              )}
               <div className="field-note" style={{ margin: "8px 0 4px", fontWeight: 700 }}>魚種倍率／出現權重</div>
               <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
                 <thead>

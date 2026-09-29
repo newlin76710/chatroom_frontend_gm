@@ -840,7 +840,8 @@ export default function ChatApp() {
 
         const message = document.createElement("div");
         message.className = "firework-message";
-        message.textContent = `🧧 ${data?.sender || ""} 發放紅包 ${data?.amount || ""} 個${roomConfig.currency_name}！`;
+        // title：系統觸發的金幣雨（例如捕魚擊殺終極 BOSS）由後端直接給標題
+        message.textContent = data?.title || `🧧 ${data?.sender || ""} 發放紅包 ${data?.amount || ""} 個${roomConfig.currency_name}！`;
 
         // 分配方式直接寫在畫面上：均分顯示「N 人平均分，每人約 M 個」，隨機顯示「N 人隨機搶」
         const recipients = Array.isArray(data?.recipients) ? data.recipients : [];
