@@ -74,7 +74,7 @@ function createFakeServer() {
   return { socket, start, stop: () => timers.splice(0).forEach(clearTimeout) };
 }
 
-const LEVEL_SAMPLES = [1, 11, 21, 31, 41, 50, 61, 71, 81, 91, 96, 97, 98, 99];
+const LEVEL_SAMPLES = [1, 11, 21, 31, 41, 50, 60, 61, 71, 81, 91, 96, 97, 98, 99];
 
 export default function ScatterCherryDemo() {
   const serverRef = useRef(null);

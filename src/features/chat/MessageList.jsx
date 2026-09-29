@@ -150,7 +150,7 @@ const MessageRow = memo(function MessageRow({
       }
     }
     const cherryTitle = enterLevel ? getCherryTitle(enterLevel) : null;
-    if (cherryTitle) {
+    if (cherryTitle && !cherryTitle.noCheer) {
       return (
         <div className="message-row cherry-enter-message">
           <div className={`cherry-enter-banner cherry-enter-${cherryTitle.tone}`}>

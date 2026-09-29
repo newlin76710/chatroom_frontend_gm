@@ -14,6 +14,7 @@ const TITLES = [
   { min: 81, max: 90, title: "櫻桃金天使", tone: "gold" },
   { min: 71, max: 80, title: "櫻桃大天使", tone: "angel" },
   { min: 61, max: 70, title: "櫻桃小天使", tone: "angel" },
+  { min: 50, max: 60, title: "高級會員",   tone: "member", noCheer: true }, // 只顯示稱號，進場不歡呼
 ];
 
 // 等級圖案：每一級距一個專屬圖案
