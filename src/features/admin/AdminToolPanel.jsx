@@ -10,6 +10,7 @@ import AdminFishingLogPanel from "./AdminFishingLogPanel";
 import AdminGiftCommissionLogPanel from "./AdminGiftCommissionLogPanel";
 import AdminFishingShotLogPanel from "./AdminFishingShotLogPanel";
 import AdminFishingPoolLogPanel from "./AdminFishingPoolLogPanel";
+import AdminBaitBlacklistPanel from "./AdminBaitBlacklistPanel";
 import AdminRoomSettingsPanel from "./AdminRoomSettingsPanel";
 import "./AdminToolPanel.css";
 
@@ -163,6 +164,7 @@ export default function AdminToolPanel({ myName, myLevel, token, userList, initi
                 <AdminFishingLogPanel token={token} />
                 <AdminFishingPoolLogPanel token={token} />
                 <AdminGiftCommissionLogPanel token={token} />
+                <AdminBaitBlacklistPanel token={token} />
               </>
             )}
             {tab === "nickname" && <AdminNicknamePanel myLevel={myLevel} token={token} myName={myName} />}
