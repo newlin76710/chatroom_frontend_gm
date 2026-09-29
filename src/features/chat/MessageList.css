@@ -150,3 +150,45 @@
     opacity:1;
   }
 }
+/* ── 🍒 櫻桃房進場歡呼（61 級以上有稱號的人進場時） ── */
+.cherry-enter-message { display: flex; justify-content: center; margin: 4px 0 10px; }
+.cherry-enter-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+  color: #fff;
+  animation: cherry-enter-pop 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) both, cherry-enter-glow 1.6s ease-in-out 0.6s 3 alternate;
+}
+.cherry-enter-angel { background: linear-gradient(90deg, #ff6f9e, #ff9fc0, #ff6f9e); box-shadow: 0 0 10px rgba(255, 120, 170, 0.7); }
+.cherry-enter-gold  { background: linear-gradient(90deg, #d4145a, #fbb03b, #d4145a); box-shadow: 0 0 12px rgba(255, 190, 60, 0.8); }
+.cherry-enter-staff { background: linear-gradient(90deg, #2b5876, #4e4376, #2b5876); box-shadow: 0 0 12px rgba(140, 120, 255, 0.8); }
+.cherry-enter-boss  { background: linear-gradient(90deg, #8e0e00, #e0a800, #8e0e00); box-shadow: 0 0 16px rgba(255, 210, 0, 0.95); border: 1px solid #ffe27a; }
+.cherry-enter-text { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); }
+.cherry-enter-title {
+  padding: 1px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff3b0;
+}
+.cherry-enter-name { cursor: pointer; font-size: 1.05em; text-decoration: underline dotted; }
+.cherry-enter-burst { font-size: 1.2em; animation: cherry-enter-shake 0.8s ease-in-out 4; }
+@keyframes cherry-enter-pop {
+  from { transform: scale(0.4); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+@keyframes cherry-enter-glow {
+  from { filter: brightness(1); }
+  to   { filter: brightness(1.25); }
+}
+@keyframes cherry-enter-shake {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-18deg) scale(1.15); }
+  75% { transform: rotate(18deg) scale(1.15); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cherry-enter-banner, .cherry-enter-burst { animation: none; }
+}

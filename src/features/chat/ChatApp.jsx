@@ -39,6 +39,7 @@ import { Converter } from "opencc-js";
 
 // ─── 環境設定 ────────────────────────────────────────────────────────────────
 import { roomConfig, loadRoomConfig, BACKEND, RN } from "../../shared/roomConfig";
+import { isCherryRoom } from "../../shared/cherryLevel";
 import { BRAND_NAME } from "../../shared/brand";
 import { buildFlowerEffect, buildPlaneEffect, buildDiamondEffect, buildCruiseEffect, buildFishingJackpotEffect } from "./giftEffects";
 import LobbyTicker from "./LobbyTicker";
@@ -89,6 +90,7 @@ const GoldAppleGame = lazy(() => import("../games/GoldAppleGame"));
 const WhackAppleGame = lazy(() => import("../games/WhackAppleGame"));
 const ClawMachineGame = lazy(() => import("../games/ClawMachineGame"));
 const CherryTreeGame = lazy(() => import("../games/CherryTreeGame"));
+const ScatterCherryGame = lazy(() => import("../games/ScatterCherryGame"));
 const DigTreasureGame = lazy(() => import("../games/DigTreasureGame"));
 const MarqueeGame = lazy(() => import("../games/MarqueeGame"));
 const PushCardGame = lazy(() => import("../games/PushCardGame"));
@@ -2056,6 +2058,18 @@ export default function ChatApp() {
       <DeferredPanel>
         {roomConfig.currency_name === "紅櫻桃" && (
           <CherryTreeGame
+            socket={socket}
+            token={token}
+            name={name}
+            setApples={setApples}
+          />
+        )}
+      </DeferredPanel>
+
+      {/* 撒櫻桃遊戲（貨幣名稱含「櫻桃」時才會出現，用滑鼠點撿櫻桃） */}
+      <DeferredPanel>
+        {isCherryRoom() && (
+          <ScatterCherryGame
             socket={socket}
             token={token}
             name={name}

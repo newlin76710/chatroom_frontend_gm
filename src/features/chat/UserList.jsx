@@ -4,6 +4,7 @@ import { getAiAvatar } from "../../shared/aiConfig";
 import "./UserList.css";
 import { roomConfig } from "../../shared/roomConfig";
 import { SNOWBALL_MIN_LEVEL } from "../../shared/constants";
+import { isCherryRoom, getCherryTitle, getCherryLevelIcon } from "../../shared/cherryLevel";
 
 // 單一使用者列抽成獨立、模組層級的 memo 元件，且只吃基本型別 (string/number/boolean) 當 props。
 // 忙碌房間裡 updateUsers 幾乎每次都會給一個全新的使用者陣列（就算內容沒變），
@@ -45,6 +46,8 @@ const UserRow = React.memo(function UserRow({
   const AML = roomConfig.admin_max_level || 99;
   const MINI_AML = roomConfig.mini_admin_level || 98;
   const isAI = type === "AI";
+  const cherryRoom = isCherryRoom();
+  const cherryTitle = cherryRoom ? getCherryTitle(level) : null;
   const color = gender === "男" ? "#A7C7E7" : gender === "女" ? "#F8C8DC" : "#00aa00";
 
   return (
@@ -65,16 +68,21 @@ const UserRow = React.memo(function UserRow({
       <span className="user-name" style={{ color }}>
         {name}
       </span>
-      {!isAI && level >= SNOWBALL_MIN_LEVEL && level < ANL && (
+      {cherryRoom && !isAI && type !== "guest" && (
+        <span className="ul-cherry-badge" title={cherryTitle ? `${cherryTitle.title}（Lv.${level}）` : `Lv.${level}`}>
+          {getCherryLevelIcon(level)}
+        </span>
+      )}
+      {!cherryRoom && !isAI && level >= SNOWBALL_MIN_LEVEL && level < ANL && (
         <span className="ul-premium-badge" title="高級會員">🎖️</span>
       )}
-      {!isAI && level >= AML && (
+      {!cherryRoom && !isAI && level >= AML && (
         <span className="ul-owner-badge" title="大站長">👑</span>
       )}
-      {!isAI && level === MINI_AML && level < AML && (
+      {!cherryRoom && !isAI && level === MINI_AML && level < AML && (
         <span className="ul-mini-owner-badge" title="小站長">🥈</span>
       )}
-      {!isAI && level >= ANL && level < AML && level !== MINI_AML && (
+      {!cherryRoom && !isAI && level >= ANL && level < AML && level !== MINI_AML && (
         <span className="ul-admin-badge" title="管理員">🔱</span>
       )}
       &nbsp;

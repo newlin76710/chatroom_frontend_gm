@@ -4,6 +4,7 @@ import "./MessageList.css";
 import { safeText } from "../../shared/utils";
 import { roomConfig } from "../../shared/roomConfig";
 import { countryZh } from "../../shared/countryZh";
+import { isCherryRoom, getCherryTitle, getCherryLevelIcon } from "../../shared/cherryLevel";
 
 const FONT_SIZE_REM = { small: 0.85, medium: 1, large: 1.15, xlarge: 1.35 };
 
@@ -26,6 +27,10 @@ function boldAmounts(text) {
     .split(/(\d[\d,]*)/g)
     .map((part, idx) => (/^\d/.test(part) ? <span key={idx} style={{ fontWeight: "bold" }}>{part}</span> : part));
 }
+
+// 櫻桃房進場歡呼：第一次在名單裡查到進場者的等級後就記住（以訊息物件為 key），
+// 之後就算那個人離開/升級，這則歷史進場訊息的稱號也不會跟著變。
+const enterLevelCache = new WeakMap();
 
 // 單則訊息的渲染邏輯抽成獨立、模組層級的 memo 元件。
 // 這是效能關鍵：只要 messages 陣列本身沒有變（訊息物件是同一個參照），
@@ -64,6 +69,7 @@ const MessageRow = memo(function MessageRow({
   const isPingpong = isSystem && messageText.includes("🏓");
   // 處理系統訊息：進入 & 升級卡
   let relatedUser = null;
+  let relatedType = null;
   if (isSystem && messageText) {
     const patterns = [
       { regex: /^(.+?) 進入聊天室$/, type: "enter" },
@@ -78,6 +84,7 @@ const MessageRow = memo(function MessageRow({
       const match = messageText.match(p.regex);
       if (match) {
         relatedUser = match[1];
+        relatedType = p.type;
         // 只移除使用者名稱，不刪前面的文字
         const startIndex = match.index;           // 匹配起始位置
         const endIndex = startIndex + match[1].length; // 使用者名稱結束位置
@@ -131,6 +138,37 @@ const MessageRow = memo(function MessageRow({
   const tag = m.mode === "private" || m.isPrivate
     ? (legacyUI ? "(密)" : "(私聊)")
     : "";
+
+  // 櫻桃房：61 級以上（有稱號）的人進場，改成特別歡呼橫幅
+  if (isSystem && relatedType === "enter" && isCherryRoom()) {
+    let enterLevel = enterLevelCache.get(m);
+    if (enterLevel === undefined) {
+      const u = lookupUser(relatedUser);
+      if (u && u.type !== "guest" && u.type !== "AI") {
+        enterLevel = Number(u.level) || 0;
+        enterLevelCache.set(m, enterLevel);
+      }
+    }
+    const cherryTitle = enterLevel ? getCherryTitle(enterLevel) : null;
+    if (cherryTitle) {
+      return (
+        <div className="message-row cherry-enter-message">
+          <div className={`cherry-enter-banner cherry-enter-${cherryTitle.tone}`}>
+            <span className="cherry-enter-burst">🎉</span>
+            <span className="cherry-enter-text">
+              熱烈歡迎
+              <span className="cherry-enter-title">{getCherryLevelIcon(enterLevel)} {cherryTitle.title}</span>
+              <span className="cherry-enter-name" style={{ color: getUserColor(relatedUser) }} onClick={() => onSelectUser(relatedUser)}>
+                {relatedUser}
+              </span>
+              駕到！
+            </span>
+            <span className="cherry-enter-burst">🎉</span>
+          </div>
+        </div>
+      );
+    }
+  }
 
   if (isSurprise) {
     return (

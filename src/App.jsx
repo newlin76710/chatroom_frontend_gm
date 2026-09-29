@@ -10,6 +10,7 @@ const MarqueeDemo = lazy(() => import("./features/games/MarqueeDemo"));
 const DigTreasureDemo = lazy(() => import("./features/games/DigTreasureDemo"));
 const PushCardDemo = lazy(() => import("./features/games/PushCardDemo"));
 const FishingDemo = lazy(() => import("./features/games/FishingDemo"));
+const ScatterCherryDemo = lazy(() => import("./features/games/ScatterCherryDemo"));
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/dig-demo" element={<Suspense fallback={null}><DigTreasureDemo /></Suspense>} />
         <Route path="/pushcard-demo" element={<Suspense fallback={null}><PushCardDemo /></Suspense>} />
         <Route path="/fishing-demo" element={<Suspense fallback={null}><FishingDemo /></Suspense>} />
+        <Route path="/scatter-cherry-demo" element={<Suspense fallback={null}><ScatterCherryDemo /></Suspense>} />
       </Routes>
     </BrowserRouter>
   );

@@ -183,6 +183,12 @@ const DEFAULT = {
   cherry_reward:        1,
   cherry_spd_lo:        3,
   cherry_spd_hi:        6,
+  scatter_enabled:      true,
+  scatter_times:        "22:00",
+  scatter_duration:     30,
+  scatter_count:        50,
+  scatter_reward:       1,
+  scatter_max_per_user: 0,
   dig_enabled:          true,
   dig_hour:             21,
   dig_minute:           0,
@@ -425,6 +431,11 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
   const isApple = currencyName === "金蘋果";
   const isCherry = currencyName === "紅櫻桃";
   const isCoin = currencyName === "金幣";
+  const isCherryCurrency = currencyName.includes("櫻桃");
+
+  // 撒櫻桃多時段：後端存成 "12:00,18:30,22:00" 字串，這裡拆成陣列編輯
+  const scatterTimes = String(settings.scatter_times ?? "").split(",").map(t => t.trim()).filter(Boolean);
+  const setScatterTimes = (list) => setSettings(p => ({ ...p, scatter_times: list.join(",") }));
 
   return (
     <div ref={panelRef} className="apple-modal-floating" style={{ left: pos.current.x, top: pos.current.y }}>
@@ -1038,6 +1049,61 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                     value={settings.cherry_spd_hi}
                     onChange={e => setInt("cherry_spd_hi", e.target.value)} />
                 </div>
+              </Row>
+            </section>
+            )}
+
+            {/* ─── 撒櫻桃（貨幣名稱含「櫻桃」時使用） ─────────────── */}
+            {isCherryCurrency && (
+            <section className="settings-section">
+              <h4>
+                🍒 撒櫻桃（每日多時段排程，滑鼠點撿）
+                <label className="toggle-label" style={{ float: "right", fontWeight: "normal" }}>
+                  <input type="checkbox" checked={!!settings.scatter_enabled}
+                    onChange={e => setBool("scatter_enabled", e.target.checked)} />
+                  {" "}啟用
+                </label>
+              </h4>
+
+              <Row label="開始時段（台灣時間）">
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {scatterTimes.map((t, idx) => (
+                    <div key={idx} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <input type="time" value={t}
+                        onChange={e => {
+                          const next = [...scatterTimes];
+                          next[idx] = e.target.value;
+                          setScatterTimes(next);
+                        }} />
+                      <button type="button" onClick={() => setScatterTimes(scatterTimes.filter((_, i) => i !== idx))}
+                        disabled={scatterTimes.length <= 1} title="刪除這個時段">✕</button>
+                    </div>
+                  ))}
+                  <div>
+                    <button type="button" onClick={() => setScatterTimes([...scatterTimes, "12:00"])}>＋ 新增時段</button>
+                  </div>
+                  <span className="field-note">每個時段都會開一場，開始前 30 秒預告；至少要保留一個時段</span>
+                </div>
+              </Row>
+              <Row label="持續時間">
+                <input type="number" min={10} max={300} value={settings.scatter_duration}
+                  onChange={e => setInt("scatter_duration", e.target.value)} />
+                <span className="field-note">秒（10–300）</span>
+              </Row>
+              <Row label="櫻桃數量">
+                <input type="number" min={1} max={500} value={settings.scatter_count}
+                  onChange={e => setInt("scatter_count", e.target.value)} />
+                <span className="field-note">顆（1–500，每場全房間共搶這麼多顆）</span>
+              </Row>
+              <Row label="每顆獎勵">
+                <input type="number" min={1} value={settings.scatter_reward}
+                  onChange={e => setInt("scatter_reward", e.target.value)} />
+                <span className="field-note">個{currencyName}</span>
+              </Row>
+              <Row label="每人上限">
+                <input type="number" min={0} value={settings.scatter_max_per_user}
+                  onChange={e => setInt("scatter_max_per_user", e.target.value)} />
+                <span className="field-note">顆（0 = 不限，先搶先贏）</span>
               </Row>
             </section>
             )}

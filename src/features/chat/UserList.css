@@ -241,3 +241,13 @@
 .ul-peony-btn:hover {
   background: linear-gradient(135deg, #ff9de2, #c41d7f);
 }
+
+/* 🍒 櫻桃房等級圖案（每十級換一種，50 級起每段有專屬圖案；見 shared/cherryLevel.js） */
+.ul-cherry-badge {
+  margin-left: 2px;
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: default;
+}

@@ -1,0 +1,65 @@
+/* ScatterCherryGame.css — 撒櫻桃（共用 CherryTreeGame.css 的 ctg-overlay / hud / warn / result 樣式） */
+
+.scg-overlay {
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 140, 170, 0.35) 0%, rgba(0, 0, 0, 0.6) 60%);
+  cursor: pointer;
+  touch-action: none;
+}
+
+.scg-cloud {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 46px;
+  opacity: 0.85;
+  pointer-events: none;
+  animation: scg-cloud 2.4s ease-in-out infinite alternate;
+}
+@keyframes scg-cloud {
+  from { transform: translateX(-60%) rotate(-3deg); }
+  to   { transform: translateX(-40%) rotate(3deg); }
+}
+
+/* 櫻桃：一開始停在畫面上緣外（animation-fill-mode: backwards），輪到它才開始往下飄 */
+.scg-cherry {
+  position: absolute;
+  top: -70px;
+  line-height: 1;
+  padding: 8px; /* 放大點擊範圍 */
+  margin-left: -8px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.5));
+  animation-name: scg-fall;
+  animation-timing-function: cubic-bezier(0.35, 0.1, 0.65, 1);
+  animation-fill-mode: backwards;
+  will-change: transform;
+}
+.scg-cherry:hover { filter: drop-shadow(0 0 8px rgba(255, 90, 130, 0.95)); }
+@keyframes scg-fall {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  50%  { transform: translate(var(--scg-drift, 0px), 55vh) rotate(160deg); }
+  100% { transform: translate(0, calc(100vh + 90px)) rotate(320deg); }
+}
+
+.scg-pop {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  font-weight: 900;
+  pointer-events: none;
+  white-space: nowrap;
+  animation: scg-pop 0.9s ease-out forwards;
+  z-index: 2;
+}
+.scg-pop-ok   { color: #ffe066; font-size: 26px; text-shadow: 0 0 8px rgba(255, 80, 120, 0.9); }
+.scg-pop-miss { color: #ffc2c2; font-size: 15px; text-shadow: 0 1px 3px #000; }
+@keyframes scg-pop {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(0.8); }
+  to   { opacity: 0; transform: translate(-50%, -130%) scale(1.2); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scg-cloud { animation: none; }
+}
