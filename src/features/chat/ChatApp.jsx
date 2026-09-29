@@ -39,6 +39,7 @@ import { Converter } from "opencc-js";
 
 // ─── 環境設定 ────────────────────────────────────────────────────────────────
 import { roomConfig, loadRoomConfig, BACKEND, RN } from "../../shared/roomConfig";
+import { checkSession, goLogin, SESSION_EXPIRED_NOTICE } from "../../shared/session";
 import { isCherryRoom } from "../../shared/cherryLevel";
 import { BRAND_NAME } from "../../shared/brand";
 import { buildFlowerEffect, buildPlaneEffect, buildDiamondEffect, buildCruiseEffect, buildFishingJackpotEffect } from "./giftEffects";
@@ -151,8 +152,8 @@ export default function ChatApp() {
   // ── 自訂 Hooks ──
   const {
     name, level, exp, gender, apples, token,
-    expTips, levelUpTips, initializedRef,
-    setApples,
+    expTips, levelUpTips, initializedRef, sessionReady,
+    setApples, setToken,
     initUser, fetchUserData, handleUpdateUsersForSelf,
   } = useUserState(socket);
 
@@ -422,10 +423,19 @@ export default function ChatApp() {
       setOffline(true);
     };
 
-    const onReconnect = () => {
+    const onReconnect = async () => {
       console.log("🟢 socket reconnected");
       setOffline(false);
       if (!joinedRef.current) return;
+      // 重連前先確認 token 還有效：手機在背景時帳號被別處登入，這裡收不到 forceLogout，
+      // 直接拿舊 token 重新 joinRoom 會把新登入的裝置踢掉（兩邊互踢）。失效就跳回登入頁。
+      const r = await checkSession();
+      if (r.status === "invalid" || r.status === "none") {
+        socket.disconnect();
+        goLogin(SESSION_EXPIRED_NOTICE);
+        return;
+      }
+      if (r.token) setToken(r.token);
       socket.emit("joinRoom", {
         room: roomRef.current,
         user: {
@@ -465,7 +475,15 @@ export default function ChatApp() {
         if (remaining <= 0) {
           clearInterval(invalidTokenTimerRef.current);
           invalidTokenTimerRef.current = null;
-          window.location.reload();
+          // 先確認登入狀態：已失效（被搶登/到期）就直接回登入頁，不要重整回聊天室又卡住
+          checkSession().then(({ status }) => {
+            if (status === "invalid" || status === "none") {
+              socket.disconnect();
+              goLogin(SESSION_EXPIRED_NOTICE);
+            } else {
+              window.location.reload();
+            }
+          });
         }
       }, 1000);
     };
@@ -700,10 +718,8 @@ export default function ChatApp() {
   // ─── joinFailed / firework ────────────────────────────────────────────────
   useEffect(() => {
     const handleJoinFail = ({ reason }) => {
-      alert(`⚠️ 加入房間失敗: ${reason}`);
-      sessionStorage.clear();
       socket.disconnect();
-      window.location.href = "/login";
+      goLogin(`⚠️ 加入房間失敗：${reason}`);
     };
 
     const handleFirework = (data) => {
@@ -1051,10 +1067,11 @@ export default function ChatApp() {
 
   // ─── forceLogout / kickFailed ─────────────────────────────────────────────
   useEffect(() => {
-    const handleForceLogout = ({ by }) => {
-      sessionStorage.setItem("forceLogoutBy", by);
-      sessionStorage.setItem("blockedUntil", Date.now() + 5000);
-      window.location.href = "/login";
+    // 被搶登/被踢：一定要清掉 sessionStorage 裡的 token。原本只跳頁不清，之後重新整理、
+    // 按上一頁或錯誤自動重整回 /chat，都會拿失效的舊 token 重新進房，又把對方踢掉，形成無限循環
+    const handleForceLogout = ({ reason, by } = {}) => {
+      socket.disconnect();
+      goLogin(reason || (by ? `你已被 ${by} 踢出聊天室` : SESSION_EXPIRED_NOTICE));
     };
     const handleKickFailed = ({ reason }) => window.alert(reason);
 
@@ -1068,7 +1085,7 @@ export default function ChatApp() {
 
   // ─── 自動 joinRoom ────────────────────────────────────────────────────────
   useEffect(() => {
-    if (joinedRef.current || !name) return;
+    if (joinedRef.current || !name || !sessionReady) return;
     socket.emit("joinRoom", {
       room,
       user: {
@@ -1079,7 +1096,7 @@ export default function ChatApp() {
       },
     });
     joinedRef.current = true;
-  }, [name]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [name, sessionReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── 發話獎勵：上線後先跟後端校正一次本地計數器 ──────────────────────────
   // joinRoom 是 async handler，緊接著送 claimSpeechReward 可能會搶在伺服器把

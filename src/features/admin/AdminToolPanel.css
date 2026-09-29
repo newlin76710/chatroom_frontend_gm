@@ -40,6 +40,43 @@
   width: 220px;
 }
 
+/* 平板/手機：寬度不超出螢幕、高度用可視區域（扣掉網址列/鍵盤），內容區可觸控捲動 */
+@media (max-width: 1024px), (pointer: coarse) {
+  .admin-tool .admin-popup {
+    width: min(650px, calc(100vw - 16px));
+    max-height: min(480px, calc(100dvh - 16px));
+  }
+  .admin-tool .admin-popup.small {
+    width: min(260px, calc(100vw - 16px));
+  }
+  .admin-tool .admin-popup-header {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  .admin-tool .admin-popup-header button {
+    font-size: 18px;
+    padding: 4px 8px;
+    min-width: 36px;
+    min-height: 32px;
+  }
+  /* 分頁按鈕太多時橫向捲動，不要擠成一團 */
+  .admin-tool .admin-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+  }
+  .admin-tool .admin-tabs button {
+    flex: 0 0 auto;
+    padding: 8px 10px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .admin-tool .admin-content {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}
+
 /* 拖曳把手 */
 .admin-tool .admin-popup-header {
   display: flex;

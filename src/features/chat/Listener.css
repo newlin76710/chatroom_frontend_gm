@@ -64,3 +64,30 @@
 .star.active {
   color: gold;
 }
+
+.listen-btn-unmute {
+  background: #f59e0b;
+  color: #000;
+  font-weight: bold;
+  animation: listen-unmute-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes listen-unmute-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+/* 平板/手機：按鈕放大方便點、文字自動縮小避免擠爆 */
+@media (max-width: 768px), (pointer: coarse) {
+  .listen-btn {
+    min-height: 36px;
+    padding: 6px 10px;
+    font-size: 14px;
+    touch-action: manipulation;
+  }
+  .current-singer,
+  .next-singer,
+  .sing-countdown {
+    font-size: 13px;
+  }
+}

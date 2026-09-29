@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 
 import { BACKEND, RN, roomConfig } from "../../shared/roomConfig";
+import { diffSettings } from "./diffSettings";
 
 export default function AdminRoomSettingsPanel({ token }) {
   const [settings, setSettings] = useState(null);
+  // 讀進來時的原始值：存檔只送「有改過的欄位」，不送整包
+  const [original, setOriginal] = useState(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -11,21 +14,25 @@ export default function AdminRoomSettingsPanel({ token }) {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.json())
-      .then(data => setSettings(data))
+      .then(data => { setSettings(data); setOriginal(data); })
       .catch(() => alert("讀取設定失敗"));
   }, [token]);
 
   const save = async () => {
     if (!settings) return;
+    // 原本整包送出：這裡的 settings 也含有遊戲/經濟設定的舊值，會把別的面板（⚙️ 設定）剛存的值蓋回去
+    const changes = diffSettings(original, settings);
+    if (!Object.keys(changes).length) { alert("沒有變更"); return; }
     setSaving(true);
     try {
       const res = await fetch(`${BACKEND}/admin/set-settings`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ ...settings, room: RN }),
+        body: JSON.stringify({ ...changes, room: RN }),
       });
       const data = await res.json();
       if (!res.ok) { alert(data.error || "更新失敗"); return; }
+      setOriginal(settings);
       alert("更新成功！");
     } catch {
       alert("更新失敗");

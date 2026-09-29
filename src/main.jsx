@@ -19,7 +19,9 @@ window.fetch = async (...args) => {
   const res = await _origFetch(...args);
   if (res.status === 401) {
     res.clone().json().then(data => {
-      if (data?.error === "Invalid token") {
+      // 後端 authMiddleware 失效時回的是「連線到期，請重新登入」之類的訊息，不是 "Invalid token"
+      const err = String(data?.error || "");
+      if (err === "Invalid token" || /連線.*到期/.test(err)) {
         window.dispatchEvent(new Event("invalidToken"));
       }
     }).catch(() => {});

@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import useDraggable from "../../shared/hooks/useDraggable";
 import AdminLoginLogPanel from "./AdminLoginLogPanel";
 import MessageLogPanel from "../chat/MessageLogPanel";
 import AdminLevelPanel from "./AdminLevelPanel";
@@ -20,34 +21,8 @@ export default function AdminToolPanel({ myName, myLevel, token, userList, initi
   const [open, setOpen] = useState(initialOpen);
   const [tab, setTab] = useState("login"); // default
 
-  // ─── 可自由拖曳（不受聊天輸入區位置限制） ───────────────────────────────
-  const popupRef = useRef(null);
-  const pos = useRef({ x: 20, y: 80, offsetX: 0, offsetY: 0, dragging: false });
-
-  const onDragMouseDown = (e) => {
-    if (e.target.closest("button")) return;
-    e.preventDefault();
-    pos.current.dragging = true;
-    pos.current.offsetX = e.clientX - pos.current.x;
-    pos.current.offsetY = e.clientY - pos.current.y;
-    document.addEventListener("mousemove", onDragMouseMove);
-    document.addEventListener("mouseup", onDragMouseUp);
-  };
-  const onDragMouseMove = (e) => {
-    if (!pos.current.dragging) return;
-    e.preventDefault();
-    pos.current.x = e.clientX - pos.current.offsetX;
-    pos.current.y = e.clientY - pos.current.offsetY;
-    if (popupRef.current) {
-      popupRef.current.style.left = pos.current.x + "px";
-      popupRef.current.style.top = pos.current.y + "px";
-    }
-  };
-  const onDragMouseUp = () => {
-    pos.current.dragging = false;
-    document.removeEventListener("mousemove", onDragMouseMove);
-    document.removeEventListener("mouseup", onDragMouseUp);
-  };
+  // ─── 可自由拖曳（滑鼠 + 手機/平板觸控，不受聊天輸入區位置限制） ───────────
+  const { panelRef, handleProps, initialStyle } = useDraggable({ x: 20, y: 80 });
 
   // ⭐ 用 useEffect 在 mount 或 myLevel 改變時設定初始 tab
   useEffect(() => {
@@ -68,11 +43,11 @@ export default function AdminToolPanel({ myName, myLevel, token, userList, initi
 
       {open && (
         <div
-          ref={popupRef}
+          ref={panelRef}
           className={`admin-popup ${myLevel < (roomConfig.admin_max_level || 99) ? "small" : ""}`}
-          style={{ left: pos.current.x, top: pos.current.y }}
+          style={initialStyle}
         >
-          <div className="admin-popup-header" onMouseDown={onDragMouseDown}>
+          <div className="admin-popup-header" {...handleProps}>
             🛡 管理面板
             <button onClick={() => setOpen(false)}>✖</button>
           </div>

@@ -1,4 +1,6 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
+import useDraggable from "../../shared/hooks/useDraggable";
+import { diffSettings } from "./diffSettings";
 import "./AdminSettingsModal.css";
 import { RN, roomConfig } from "../../shared/roomConfig";
 import { BRAND_NAME } from "../../shared/brand";
@@ -290,35 +292,11 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
   const [settings, setSettings] = useState(DEFAULT);
   const [loading,  setLoading]  = useState(true);
   const [saving,   setSaving]   = useState(false);
+  // 讀進來時的原始值：存檔只送「有改過的欄位」，不送整包
+  const [original, setOriginal] = useState(null);
 
-  // ─── 可自由拖曳（不再用全螢幕遮罩蓋住聊天室） ───────────────────────────
-  const panelRef = useRef(null);
-  const pos = useRef({ x: 60, y: 40, offsetX: 0, offsetY: 0, dragging: false });
-
-  const onDragMouseDown = (e) => {
-    if (e.target.closest("button")) return;
-    e.preventDefault();
-    pos.current.dragging = true;
-    pos.current.offsetX = e.clientX - pos.current.x;
-    pos.current.offsetY = e.clientY - pos.current.y;
-    document.addEventListener("mousemove", onDragMouseMove);
-    document.addEventListener("mouseup", onDragMouseUp);
-  };
-  const onDragMouseMove = (e) => {
-    if (!pos.current.dragging) return;
-    e.preventDefault();
-    pos.current.x = e.clientX - pos.current.offsetX;
-    pos.current.y = e.clientY - pos.current.offsetY;
-    if (panelRef.current) {
-      panelRef.current.style.left = pos.current.x + "px";
-      panelRef.current.style.top = pos.current.y + "px";
-    }
-  };
-  const onDragMouseUp = () => {
-    pos.current.dragging = false;
-    document.removeEventListener("mousemove", onDragMouseMove);
-    document.removeEventListener("mouseup", onDragMouseUp);
-  };
+  // ─── 可自由拖曳（滑鼠 + 手機/平板觸控，不再用全螢幕遮罩蓋住聊天室） ─────────
+  const { panelRef, handleProps, initialStyle } = useDraggable({ x: 60, y: 40 });
 
   /* ─── 讀取設定 ───────────────────────────────────────────────── */
   const fetchSettings = async () => {
@@ -328,6 +306,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
       });
       const data = await res.json();
       setSettings({ ...DEFAULT, ...data });
+      setOriginal({ ...DEFAULT, ...data });
     } catch {
       alert("讀取設定失敗");
     } finally {
@@ -341,6 +320,10 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
 
   /* ─── 儲存設定 ───────────────────────────────────────────────── */
   const handleSave = async () => {
+    // 原本整包送出：會連同房間設定（例如「不開放新會員」）的舊值一起送，
+    // 把在「🛡 管理 → 房間設定」剛改好的值蓋回去，看起來就像改了沒用
+    const changes = diffSettings(original, settings);
+    if (!Object.keys(changes).length) { alert("沒有變更"); return; }
     setSaving(true);
     try {
       const res  = await fetch(`${BACKEND}/admin/set-settings`, {
@@ -349,7 +332,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ ...settings, room: RN }),
+        body: JSON.stringify({ ...changes, room: RN }),
       });
       const data = await res.json();
       if (!res.ok) { alert(data.error || "更新失敗"); return; }
@@ -441,12 +424,12 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
   const setScatterTimes = (list) => setSettings(p => ({ ...p, scatter_times: list.join(",") }));
 
   return (
-    <div ref={panelRef} className="apple-modal-floating" style={{ left: pos.current.x, top: pos.current.y }}>
-      <div className="apple-modal-header" onMouseDown={onDragMouseDown}>
+    <div ref={panelRef} className="apple-modal-floating" style={initialStyle}>
+      <div className="apple-modal-header" {...handleProps}>
         <h3>⚙️ {currencyName}設定</h3>
         <button onClick={onClose}>✖</button>
       </div>
-      <div className="apple-modal-content" style={{ width: 460, maxHeight: "80vh", overflowY: "auto" }}>
+      <div className="apple-modal-content" style={{ width: "min(500px, calc(100vw - 16px))", boxSizing: "border-box", maxHeight: "80dvh", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         {loading ? <div>讀取中…</div> : (
           <>
             {/* ─── 功能顯示 ──────────────────────────────────────── */}

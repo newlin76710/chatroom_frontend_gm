@@ -4,6 +4,7 @@ import { aiAvatars } from "../../shared/aiConfig";
 import socket from "../../shared/socket";
 
 import { roomConfig, loadRoomConfig, BACKEND, RN } from "../../shared/roomConfig";
+import { peekLoginNotice, takeLoginNotice } from "../../shared/session";
 loadRoomConfig();
 const inputStyle = {
   width: "100%",
@@ -47,6 +48,9 @@ export default function Login() {
   const [editLoggedIn, setEditLoggedIn] = useState(false);
   const [phoneConfirm, setPhoneConfirm] = useState(false);
   const [emailConfirm, setEmailConfirm] = useState(false);
+  // 被搶登/被踢/連線到期跳回來時，說明原因（只顯示一次）
+  const [loginNotice, setLoginNotice] = useState(() => peekLoginNotice());
+  useEffect(() => { takeLoginNotice(); }, []);
 
   useEffect(() => {
     loadRoomConfig().then(cfg => setRoomName(cfg.room_name || RN));
@@ -228,7 +232,20 @@ export default function Login() {
 
   // ----- JSX -----
   return (
-    <div style={{ maxWidth: 420, margin: "60px auto", padding: 20 }}>
+    <div style={{ maxWidth: 420, margin: "min(60px, 6vh) auto", padding: "20px 16px", boxSizing: "border-box" }}>
+      {loginNotice && (
+        <div
+          role="alert"
+          onClick={() => setLoginNotice("")}
+          style={{
+            marginBottom: 12, padding: "10px 12px", borderRadius: 8,
+            background: "#fff3cd", color: "#664d03", border: "1px solid #ffe69c",
+            fontSize: 14, textAlign: "center", cursor: "pointer",
+          }}
+        >
+          {loginNotice}
+        </div>
+      )}
       <h2 style={{ textAlign: "center", marginBottom: 10 }}>{roomName}聊天室</h2>
       {roomUserCount !== null && (
         <div style={{ textAlign: "center", color: "#66ccff", fontSize: 14, marginBottom: 6 }}>

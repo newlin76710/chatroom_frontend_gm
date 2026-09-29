@@ -3,24 +3,67 @@
 // 舊檔名 chunk 已經不存在（Failed to fetch dynamically imported module），畫面就變成錯誤訊息/黑屏。
 // 這種情況重新整理一次就好，所以直接幫玩家重整，不讓他們卡在錯誤畫面。
 //
-// 防無限重整：短時間內（RELOAD_GUARD_MS）已經自動重整過一次還是出錯，代表不是版本過期而是真的壞了，
-// 這時回傳 false，讓錯誤邊界照舊顯示錯誤訊息，不再重整。
+// 防無限重整：RELOAD_WINDOW_MS 內已經自動重整過 MAX_AUTO_RELOADS 次還是出錯，代表不是版本過期而是真的壞了
+// （例如帳號已被搶登、狀態卡住），這時不再重整：在聊天室就直接清掉登入資料跳回登入頁，其他頁面則顯示錯誤訊息。
+//
+// 重整前會先確認登入狀態（見 session.js）：
+//   - 沒有 token（尚未登入）→ 直接跳登入頁，不用重整
+//   - token 已失效（被搶登/連線到期）→ 清掉登入資料跳登入頁；原本會重整回聊天室、拿舊 token 進房又出錯，一直循環
+//   - 有效或無法判斷（網路不穩）→ 照常重整
+import { checkSession, getSessionToken, goLogin, SESSION_EXPIRED_NOTICE } from "./session";
 
-const RELOAD_AT_KEY = "autoReloadAt";
+const RELOAD_LOG_KEY = "autoReloadLog";
 const NOTICE_KEY = "autoReloadNotice";
-const RELOAD_GUARD_MS = 20_000;
+const RELOAD_WINDOW_MS = 120_000;
+const MAX_AUTO_RELOADS = 2;
 const NOTICE_TEXT = "連線到期，已自動重整頁面";
 
+let reloadingNow = false;
+
+function isChatPage() {
+  return window.location.pathname.startsWith("/chat");
+}
+
 export function autoReloadOnError() {
+  if (reloadingNow) return true; // 多個錯誤邊界同時接到錯誤，只處理一次
+  let log;
   try {
-    const last = Number(sessionStorage.getItem(RELOAD_AT_KEY)) || 0;
-    if (Date.now() - last < RELOAD_GUARD_MS) return false;
-    sessionStorage.setItem(RELOAD_AT_KEY, String(Date.now()));
-    sessionStorage.setItem(NOTICE_KEY, "1");
+    const now = Date.now();
+    log = JSON.parse(sessionStorage.getItem(RELOAD_LOG_KEY) || "[]").filter(
+      (t) => Number.isFinite(t) && now - t < RELOAD_WINDOW_MS
+    );
+    if (log.length >= MAX_AUTO_RELOADS) {
+      if (isChatPage()) {
+        reloadingNow = true;
+        goLogin("頁面連續發生錯誤，已登出，請重新登入");
+        return true;
+      }
+      return false;
+    }
+    log.push(now);
+    sessionStorage.setItem(RELOAD_LOG_KEY, JSON.stringify(log));
   } catch {
     return false; // sessionStorage 不能用就沒辦法防無限重整，乾脆不自動重整
   }
-  window.location.reload();
+  reloadingNow = true;
+
+  if (!isChatPage()) {
+    try { sessionStorage.setItem(NOTICE_KEY, "1"); } catch { /* ignore */ }
+    window.location.reload();
+    return true;
+  }
+  if (!getSessionToken()) {
+    goLogin(); // 尚未登入
+    return true;
+  }
+  checkSession().then(({ status }) => {
+    if (status === "invalid" || status === "none") {
+      goLogin(SESSION_EXPIRED_NOTICE);
+      return;
+    }
+    try { sessionStorage.setItem(NOTICE_KEY, "1"); } catch { /* ignore */ }
+    window.location.reload();
+  });
   return true;
 }
 

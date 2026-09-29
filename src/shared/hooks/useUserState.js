@@ -10,6 +10,7 @@ import { EXP_TIP_DURATION, LEVEL_UP_TIP_DURATION } from "../constants";
 import { roomConfig, BACKEND, RN } from "../roomConfig";
 
 import { safeText } from "../utils";
+import { checkSession, goLogin, SESSION_EXPIRED_NOTICE } from "../session";
 
 export function useUserState(socket) {
   const [name, setName] = useState("");
@@ -20,6 +21,8 @@ export function useUserState(socket) {
     () => parseInt(sessionStorage.getItem("apples")) || 0
   );
   const [token, setToken] = useState("");
+  // /auth/me 確認 token 仍有效後才為 true；在這之前不能 joinRoom（避免失效 token 進房把新登入的裝置踢掉）
+  const [sessionReady, setSessionReady] = useState(false);
   const [expTips, setExpTips] = useState([]);
   const [levelUpTips, setLevelUpTips] = useState([]);
 
@@ -59,9 +62,8 @@ export function useUserState(socket) {
       sessionStorage.getItem("guestToken") ||
       null;
     if (!storedToken) {
-      sessionStorage.clear();
       socket.disconnect();
-      window.location.href = "/login";
+      goLogin(); // 尚未登入
       return null;
     }
     setToken(storedToken);
@@ -75,34 +77,40 @@ export function useUserState(socket) {
 
   // --- fetchUserData: 從後端取得最新資料 ---
   const fetchUserData = useCallback(async (t) => {
-    try {
-      const res = await fetch(`${BACKEND}/auth/me?room=${RN}`, {
-        headers: { Authorization: `Bearer ${t}` },
-      });
-      if (!res.ok) throw new Error("無法取得使用者資料");
-      const data = await res.json();
-      setName(safeText(data.username));
-      setLevel(data.level || 1);
-      setExp(data.exp || 0);
-      setApples(data.gold_apples || 0);
-      setGender(data.gender || "女");
-      sessionStorage.setItem("name", data.username);
-      sessionStorage.setItem("level", data.level);
-      sessionStorage.setItem("exp", data.exp);
-      sessionStorage.setItem("apples", data.gold_apples || 0);
-      sessionStorage.setItem("gender", data.gender);
-      if (data.account_type === "account") {
-        sessionStorage.setItem("token", t);
-      } else {
-        sessionStorage.setItem("guestToken", t);
+    // 網路不穩（手機切換 Wi-Fi/行動網路）時先重試幾次，不要一失敗就踢回登入頁；
+    // 後端明確回 401（被搶登/連線到期）才清掉登入資料跳回登入頁
+    const MAX_TRIES = 4;
+    for (let i = 0; i < MAX_TRIES; i++) {
+      const r = await checkSession();
+      if (r.status === "none") { socket.disconnect(); goLogin(); return; }
+      if (r.status === "invalid") { socket.disconnect(); goLogin(SESSION_EXPIRED_NOTICE); return; }
+      if (r.status === "valid") {
+        const data = r.data || {};
+        const tk = r.token || t;
+        setName(safeText(data.username));
+        setLevel(data.level || 1);
+        setExp(data.exp || 0);
+        setApples(data.gold_apples || 0);
+        setGender(data.gender || "女");
+        sessionStorage.setItem("name", data.username);
+        sessionStorage.setItem("level", data.level);
+        sessionStorage.setItem("exp", data.exp);
+        sessionStorage.setItem("apples", data.gold_apples || 0);
+        sessionStorage.setItem("gender", data.gender);
+        if (data.account_type === "account") {
+          sessionStorage.setItem("token", tk);
+        } else {
+          sessionStorage.setItem("guestToken", tk);
+        }
+        setToken(tk);
+        setSessionReady(true);
+        return;
       }
-      setToken(t);
-    } catch (err) {
-      console.error(err);
-      sessionStorage.clear();
-      socket.disconnect();
-      window.location.href = "/login";
+      await new Promise((ok) => setTimeout(ok, 1500 * (i + 1)));
     }
+    console.error("無法取得使用者資料");
+    socket.disconnect();
+    goLogin("無法連線到伺服器，請確認網路後重新登入");
   }, [socket]);
 
   // --- handleUpdateUsersForSelf: 從 updateUsers 中找到自己並同步狀態 ---
@@ -167,8 +175,8 @@ export function useUserState(socket) {
   }, []); // ✅ 空依賴陣列，handler 只建立一次
 
   return {
-    name, level, exp, gender, apples, token, expTips, levelUpTips, initializedRef,
-    setApples,
+    name, level, exp, gender, apples, token, expTips, levelUpTips, initializedRef, sessionReady,
+    setApples, setToken,
     initUser,
     fetchUserData,
     handleUpdateUsersForSelf,

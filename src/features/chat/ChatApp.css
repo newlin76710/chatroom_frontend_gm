@@ -1221,3 +1221,107 @@ body {
   .trade-apple { flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 6px; }
   .trade-apple-label { width: 100%; text-align: center; }
 }
+
+/* =====================================================================
+   平板 / 手機體驗優化
+   ===================================================================== */
+
+/* 手機瀏覽器的 100vh 會把網址列/工具列算進去，畫面底部（輸入框）常被蓋住；支援的瀏覽器改用動態可視高度 */
+@supports (height: 100dvh) {
+  body { min-height: 100dvh; }
+}
+@media (min-width: 769px) {
+  @supports (height: 100dvh) {
+    .chat-layout { height: 100dvh; }
+  }
+}
+
+/* 觸控裝置共通 */
+@media (pointer: coarse) {
+  /* 去掉點擊時的灰色閃框、雙擊放大延遲 */
+  button,
+  a,
+  label,
+  select,
+  input,
+  textarea,
+  [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* iOS Safari：輸入框字級小於 16px 時一點下去整個頁面會自動放大、還縮不回來 */
+  input[type="text"],
+  input[type="search"],
+  input[type="password"],
+  input[type="number"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="url"],
+  input:not([type]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* 捲動區：慣性捲動、捲到底不會帶動整個頁面彈跳 */
+  .message-list,
+  .user-list,
+  .chat-right {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* 工具列按鈕加大點擊範圍 */
+  .chat-toolbar button {
+    min-height: 32px;
+  }
+}
+
+/* 平板橫向 / 大平板直向（769px – 1024px）：原本完全吃桌機版排版，右欄太寬、邊距太大 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .chat-layout { padding: 10px; gap: 8px; }
+  .chat-right { flex: 0 0 240px; }
+}
+
+/* 平板直向（481px – 768px）：高度跟著可視區域走 */
+@media (min-width: 481px) and (max-width: 768px) {
+  @supports (height: 100dvh) {
+    .chat-layout { min-height: 100dvh; }
+  }
+}
+
+/* 手機（≤480px） */
+@media (max-width: 480px) {
+  @supports (height: 100dvh) {
+    .chat-layout { min-height: 100dvh; }
+    .message-list { max-height: 45dvh; }
+  }
+  .chat-title { font-size: 1rem; }
+  /* 標題列內容太多時換行，不要撐出橫向捲軸 */
+  .chat-title-bar { flex-wrap: wrap; gap: 4px; }
+}
+
+/* 全螢幕特效：手機上用動態可視高度，避免被網址列裁掉 */
+@supports (height: 100dvh) {
+  .flower-effect-container .firework-gif {
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+}
+
+/* 防止任何元素撐出橫向捲軸讓整頁左右晃 */
+@media (max-width: 1024px) {
+  html, body { overflow-x: hidden; }
+}
+
+/* 瀏海/圓角/底部 Home 條安全區域（放最後，蓋過上面各尺寸的 padding） */
+@supports (padding: max(0px)) {
+  @media (max-width: 1024px) {
+    .chat-layout {
+      padding-left: max(8px, env(safe-area-inset-left));
+      padding-right: max(8px, env(safe-area-inset-right));
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+  }
+}
