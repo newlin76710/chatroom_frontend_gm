@@ -98,7 +98,7 @@ export function LevelTitleEditor({ settings, setSettings }) {
           setLT({ ranges: [...ranges, { min: lo, max: lo + 9, title: "", icon: "", tone: "gold", cheer: false, welcome: "", welcome_style: "plain" }] });
         }}>＋ 新增區間</button>
         <button type="button" style={smallBtn} onClick={() => {
-          if (ranges.length && !window.confirm("要還原成預設稱謂/圖案/歡迎詞（櫻桃房原始設定），覆蓋目前的等級區間嗎？")) return;
+          if (ranges.length && !window.confirm("要還原成預設稱謂/圖案/歡迎詞，覆蓋目前的等級區間嗎？")) return;
           setLT({ ranges: DEFAULT_CHERRY_LEVEL_TITLES.ranges.map((r) => ({ ...r })), cheer_enabled: true });
         }}>還原預設（櫻桃房原始設定）</button>
       </div>
