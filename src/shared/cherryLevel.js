@@ -13,7 +13,7 @@ const findRange = (level) => {
 
 export function getCherryTitle(level) {
   const r = findRange(level);
-  return r && r.title ? { min: r.min, max: r.max, title: r.title, tone: r.tone, noCheer: !r.cheer } : null;
+  return r && r.title ? { min: r.min, max: r.max, title: r.title, tone: r.welcome_style, noCheer: !r.welcome } : null;
 }
 
 export function getCherryLevelIcon(level) {

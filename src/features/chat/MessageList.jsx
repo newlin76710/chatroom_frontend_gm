@@ -4,7 +4,7 @@ import "./MessageList.css";
 import { safeText } from "../../shared/utils";
 import { roomConfig } from "../../shared/roomConfig";
 import { countryZh } from "../../shared/countryZh";
-import { hasLevelTitles, resolveLevelTitle, resolveLevelInfo } from "../../shared/levelTitles";
+import { hasLevelTitles, resolveLevelTitle } from "../../shared/levelTitles";
 
 const FONT_SIZE_REM = { small: 0.85, medium: 1, large: 1.15, xlarge: 1.35 };
 
@@ -28,9 +28,6 @@ function boldAmounts(text) {
     .map((part, idx) => (/^\d/.test(part) ? <span key={idx} style={{ fontWeight: "bold" }}>{part}</span> : part));
 }
 
-// 櫻桃房進場歡呼：第一次在名單裡查到進場者的等級後就記住（以訊息物件為 key），
-// 之後就算那個人離開/升級，這則歷史進場訊息的稱號也不會跟著變。
-const enterLevelCache = new WeakMap();
 
 // 單則訊息的渲染邏輯抽成獨立、模組層級的 memo 元件。
 // 這是效能關鍵：只要 messages 陣列本身沒有變（訊息物件是同一個參照），
@@ -142,43 +139,12 @@ const MessageRow = memo(function MessageRow({
     ? (legacyUI ? "(密)" : "(私聊)")
     : "";
 
-  // 金幣/櫻桃房：後台「等級稱謂設定」開啟進場歡呼、且該等級區間有勾歡呼（或有專屬稱謂）的人進場，改成特別歡呼橫幅
-  if (isSystem && relatedType === "enter" && hasLevelTitles()) {
-    let enterLevel = enterLevelCache.get(m);
-    if (enterLevel === undefined) {
-      const u = lookupUser(relatedUser);
-      if (u && u.type !== "guest" && u.type !== "AI") {
-        enterLevel = Number(u.level) || 0;
-        enterLevelCache.set(m, enterLevel);
-      }
-    }
-    const info = enterLevel ? resolveLevelInfo(relatedUser, enterLevel) : null;
-    if (info && info.cheer && (info.title || info.icon)) {
-      return (
-        <div className="message-row cherry-enter-message">
-          <div className={`cherry-enter-banner cherry-enter-${info.tone}`}>
-            <span className="cherry-enter-burst">🎉</span>
-            <span className="cherry-enter-text">
-              熱烈歡迎
-              <span className="cherry-enter-title">{info.icon} {info.title}</span>
-              <span className="cherry-enter-name" style={{ color: getUserColor(relatedUser) }} onClick={() => onSelectUser(relatedUser)}>
-                {relatedUser}
-              </span>
-              駕到！
-            </span>
-            <span className="cherry-enter-burst">🎉</span>
-          </div>
-        </div>
-      );
-    }
-  }
-
-  // 進場歡迎詞：後台為這個等級區間/帳號選了動畫橫幅時，改用跟進場歡呼同款的橫幅呈現
+  // 進場歡迎：後台為這個等級區間/帳號選了動畫橫幅時，用橫幅呈現（plain 就照一般系統訊息顯示）
   if (isSystem && m.type === "welcome" && m.welcomeStyle && m.welcomeStyle !== "plain") {
     return (
       <div className="message-row cherry-enter-message">
         <div className={`cherry-enter-banner cherry-enter-${m.welcomeStyle}`}>
-          <span className="cherry-enter-burst">✨</span>
+          <span className="cherry-enter-burst">🎉</span>
           <span
             className="cherry-enter-text"
             style={{ cursor: m.welcomeUser ? "pointer" : "default" }}
@@ -186,7 +152,7 @@ const MessageRow = memo(function MessageRow({
           >
             {messageText}
           </span>
-          <span className="cherry-enter-burst">✨</span>
+          <span className="cherry-enter-burst">🎉</span>
         </div>
       </div>
     );

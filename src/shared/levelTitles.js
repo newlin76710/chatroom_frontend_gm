@@ -1,48 +1,43 @@
-// levelTitles.js — 金幣房／櫻桃房共用的「等級稱謂設定」（roomConfig.level_titles，在 🛡 管理 → 房間設定 裡編輯）
-// 格式、查詢規則跟後端 chatroom_backend/src/share/levelTitles.js 一致：
-//   ranges：[{ min, max, title, icon, tone, cheer, welcome }] 等級區間的稱謂／圖案／歡呼配色／是否歡呼／進場歡迎詞
-//   users ：[{ username, title, icon, welcome }] 按帳號指定專屬稱謂／圖案／歡迎詞（優先於區間）
-//   cheer_enabled：進場歡呼橫幅總開關；welcome_enabled：進場歡迎詞總開關（歡迎詞由後端廣播）
-// 後端 /api/room-config 回傳的已經是「實際生效」的設定（櫻桃房沒設定過會帶預設表）；
+// levelTitles.js — 金幣房／櫻桃房共用的「等級稱謂設定」（roomConfig.level_titles，在 🛡 管理 → 等級管理 →
+// 🏷️ 等級稱謂/圖案管理 編輯）。格式、查詢規則跟後端 chatroom_backend/src/share/levelTitles.js 一致：
+//   ranges：[{ min, max, title, icon, welcome, welcome_style }] 等級區間的稱謂／圖案／進場歡迎文字／進場歡迎動畫
+//   users ：[{ username, title, icon, welcome, welcome_style }] 按帳號指定（優先於區間）
+//   welcome_enabled：進場歡迎總開關（進場歡迎由後端廣播，前端 MessageList 依 welcome_style 顯示橫幅）
 // 沒設定過時兩種房間的預設都是櫻桃房原始設定；這裡的 DEFAULT_CHERRY_LEVEL_TITLES 只給還沒拿到後端設定時當後備。
 import { roomConfig } from "./roomConfig";
 
-export const TONE_OPTIONS = [
-  { value: "angel", label: "粉紅" },
-  { value: "gold", label: "金紅" },
-  { value: "staff", label: "紫藍" },
-  { value: "boss", label: "尊爵金" },
-  { value: "member", label: "一般" },
-];
-
-export const DEFAULT_WELCOME = "歡迎【{title}】{username} 尊榮降臨！";
-
-// 進場歡迎詞的呈現方式：一般文字，或跟進場歡呼同款的動畫橫幅
+// 進場歡迎動畫：一般文字，或各色動畫橫幅（對應 MessageList.css 的 cherry-enter-*）
 export const WELCOME_STYLE_OPTIONS = [
   { value: "plain", label: "一般文字" },
-  ...TONE_OPTIONS.map((t) => ({ value: t.value, label: `橫幅・${t.label}` })),
+  { value: "angel", label: "橫幅・粉紅" },
+  { value: "gold", label: "橫幅・金紅" },
+  { value: "staff", label: "橫幅・紫藍" },
+  { value: "boss", label: "橫幅・尊爵金" },
+  { value: "member", label: "橫幅・一般" },
 ];
+
+export const CHEER_WELCOME = "熱烈歡迎 {icon} {title} {username} 駕到！";
+export const DEFAULT_WELCOME = "歡迎【{title}】{username} 尊榮降臨！";
 
 export const DEFAULT_CHERRY_LEVEL_TITLES = {
   ranges: [
-    { min: 99, max: 99, title: "總站長", icon: "👑", tone: "boss", cheer: true, welcome: DEFAULT_WELCOME, welcome_style: "boss" },
-    { min: 98, max: 98, title: "副總站長", icon: "💎", tone: "boss", cheer: true, welcome: DEFAULT_WELCOME, welcome_style: "boss" },
-    { min: 97, max: 97, title: "小站長", icon: "🏆", tone: "boss", cheer: true, welcome: DEFAULT_WELCOME, welcome_style: "boss" },
-    { min: 96, max: 96, title: "指揮官", icon: "🔱", tone: "staff", cheer: true, welcome: DEFAULT_WELCOME, welcome_style: "staff" },
-    { min: 91, max: 95, title: "書記官", icon: "🔱", tone: "staff", cheer: true, welcome: DEFAULT_WELCOME, welcome_style: "staff" },
-    { min: 81, max: 90, title: "金天使", icon: "⭐", tone: "gold", cheer: true },
-    { min: 71, max: 80, title: "大天使", icon: "🌺", tone: "angel", cheer: true },
-    { min: 61, max: 70, title: "小天使", icon: "🍒", tone: "angel", cheer: true },
-    { min: 50, max: 60, title: "高級會員", icon: "🎖️", tone: "member", cheer: false },
-    { min: 41, max: 49, title: "", icon: "🌸", tone: "member", cheer: false },
-    { min: 31, max: 40, title: "", icon: "🌷", tone: "member", cheer: false },
-    { min: 21, max: 30, title: "", icon: "🌼", tone: "member", cheer: false },
-    { min: 11, max: 20, title: "", icon: "🍀", tone: "member", cheer: false },
-    { min: 1, max: 10, title: "", icon: "🌱", tone: "member", cheer: false },
+    { min: 99, max: 99, title: "總站長",     icon: "👑", welcome: DEFAULT_WELCOME, welcome_style: "boss" },
+    { min: 98, max: 98, title: "副總站長",   icon: "💎", welcome: DEFAULT_WELCOME, welcome_style: "boss" },
+    { min: 97, max: 97, title: "小站長",     icon: "🏆", welcome: DEFAULT_WELCOME, welcome_style: "boss" },
+    { min: 96, max: 96, title: "指揮官",     icon: "🔱", welcome: DEFAULT_WELCOME, welcome_style: "staff" },
+    { min: 91, max: 95, title: "書記官",     icon: "🔱", welcome: DEFAULT_WELCOME, welcome_style: "staff" },
+    { min: 81, max: 90, title: "櫻桃金天使", icon: "⭐", welcome: CHEER_WELCOME,   welcome_style: "gold" },
+    { min: 71, max: 80, title: "櫻桃大天使", icon: "🌺", welcome: CHEER_WELCOME,   welcome_style: "angel" },
+    { min: 61, max: 70, title: "櫻桃小天使", icon: "🍒", welcome: CHEER_WELCOME,   welcome_style: "angel" },
+    { min: 50, max: 60, title: "高級會員",   icon: "🎖️", welcome: "", welcome_style: "plain" },
+    { min: 41, max: 49, title: "", icon: "🌸", welcome: "", welcome_style: "plain" },
+    { min: 31, max: 40, title: "", icon: "🌷", welcome: "", welcome_style: "plain" },
+    { min: 21, max: 30, title: "", icon: "🌼", welcome: "", welcome_style: "plain" },
+    { min: 11, max: 20, title: "", icon: "🍀", welcome: "", welcome_style: "plain" },
+    { min: 1,  max: 10, title: "", icon: "🌱", welcome: "", welcome_style: "plain" },
   ],
   users: [],
-  cheer_enabled: true,
-  welcome_enabled: false,
+  welcome_enabled: true,
 };
 
 // 只有金幣房、櫻桃房開放等級稱謂
@@ -64,9 +59,9 @@ export function hasLevelTitles() {
   return !!cfg && ((cfg.ranges?.length || 0) + (cfg.users?.length || 0)) > 0;
 }
 
-// 回傳 { title, icon, tone, cheer }：帳號專屬的稱謂/圖案優先，沒填的欄位再用等級區間補
+// 回傳 { title, icon }：帳號專屬的稱謂/圖案優先，沒填的欄位再用等級區間補
 export function resolveLevelInfo(username, level) {
-  const empty = { title: "", icon: "", tone: "", cheer: false };
+  const empty = { title: "", icon: "" };
   const cfg = getLevelTitleConfig();
   if (!cfg) return empty;
   const lv = Number(level);
@@ -80,9 +75,6 @@ export function resolveLevelInfo(username, level) {
   return {
     title: user?.title || range?.title || "",
     icon: user?.icon || range?.icon || "",
-    tone: range?.tone || "gold",
-    // 進場歡呼：總開關開啟，且（有專屬稱謂 或 所在區間有勾歡呼）
-    cheer: !!cfg.cheer_enabled && (!!user?.title || !!range?.cheer),
   };
 }
 

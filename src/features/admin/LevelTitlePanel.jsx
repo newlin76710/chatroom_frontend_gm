@@ -19,7 +19,7 @@ export default function LevelTitlePanel({ token }) {
       const res = await fetch(`${BACKEND}/admin/settings?room=${RN}`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (!res.ok) { alert(data.error || "讀取設定失敗"); return; }
-      const picked = { level_titles: data.level_titles || { ranges: [], users: [], cheer_enabled: false, welcome_enabled: false } };
+      const picked = { level_titles: data.level_titles || { ranges: [], users: [], welcome_enabled: false } };
       setSettings(picked);
       setOriginal(picked);
     } catch {
