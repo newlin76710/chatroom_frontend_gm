@@ -167,6 +167,7 @@
 .cherry-enter-gold  { background: linear-gradient(90deg, #d4145a, #fbb03b, #d4145a); box-shadow: 0 0 12px rgba(255, 190, 60, 0.8); }
 .cherry-enter-staff { background: linear-gradient(90deg, #2b5876, #4e4376, #2b5876); box-shadow: 0 0 12px rgba(140, 120, 255, 0.8); }
 .cherry-enter-boss  { background: linear-gradient(90deg, #8e0e00, #e0a800, #8e0e00); box-shadow: 0 0 16px rgba(255, 210, 0, 0.95); border: 1px solid #ffe27a; }
+.cherry-enter-member { background: linear-gradient(90deg, #1f6f5c, #3fa98c, #1f6f5c); box-shadow: 0 0 10px rgba(80, 200, 160, 0.6); }
 .cherry-enter-text { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); }
 .cherry-enter-title {
   padding: 1px 8px;

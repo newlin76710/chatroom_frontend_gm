@@ -4,16 +4,21 @@ import { getAiAvatar } from "../../shared/aiConfig";
 import "./UserList.css";
 import { roomConfig } from "../../shared/roomConfig";
 import { SNOWBALL_MIN_LEVEL } from "../../shared/constants";
-import { isCherryRoom, getCherryTitle, getCherryLevelIcon } from "../../shared/cherryLevel";
+import { getLevelTitleConfig, resolveLevelInfo } from "../../shared/levelTitles";
 
 // 單一使用者列抽成獨立、模組層級的 memo 元件，且只吃基本型別 (string/number/boolean) 當 props。
 // 忙碌房間裡 updateUsers 幾乎每次都會給一個全新的使用者陣列（就算內容沒變），
 // 若整列吃「使用者物件」當 props，物件參照每次都不同，memo 形同虛設。
 // 改吃基本型別後，即使外層陣列/物件參照改變，只要這個使用者實際顯示的值沒變，
 // React.memo 的淺層比較就能正確跳過這一列的重新渲染。
+const NO_LEVEL_INFO = { title: "", icon: "" };
+
 const UserRow = React.memo(function UserRow({
   name,
   level,
+  levelTitle,
+  levelIcon,
+  customBadges,
   gender,
   type,
   avatarUrl,
@@ -46,9 +51,9 @@ const UserRow = React.memo(function UserRow({
   const AML = roomConfig.admin_max_level || 99;
   const MINI_AML = roomConfig.mini_admin_level || 98;
   const isAI = type === "AI";
-  const cherryRoom = isCherryRoom();
-  const cherryTitle = cherryRoom ? getCherryTitle(level) : null;
   const color = gender === "男" ? "#A7C7E7" : gender === "女" ? "#F8C8DC" : "#00aa00";
+  // 後台「等級稱謂」：不直接顯示在名字前，滑鼠移到頭像/等級圖案/暱稱上才用提示框顯示
+  const titleTip = levelTitle ? `【${levelTitle}】${name}（Lv.${level}）` : undefined;
 
   return (
     <div
@@ -62,28 +67,30 @@ const UserRow = React.memo(function UserRow({
           className="user-avatar"
           loading="lazy"
           decoding="async"
+          title={titleTip}
         />
       )}
 
-      <span className="user-name" style={{ color }}>
+      <span className="user-name" style={{ color }} title={titleTip}>
         {name}
       </span>
-      {cherryRoom && !isAI && type !== "guest" && (
-        <span className="ul-cherry-badge" title={cherryTitle ? `${cherryTitle.title}（Lv.${level}）` : `Lv.${level}`}>
-          {getCherryLevelIcon(level)}
+      {/* 金幣/櫻桃房有等級稱謂設定時：等級圖案用後台設定；其他房間維持原本固定的徽章 */}
+      {customBadges && !isAI && type !== "guest" && levelIcon && (
+        <span className="ul-cherry-badge" title={titleTip || `Lv.${level}`}>
+          {levelIcon}
         </span>
       )}
-      {!cherryRoom && !isAI && level >= SNOWBALL_MIN_LEVEL && level < ANL && (
-        <span className="ul-premium-badge" title="高級會員">🎖️</span>
+      {!customBadges && !isAI && level >= SNOWBALL_MIN_LEVEL && level < ANL && (
+        <span className="ul-premium-badge" title={titleTip || "高級會員"}>🎖️</span>
       )}
-      {!cherryRoom && !isAI && level >= AML && (
-        <span className="ul-owner-badge" title="大站長">👑</span>
+      {!customBadges && !isAI && level >= AML && (
+        <span className="ul-owner-badge" title={titleTip || "大站長"}>👑</span>
       )}
-      {!cherryRoom && !isAI && level === MINI_AML && level < AML && (
-        <span className="ul-mini-owner-badge" title="小站長">🥈</span>
+      {!customBadges && !isAI && level === MINI_AML && level < AML && (
+        <span className="ul-mini-owner-badge" title={titleTip || "小站長"}>🥈</span>
       )}
-      {!cherryRoom && !isAI && level >= ANL && level < AML && level !== MINI_AML && (
-        <span className="ul-admin-badge" title="管理員">🔱</span>
+      {!customBadges && !isAI && level >= ANL && level < AML && level !== MINI_AML && (
+        <span className="ul-admin-badge" title={titleTip || "管理員"}>🔱</span>
       )}
       &nbsp;
       {isAI ? "AI" : type === "guest" ? 1 : level}
@@ -246,10 +253,13 @@ function UserList({
   onPingpongChallenge,
   onSnowballThrow,
   gamesBusy,
+  // eslint-disable-next-line no-unused-vars -- 後台改等級稱謂時由 ChatApp 遞增，讓 memo 過的名單重新算稱謂
+  levelTitlesVersion = 0,
 }) {
   const ANL = roomConfig.admin_min_level || 91;
   const AML = roomConfig.admin_max_level || 99;
   const OPENAI = roomConfig.openai;
+  const customBadges = !!getLevelTitleConfig();
   const [openMenu, setOpenMenu] = React.useState(null);
   const [peonyPopup, setPeonyPopup] = React.useState(null); // { x, y }
 
@@ -319,12 +329,16 @@ function UserList({
           const canBan = myLevel >= AML && u.level < myLevel && !isSelf && !!kickAndBlockUser;
           const showManage = !isSelf && !isAI;
           const avatarUrl = u.avatar || getAiAvatar(u.name);
+          const levelInfo = isAI ? NO_LEVEL_INFO : resolveLevelInfo(u.name, u.type === "guest" ? 0 : u.level);
 
           return (
             <UserRow
               key={u.name}
               name={u.name}
               level={u.level}
+              levelTitle={levelInfo.title}
+              levelIcon={levelInfo.icon}
+              customBadges={customBadges}
               gender={u.gender}
               type={u.type}
               avatarUrl={avatarUrl}

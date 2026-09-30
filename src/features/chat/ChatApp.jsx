@@ -121,6 +121,8 @@ export default function ChatApp() {
   const openaiRef = useRef(false);
   const [ownMessageLeft, setOwnMessageLeft] = useState(!!roomConfig.own_message_left);
   const [legacyChatUI, setLegacyChatUI] = useState(!!roomConfig.legacy_chat_ui);
+  // 等級稱謂（roomConfig.level_titles）載入/後台修改時遞增，讓 memo 過的訊息列表/在線名單重新套用稱謂
+  const [levelTitlesVersion, setLevelTitlesVersion] = useState(0);
 
   // ─── 從後端 room_settings 取得設定 ──────────────────────────────────────
   useEffect(() => {
@@ -129,6 +131,7 @@ export default function ChatApp() {
       openaiRef.current = cfg.openai === true;
       setOwnMessageLeft(!!cfg.own_message_left);
       setLegacyChatUI(!!cfg.legacy_chat_ui);
+      setLevelTitlesVersion((v) => v + 1);
     });
   }, []);
 
@@ -139,6 +142,7 @@ export default function ChatApp() {
       Object.assign(roomConfig, data);
       if (data.own_message_left !== undefined) setOwnMessageLeft(!!data.own_message_left);
       if (data.legacy_chat_ui !== undefined) setLegacyChatUI(!!data.legacy_chat_ui);
+      if (data.level_titles !== undefined) setLevelTitlesVersion((v) => v + 1);
     };
     socket.on("roomConfigUpdate", handleRoomConfigUpdate);
     return () => socket.off("roomConfigUpdate", handleRoomConfigUpdate);
@@ -687,6 +691,7 @@ export default function ChatApp() {
         case "system_online": return "🕒 在線獎勵";
         case "system_littlemary": return "🎡 小瑪莉";
         case "system_red_envelope": return "🧧 金幣雨";
+        case "system_celebration": return "🎉 慶典模式";
         case "system_fishing": return "🎣 捕魚";
         default: return roomConfig.currency_name;
       }
@@ -861,13 +866,15 @@ export default function ChatApp() {
 
         // 分配方式直接寫在畫面上：均分顯示「N 人平均分，每人約 M 個」，隨機顯示「N 人隨機搶」
         const recipients = Array.isArray(data?.recipients) ? data.recipients : [];
+        // 份數以後端給的大廳顯示總人數（shareCount，含虛擬帳號）為準；系統金幣雨沒給時退回領取名單人數
+        const headcount = Number(data?.shareCount) || recipients.length;
         const modeLine = document.createElement("div");
         modeLine.className = "red-envelope-mode";
         if (data?.mode === "random") {
-          modeLine.textContent = `🎲 全場 ${recipients.length} 人隨機搶`;
+          modeLine.textContent = `🎲 全場 ${headcount} 人隨機搶`;
         } else {
           const total = Number(data?.amount) || 0;
-          const n = recipients.length;
+          const n = headcount;
           const per = n ? Math.floor(total / n) : 0;
           // 除不盡時餘數會隨機多給部分人 1 個（見後端 splitEven），所以顯示成區間
           const perText = n && total % n !== 0 ? `${per}～${per + 1}` : `${per}`;
@@ -1029,6 +1036,13 @@ export default function ChatApp() {
         signature.textContent = `${data?.brand || BRAND_NAME} 呈獻（由 ${data?.sender || ""} 發起）`;
 
         container.appendChild(message);
+        // 慶典金額分給全場：多一行顯示分配方式（份數依大廳顯示總人數，同紅包）
+        if (data?.distribution?.modeText) {
+          const distLine = document.createElement("div");
+          distLine.className = "red-envelope-mode";
+          distLine.textContent = `${data.distribution.mode === "random" ? "🎲" : "⚖️"} ${data.distribution.modeText}`;
+          container.appendChild(distLine);
+        }
         container.appendChild(signature);
         document.body.appendChild(container);
         setTimeout(() => { container.remove(); done(); }, cfg.duration);
@@ -1559,6 +1573,7 @@ export default function ChatApp() {
                 scrollLocked={scrollLocked}
                 scrollLockedRef={scrollLockedRef}
                 legacyUI={legacyChatUI}
+                levelTitlesVersion={levelTitlesVersion}
               />
 
               {legacyChatUI ? (
@@ -1820,7 +1835,7 @@ export default function ChatApp() {
                 <div className="trade-apple">
                   <div className="trade-apple-label" style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     {level >= (roomConfig.mini_admin_level || 98) && (
-                      <button className="admin-btn" onClick={() => setShowAppleSetting(true)}>⚙️ 設定</button>
+                      <button className="admin-btn" onClick={() => setShowAppleSetting((v) => !v)}>⚙️ 設定</button>
                     )}
                     {level >= ANL && (
                       <button
@@ -1999,6 +2014,7 @@ export default function ChatApp() {
               setFilteredUsers={setFilteredUsers}
               focusInput={focusInput}
               token={token}
+              levelTitlesVersion={levelTitlesVersion}
             />
           </AppErrorBoundary>
         </div>

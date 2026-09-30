@@ -77,14 +77,21 @@
   padding: 24px;
 }
 
-/* 5x3 地洞格（共 15 個） */
+/* 地洞格：欄數由 JS 依格數算好放在 --dtg-cols（15 格 = 5x3） */
 .dtg-holes-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(var(--dtg-cols, 5), 1fr);
   gap: 20px;
-  max-width: 640px;
+  max-width: calc(var(--dtg-cols, 5) * 128px);
   width: 100%;
 }
+/* 格數多時：縮小間距、場地改成可捲動，避免超出畫面 */
+.dtg-field--many {
+  align-items: flex-start;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.dtg-field--many .dtg-holes-grid { gap: 12px; }
 
 .dtg-hole-cell {
   aspect-ratio: 1;
@@ -241,10 +248,11 @@
 /* 平板/手機：縮小地洞、減少欄數 */
 @media (max-width: 700px) {
   .dtg-holes-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(var(--dtg-cols-mobile, 3), 1fr);
     gap: 14px;
-    max-width: 360px;
+    max-width: calc(var(--dtg-cols-mobile, 3) * 120px);
   }
+  .dtg-field--many .dtg-holes-grid { gap: 8px; }
   .dtg-timer { font-size: 2rem; }
   .dtg-score { font-size: 1rem; }
   .dtg-hint { display: none; }

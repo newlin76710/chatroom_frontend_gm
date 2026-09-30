@@ -36,6 +36,10 @@ const _cfg = {
   zombie_enabled:      true,
   red_envelope_amount_options: "100,500,1000,5000",
   red_envelope_max_amount: 10000,
+  fishing_fish_speed:  100,
+  celebration_amount_options: "100,500,1000",
+  celebration_max_amount: 10000,
+  level_titles:        { ranges: [], users: [] },
 };
 
 export const roomConfig = _cfg;

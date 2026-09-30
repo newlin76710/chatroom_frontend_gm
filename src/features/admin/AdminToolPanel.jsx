@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import useDraggable from "../../shared/hooks/useDraggable";
+import FloatingPortal from "../../shared/FloatingPortal";
 import AdminLoginLogPanel from "./AdminLoginLogPanel";
 import MessageLogPanel from "../chat/MessageLogPanel";
 import AdminLevelPanel from "./AdminLevelPanel";
@@ -13,6 +14,8 @@ import AdminFishingShotLogPanel from "./AdminFishingShotLogPanel";
 import AdminFishingPoolLogPanel from "./AdminFishingPoolLogPanel";
 import AdminBaitBlacklistPanel from "./AdminBaitBlacklistPanel";
 import AdminRoomSettingsPanel from "./AdminRoomSettingsPanel";
+import LevelTitlePanel from "./LevelTitlePanel";
+import { isTitleRoom } from "../../shared/levelTitles";
 import "./AdminToolPanel.css";
 
 import { roomConfig } from "../../shared/roomConfig";
@@ -20,6 +23,7 @@ import { roomConfig } from "../../shared/roomConfig";
 export default function AdminToolPanel({ myName, myLevel, token, userList, initialOpen = false }) {
   const [open, setOpen] = useState(initialOpen);
   const [tab, setTab] = useState("login"); // default
+  const [levelSubTab, setLevelSubTab] = useState("users"); // 等級管理子分頁：users | titles
 
   // ─── 可自由拖曳（滑鼠 + 手機/平板觸控，不受聊天輸入區位置限制） ───────────
   const { panelRef, handleProps, initialStyle } = useDraggable({ x: 20, y: 80 });
@@ -42,6 +46,7 @@ export default function AdminToolPanel({ myName, myLevel, token, userList, initi
       </button>
 
       {open && (
+        <FloatingPortal className="admin-tool" onBackdropClick={() => setOpen(false)}>
         <div
           ref={panelRef}
           className={`admin-popup ${myLevel < (roomConfig.admin_max_level || 99) ? "small" : ""}`}
@@ -129,7 +134,19 @@ export default function AdminToolPanel({ myName, myLevel, token, userList, initi
             {tab === "roomsettings" && <AdminRoomSettingsPanel token={token} />}
             {tab === "login" && <AdminLoginLogPanel token={token} />}
             {tab === "message" && <MessageLogPanel myName={myName} myLevel={myLevel} token={token} userList={userList}/>}
-            {tab === "level" && <AdminLevelPanel token={token} myLevel={myLevel} />}
+            {tab === "level" && (
+              <>
+                {/* 等級稱謂/圖案只開放金幣房、櫻桃房 */}
+                {isTitleRoom() && (
+                  <div className="admin-subtabs">
+                    <button className={levelSubTab === "users" ? "active" : ""} onClick={() => setLevelSubTab("users")}>使用者等級</button>
+                    <button className={levelSubTab === "titles" ? "active" : ""} onClick={() => setLevelSubTab("titles")}>等級稱謂/圖案</button>
+                  </div>
+                )}
+                {(levelSubTab === "users" || !isTitleRoom()) && <AdminLevelPanel token={token} myLevel={myLevel} />}
+                {levelSubTab === "titles" && isTitleRoom() && <LevelTitlePanel token={token} />}
+              </>
+            )}
             {tab === "ip" && <AdminIPPanel token={token} myLevel={myLevel} />}
             {tab === "onlineip" && <AdminOnlineIPPanel token={token} myLevel={myLevel} />}
             {tab === "adjustment" && <AdminAdjustmentLogPanel token={token} />}
@@ -145,6 +162,7 @@ export default function AdminToolPanel({ myName, myLevel, token, userList, initi
             {tab === "nickname" && <AdminNicknamePanel myLevel={myLevel} token={token} myName={myName} />}
           </div>
         </div>
+        </FloatingPortal>
       )}
     </div>
   );

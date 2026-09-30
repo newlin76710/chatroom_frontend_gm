@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import useDraggable from "../../shared/hooks/useDraggable";
+import FloatingPortal from "../../shared/FloatingPortal";
 import { diffSettings } from "./diffSettings";
 import "./AdminSettingsModal.css";
 import { RN, roomConfig } from "../../shared/roomConfig";
@@ -119,12 +120,14 @@ const DEFAULT = {
   celebration_amount_options: "100,500,1000",
   celebration_burst_limit: 1,
   celebration_cooldown_minutes: 10,
+  celebration_max_amount: 10000,
   // 多人共用血池捕魚（對應後端 game/fishingGame.js 的預設值）
   fishing_enabled: true,
   fishing_rod_bets: "100,500,1000,5000,10000",
   fishing_seed_pool: 10000,
   fishing_pool_rate: 30,
   fishing_fish_rtp: 60,
+  fishing_fish_speed: 100,
   fishing_boss_payout_pct: 80,
   fishing_boss_threshold: 50000,
   fishing_boss_hp: 300,
@@ -195,18 +198,8 @@ const DEFAULT = {
   scatter_reward:       1,
   scatter_max_per_user: 0,
   dig_enabled:          true,
-  dig_hour:             21,
-  dig_minute:           0,
-  dig_hour2:            13,
-  dig_minute2:          0,
-  dig_hour3:            18,
-  dig_minute3:          0,
-  dig_hour4:            9,
-  dig_minute4:          0,
-  dig_hour5:            6,
-  dig_minute5:          0,
-  dig_hour6:            0,
-  dig_minute6:          0,
+  dig_times:            "21:00",
+  dig_hole_count:       15,
   dig_duration:         60,
   dig_max_digs:         5,
   dig_reward_min:       1,
@@ -422,14 +415,18 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
   // 撒櫻桃多時段：後端存成 "12:00,18:30,22:00" 字串，這裡拆成陣列編輯
   const scatterTimes = String(settings.scatter_times ?? "").split(",").map(t => t.trim()).filter(Boolean);
   const setScatterTimes = (list) => setSettings(p => ({ ...p, scatter_times: list.join(",") }));
+  // 挖寶時段：比照撒櫻桃，不限場次
+  const digTimes = String(settings.dig_times ?? "").split(",").map(t => t.trim()).filter(Boolean);
+  const setDigTimes = (list) => setSettings(p => ({ ...p, dig_times: list.join(",") }));
 
   return (
+    <FloatingPortal onBackdropClick={onClose}>
     <div ref={panelRef} className="apple-modal-floating" style={initialStyle}>
       <div className="apple-modal-header" {...handleProps}>
         <h3>⚙️ {currencyName}設定</h3>
         <button onClick={onClose}>✖</button>
       </div>
-      <div className="apple-modal-content" style={{ width: "min(500px, calc(100vw - 16px))", boxSizing: "border-box", maxHeight: "80dvh", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+      <div className="apple-modal-content" >
         {loading ? <div>讀取中…</div> : (
           <>
             {/* ─── 功能顯示 ──────────────────────────────────────── */}
@@ -1106,95 +1103,31 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                 </label>
               </h4>
 
-              <Row label="第 1 場開始時間（台灣時間）">
-                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                  <input type="number" min={0} max={23} style={{ width: 64 }}
-                    value={settings.dig_hour}
-                    onChange={e => setInt("dig_hour", e.target.value)} />
-                  <span>時</span>
-                  <input type="number" min={0} max={59} style={{ width: 64 }}
-                    value={settings.dig_minute}
-                    onChange={e => setInt("dig_minute", e.target.value)} />
-                  <span>分</span>
-                  <span style={{ color: "#aaa", fontSize: "0.85rem" }}>
-                    → {fmtTime(settings.dig_hour, settings.dig_minute)}
-                  </span>
+              <Row label="開始時段（台灣時間）">
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {digTimes.map((t, idx) => (
+                    <div key={idx} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <span style={{ minWidth: 44, color: "#666" }}>第 {idx + 1} 場</span>
+                      <input type="time" value={t}
+                        onChange={e => {
+                          const next = [...digTimes];
+                          next[idx] = e.target.value;
+                          setDigTimes(next);
+                        }} />
+                      <button type="button" onClick={() => setDigTimes(digTimes.filter((_, i) => i !== idx))}
+                        disabled={digTimes.length <= 1} title="刪除這個時段">✕</button>
+                    </div>
+                  ))}
+                  <div>
+                    <button type="button" onClick={() => setDigTimes([...digTimes, "12:00"])}>＋ 新增時段</button>
+                  </div>
+                  <span className="field-note">場次不限，每個時段都會開一場，開始前 30 秒預告；至少要保留一個時段</span>
                 </div>
               </Row>
-              <Row label="第 2 場開始時間（台灣時間）">
-                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                  <input type="number" min={0} max={23} style={{ width: 64 }}
-                    value={settings.dig_hour2}
-                    onChange={e => setInt("dig_hour2", e.target.value)} />
-                  <span>時</span>
-                  <input type="number" min={0} max={59} style={{ width: 64 }}
-                    value={settings.dig_minute2}
-                    onChange={e => setInt("dig_minute2", e.target.value)} />
-                  <span>分</span>
-                  <span style={{ color: "#aaa", fontSize: "0.85rem" }}>
-                    → {fmtTime(settings.dig_hour2, settings.dig_minute2)}
-                  </span>
-                </div>
-              </Row>
-              <Row label="第 3 場開始時間（台灣時間）">
-                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                  <input type="number" min={0} max={23} style={{ width: 64 }}
-                    value={settings.dig_hour3}
-                    onChange={e => setInt("dig_hour3", e.target.value)} />
-                  <span>時</span>
-                  <input type="number" min={0} max={59} style={{ width: 64 }}
-                    value={settings.dig_minute3}
-                    onChange={e => setInt("dig_minute3", e.target.value)} />
-                  <span>分</span>
-                  <span style={{ color: "#aaa", fontSize: "0.85rem" }}>
-                    → {fmtTime(settings.dig_hour3, settings.dig_minute3)}
-                  </span>
-                </div>
-              </Row>
-              <Row label="第 4 場開始時間（台灣時間）">
-                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                  <input type="number" min={0} max={23} style={{ width: 64 }}
-                    value={settings.dig_hour4}
-                    onChange={e => setInt("dig_hour4", e.target.value)} />
-                  <span>時</span>
-                  <input type="number" min={0} max={59} style={{ width: 64 }}
-                    value={settings.dig_minute4}
-                    onChange={e => setInt("dig_minute4", e.target.value)} />
-                  <span>分</span>
-                  <span style={{ color: "#aaa", fontSize: "0.85rem" }}>
-                    → {fmtTime(settings.dig_hour4, settings.dig_minute4)}
-                  </span>
-                </div>
-              </Row>
-              <Row label="第 5 場開始時間（台灣時間）">
-                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                  <input type="number" min={0} max={23} style={{ width: 64 }}
-                    value={settings.dig_hour5}
-                    onChange={e => setInt("dig_hour5", e.target.value)} />
-                  <span>時</span>
-                  <input type="number" min={0} max={59} style={{ width: 64 }}
-                    value={settings.dig_minute5}
-                    onChange={e => setInt("dig_minute5", e.target.value)} />
-                  <span>分</span>
-                  <span style={{ color: "#aaa", fontSize: "0.85rem" }}>
-                    → {fmtTime(settings.dig_hour5, settings.dig_minute5)}
-                  </span>
-                </div>
-              </Row>
-              <Row label="第 6 場開始時間（台灣時間）">
-                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                  <input type="number" min={0} max={23} style={{ width: 64 }}
-                    value={settings.dig_hour6}
-                    onChange={e => setInt("dig_hour6", e.target.value)} />
-                  <span>時</span>
-                  <input type="number" min={0} max={59} style={{ width: 64 }}
-                    value={settings.dig_minute6}
-                    onChange={e => setInt("dig_minute6", e.target.value)} />
-                  <span>分</span>
-                  <span style={{ color: "#aaa", fontSize: "0.85rem" }}>
-                    → {fmtTime(settings.dig_hour6, settings.dig_minute6)}
-                  </span>
-                </div>
+              <Row label="地洞格數">
+                <input type="number" min={1} max={100} value={settings.dig_hole_count}
+                  onChange={e => setInt("dig_hole_count", e.target.value)} />
+                <span className="field-note">格（1–100，每場畫面上的地洞數量）</span>
               </Row>
               <Row label="持續時間">
                 <input type="number" min={10} max={300} value={settings.dig_duration}
@@ -1202,9 +1135,9 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                 <span className="field-note">秒</span>
               </Row>
               <Row label="挖寶次數">
-                <input type="number" min={1} max={50} value={settings.dig_max_digs}
+                <input type="number" min={1} max={100} value={settings.dig_max_digs}
                   onChange={e => setInt("dig_max_digs", e.target.value)} />
-                <span className="field-note">次（每人本場最多可以挖幾次）</span>
+                <span className="field-note">次（每人本場最多可以挖幾次；超過格數時以格數為上限）</span>
               </Row>
               <Row label="隨機獎勵範圍">
                 <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
@@ -1475,6 +1408,11 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                   onChange={e => setInt("fishing_fish_rtp", e.target.value)} />
                 <span className="field-note">%（一般魚的期望回饋，決定魚的血量：越高魚越好打死；由系統直接發放；預設 60）</span>
               </Row>
+              <Row label="魚隻游動速度">
+                <input type="number" min={20} max={300} step={10} style={{ width: 70 }} value={settings.fishing_fish_speed}
+                  onChange={e => setInt("fishing_fish_speed", e.target.value)} />
+                <span className="field-note">%（20–300，100 = 原速，數字越大魚群/BOSS 游得越快；由伺服器統一換算，手機與電腦同步；只影響之後新生成的魚）</span>
+              </Row>
               {(() => {
                 // 整體回饋率上限 ≈ 魚種回饋率 × 最高竿係數（帝王神竿 1.25）+ 滾入比例（對應後端 fishingGame.js）
                 const rtp = Number(settings.fishing_fish_rtp) || 0;
@@ -1645,8 +1583,14 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                 <input type="text" value={settings.celebration_amount_options}
                   onChange={e => setSettings(p => ({ ...p, celebration_amount_options: e.target.value }))}
                   placeholder="100,500,1000" style={{ width: 180 }} />
-                <span className="field-note">逗號分隔的正整數，玩家發起慶典時可選其中一個金額</span>
+                <span className="field-note">逗號分隔的正整數，慶典面板的快選金額（玩家另外也可以自訂金額）</span>
               </Row>
+              <Row label="單次自訂金額上限">
+                <input type="number" min={1} style={{ width: 100 }} value={settings.celebration_max_amount}
+                  onChange={e => setInt("celebration_max_amount", e.target.value)} />
+                <span className="field-note">玩家發起慶典（快選或自訂金額）不能超過這個金額；金額由發起人選均分或隨機分給全場（份數依大廳顯示總人數，同紅包）</span>
+              </Row>
+
               <Row label="可連發場次">
                 <input type="number" min={1} max={20} value={settings.celebration_burst_limit}
                   onChange={e => setInt("celebration_burst_limit", e.target.value)} />
@@ -2099,6 +2043,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
         )}
       </div>
     </div>
+    </FloatingPortal>
   );
 }
 

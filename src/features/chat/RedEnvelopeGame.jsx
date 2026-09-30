@@ -77,7 +77,7 @@ export default function RedEnvelopeGame({ socket, token, name, apples, hidden, i
             <strong className="reg-mode-tag">
               {roomConfig.red_envelope_distribution_mode === "random" ? "🎲 隨機搶" : "⚖️ 平均分"}
             </strong>
-            （發起人自己不算）
+            （份數依大廳顯示總人數計算）
           </p>
           <div className="reg-options">
             {options.map((opt) => (

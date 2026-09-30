@@ -7,9 +7,19 @@
   box-shadow: 0 10px 30px rgba(0,0,0,.35);
   overflow: hidden;
   z-index: 999999;
+  /* 整個視窗（含標題列）上限 80vh，內容區在裡面捲動，手機上 ✖ 不會被推出畫面 */
+  display: flex;
+  flex-direction: column;
+  width: 500px;
+  max-width: calc(100vw - 16px);
+  max-height: 80vh;
+}
+@supports (height: 100dvh) {
+  .apple-modal-floating { max-height: 80dvh; }
 }
 
 .apple-modal-header {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -36,6 +46,15 @@
 .apple-modal-content {
   padding: 20px;
   color: black;
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+@media (max-width: 480px) {
+  .apple-modal-content { padding: 12px; }
 }
 
 /* ─── 設定各節 ───────────────────────────────── */

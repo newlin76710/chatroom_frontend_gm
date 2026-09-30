@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { BACKEND, RN, roomConfig } from "../../shared/roomConfig";
 import { diffSettings } from "./diffSettings";
+import VipWelcomeSettings from "./LevelTitleSettings";
 
 export default function AdminRoomSettingsPanel({ token }) {
   const [settings, setSettings] = useState(null);
@@ -344,6 +345,8 @@ export default function AdminRoomSettingsPanel({ token }) {
       <div style={{ fontSize: 12, color: "#888", marginLeft: 120 }}>
         虛擬用戶會從男/女暱稱庫隨機抽人加入在線列表，名字跟性別是配對好的（男暱稱庫的名字一定顯示男生），兩邊都填才會有效果。假人進房時會同步出現在在線名單。
       </div>
+
+      <VipWelcomeSettings settings={settings} setSettings={setSettings} />
 
       <button
         onClick={save}

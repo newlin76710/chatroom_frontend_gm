@@ -24,8 +24,11 @@ function fishPos(f, now) {
   return { p, x, y };
 }
 
-function bossPos(now) {
-  return { x: 0.5 + 0.26 * Math.sin(now / 5200), y: 0.4 + 0.1 * Math.sin(now / 3100) };
+// speed：後台「魚隻游動速度」（%）。BOSS（魷魚王等）的游動節奏也跟著調整；
+// 用伺服器時間當相位，所有裝置同一時間看到的 BOSS 位置一致
+function bossPos(now, speed = 100) {
+  const t = (now * speed) / 100;
+  return { x: 0.5 + 0.26 * Math.sin(t / 5200), y: 0.4 + 0.1 * Math.sin(t / 3100) };
 }
 
 // demo：/fishing-demo 展示頁用，略過「僅金幣房間」的顯示條件
@@ -57,6 +60,8 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
   const bossRef = useRef(null);
   const bossElRef = useRef(null);
   const offsetRef = useRef(0);
+  const rttRef = useRef(Infinity);   // 目前時鐘差樣本的往返時間，越小越準
+  const speedRef = useRef(Number(roomConfig.fishing_fish_speed) || 100);
   const lastShotRef = useRef(0);
   const sizeRef = useRef({ w: 800, h: 450 });
   const tokenRef = useRef(token);
@@ -116,7 +121,7 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
     const { w, h } = sizeRef.current;
     const now = serverNow();
     if (fishId === "boss") {
-      const b = bossPos(now);
+      const b = bossPos(now, speedRef.current);
       return { x: b.x * w, y: b.y * h };
     }
     const f = fishDataRef.current.get(fishId);
@@ -138,14 +143,21 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
   useEffect(() => {
     if (!open || minimized) return;
     let raf;
+    // 用 clientWidth/clientHeight（不受開窗縮放動畫的 transform 影響），並用 ResizeObserver 追蹤
+    // 池塘尺寸：手機上標題列換行、按鈕列展開、網址列收合都不會觸發 window resize，原本只在
+    // resize 時量一次，量到的是錯的尺寸，魚在手機上走的像素距離跟實際池塘對不上 → 看起來跟電腦版速度不同
     const measure = () => {
-      const r = pondRef.current?.getBoundingClientRect();
-      if (r) sizeRef.current = { w: r.width, h: r.height };
+      const el = pondRef.current;
+      if (el && el.clientWidth > 0) sizeRef.current = { w: el.clientWidth, h: el.clientHeight };
     };
     measure();
     window.addEventListener("resize", measure);
+    const ro = typeof ResizeObserver !== "undefined" && pondRef.current ? new ResizeObserver(measure) : null;
+    if (ro) ro.observe(pondRef.current);
     const loop = () => {
       const now = serverNow();
+      // 後台改游速會透過 roomConfigUpdate 即時寫進 roomConfig，BOSS 節奏跟著更新
+      speedRef.current = Number(roomConfig.fishing_fish_speed) || speedRef.current;
       const { w, h } = sizeRef.current;
       let removed = false;
       for (const [id, f] of fishDataRef.current) {
@@ -156,11 +168,11 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
           continue;
         }
         const el = fishElRef.current.get(id);
-        if (el) el.style.transform = `translate(${x * w}px, ${y * h}px) translate(-50%, -50%)`;
+        if (el) el.style.transform = `translate3d(${x * w}px, ${y * h}px, 0) translate(-50%, -50%)`;
       }
       if (bossRef.current && bossElRef.current) {
-        const b = bossPos(now);
-        bossElRef.current.style.transform = `translate(${b.x * w}px, ${b.y * h}px) translate(-50%, -50%)`;
+        const b = bossPos(now, speedRef.current);
+        bossElRef.current.style.transform = `translate3d(${b.x * w}px, ${b.y * h}px, 0) translate(-50%, -50%)`;
       }
       if (removed) syncFishList();
       raf = requestAnimationFrame(loop);
@@ -169,6 +181,7 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", measure);
+      if (ro) ro.disconnect();
     };
   }, [open, minimized, syncFishList]);
 
@@ -204,10 +217,36 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
     };
   }, [open, socket]);
 
+  // ── 時鐘校正（NTP 式）：送出時間 t0 → 伺服器回 serverNow → 用往返時間的一半扣掉網路延遲。
+  // 連續取樣、只留往返時間最短（最準）的那筆，之後每 15 秒再校一次，手機跟電腦的魚位置才會同步
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    const sample = () => {
+      if (typeof socket.timeout !== "function") return; // /fishing-demo 的假 socket 沒有網路延遲，不用校正
+      const t0 = Date.now();
+      socket.timeout(3000).emit("fishingTimeSync", { t0 }, (err, d) => {
+        if (cancelled || err || !d?.serverNow) return;
+        const t1 = Date.now();
+        const rtt = t1 - t0;
+        // 舊樣本放寬一點（網路狀況會變），避免永遠卡在很久以前的一筆
+        if (rtt <= rttRef.current * 1.5 + 20) {
+          rttRef.current = rtt;
+          offsetRef.current = d.serverNow + rtt / 2 - t1;
+        }
+      });
+    };
+    rttRef.current = Infinity;
+    const burst = [0, 300, 700, 1200].map((ms) => setTimeout(sample, ms));
+    const periodic = setInterval(sample, 15000);
+    return () => { cancelled = true; burst.forEach(clearTimeout); clearInterval(periodic); };
+  }, [open, socket]);
+
   // ── Socket 事件 ──
   useEffect(() => {
     const onSnapshot = (d) => {
-      offsetRef.current = d.serverNow - Date.now();
+      if (!Number.isFinite(rttRef.current)) offsetRef.current = d.serverNow - Date.now();
+      if (d.fishSpeed) { speedRef.current = Number(d.fishSpeed) || 100; roomConfig.fishing_fish_speed = speedRef.current; }
       fishDataRef.current = new Map((d.fish || []).map((f) => [f.id, f]));
       bossRef.current = d.boss || null;
       setBoss(d.boss || null);
@@ -221,7 +260,8 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
       syncFishList();
     };
     const onSpawn = ({ fish, serverNow: sn }) => {
-      if (sn) offsetRef.current = offsetRef.current * 0.8 + (sn - Date.now()) * 0.2;
+      // 尚未完成往返校正時才用事件夾帶的時間粗估（這個值少算了網路延遲，校正完就不再用）
+      if (sn && !Number.isFinite(rttRef.current)) offsetRef.current = offsetRef.current * 0.8 + (sn - Date.now()) * 0.2;
       fishDataRef.current.set(fish.id, fish);
       syncFishList();
     };

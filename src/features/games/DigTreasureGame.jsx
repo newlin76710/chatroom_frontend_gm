@@ -1,12 +1,12 @@
 // DigTreasureGame.jsx — 挖寶遊戲覆蓋層（房間貨幣為「金幣」時啟用）
-// 玩法：畫面上有 15 個地洞，每人整場只有固定次數的挖寶機會（maxDigs）。
+// 玩法：畫面上有 N 個地洞（後台 dig_hole_count，預設 15），每人整場只有固定次數的挖寶機會（maxDigs）。
 // 點擊任一個還沒挖過的地洞＝用掉一次機會，伺服器立刻擲出隨機金幣獎勵直接入帳，
 // 該地洞就地顯示挖到的金額；機會用完後其他地洞就不能再挖。
 //
 // Socket 事件：
 //   接收 (in):
 //     digGameWarn            { secondsLeft }
-//     digGameStart           { duration, maxDigs, rewardMin, rewardMax }
+//     digGameStart           { duration, holeCount, maxDigs, rewardMin, rewardMax }
 //     digGameEnd             (空)
 //     digGameResult          { rewards: { [name]: amount } }
 //     digTreasureResult      { reward, digsUsed, digsLeft, totalReward }
@@ -19,11 +19,19 @@ import "./DigTreasureGame.css";
 
 import { BACKEND, RN, roomConfig } from "../../shared/roomConfig";
 
-// 地洞總數（5x3 排列）
-const HOLE_COUNT = 15;
+// 地洞格數由後台設定（digGameStart 帶 holeCount），舊版後端沒帶時維持 15 格
+const DEFAULT_HOLE_COUNT = 15;
+const MAX_HOLE_COUNT = 100;
 
-function emptyHoles() {
-  return Array.from({ length: HOLE_COUNT }, () => ({ dug: false, pending: false, reward: null }));
+function emptyHoles(count = DEFAULT_HOLE_COUNT) {
+  return Array.from({ length: count }, () => ({ dug: false, pending: false, reward: null }));
+}
+
+// 依格數決定欄數：15 格維持原本的 5x3（手機 3 欄），格數多時自動加欄、畫面可捲動
+function gridColumns(count) {
+  const desktop = Math.max(1, Math.min(10, Math.ceil(Math.sqrt(count * 5 / 3))));
+  const mobile = Math.min(desktop, count <= 15 ? 3 : count <= 40 ? 4 : 5);
+  return { desktop, mobile };
 }
 
 export default function DigTreasureGame({ socket, token, name, setApples }) {
@@ -40,7 +48,7 @@ export default function DigTreasureGame({ socket, token, name, setApples }) {
   const [rewardMin, setRewardMin] = useState(1);
   const [rewardMax, setRewardMax] = useState(10);
   const [myTotal, setMyTotal] = useState(0);
-  const [holes, setHoles] = useState(emptyHoles);
+  const [holes, setHoles] = useState(() => emptyHoles());
   const [result, setResult] = useState(null);
 
   // ── Refs ───────────────────────────────────────────────────────────────
@@ -97,7 +105,7 @@ export default function DigTreasureGame({ socket, token, name, setApples }) {
       setPhase("warn");
     };
 
-    const onStart = ({ duration, maxDigs: md, rewardMin: rmn, rewardMax: rmx }) => {
+    const onStart = ({ duration, holeCount, maxDigs: md, rewardMin: rmn, rewardMax: rmx }) => {
       clearInterval(warnTimerRef.current);
 
       setMaxDigs(md || 0);
@@ -107,7 +115,8 @@ export default function DigTreasureGame({ socket, token, name, setApples }) {
       setRewardMax(rmx ?? 10);
       setMyTotal(0);
       setResult(null);
-      setHoles(emptyHoles());
+      const count = Math.max(1, Math.min(MAX_HOLE_COUNT, Math.floor(Number(holeCount)) || DEFAULT_HOLE_COUNT));
+      setHoles(emptyHoles(count));
       pendingQueueRef.current = [];
 
       setPhase("playing");
@@ -198,7 +207,7 @@ export default function DigTreasureGame({ socket, token, name, setApples }) {
           <div className="dtg-warn-unit">秒後開始</div>
           <h2 className="dtg-warn-title">⛏️ 挖寶遊戲</h2>
           <ul className="dtg-warn-rules">
-            <li>🕳️ 畫面上有 <strong>15 個地洞</strong></li>
+            <li>🕳️ 畫面上有<strong>多個地洞</strong>，挑一個開挖</li>
             <li>⛏️ 每人整場只有<strong>固定挖寶次數</strong></li>
             <li>👆 點擊任一地洞就能挖，<strong>隨機獲得</strong>{roomConfig.currency_emoji} {roomConfig.currency_name}</li>
             <li>⏱ 機會用完，或時間到就結束這一輪</li>
@@ -266,9 +275,15 @@ export default function DigTreasureGame({ socket, token, name, setApples }) {
         <span className="dtg-hint">已挖到 {myTotal} 個{roomConfig.currency_name}</span>
       </div>
 
-      {/* 遊戲場地（15 個地洞） */}
-      <div className="dtg-field">
-        <div className="dtg-holes-grid">
+      {/* 遊戲場地（地洞格數由後台設定） */}
+      <div className={`dtg-field${holes.length > 15 ? " dtg-field--many" : ""}`}>
+        <div
+          className="dtg-holes-grid"
+          style={{
+            "--dtg-cols": gridColumns(holes.length).desktop,
+            "--dtg-cols-mobile": gridColumns(holes.length).mobile,
+          }}
+        >
           {holes.map((hole, i) => {
             const disabled = hole.dug || hole.pending || digsLeft <= 0;
             return (

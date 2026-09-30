@@ -12,6 +12,8 @@ import { useCallback, useEffect, useRef } from "react";
 const EDGE = 8;          // 與畫面邊緣保留的距離
 const MIN_VISIBLE = 60;  // 視窗至少要留在畫面內的寬度
 
+const HAS_POINTER = typeof window !== "undefined" && "PointerEvent" in window;
+
 function isSmallScreen() {
   return typeof window !== "undefined" && window.innerWidth <= 768;
 }
@@ -74,6 +76,35 @@ export default function useDraggable(initial = { x: 20, y: 80 }) {
     document.addEventListener("pointercancel", onPointerUp);
   }, [onPointerMove, onPointerUp]);
 
+  // ─── 觸控後備：少數舊版手機瀏覽器 / App 內建瀏覽器沒有 Pointer Events，標題列完全拖不動 ───
+  const onTouchMove = useCallback((e) => {
+    const d = drag.current;
+    const t = e.touches && e.touches[0];
+    if (!d || !t) return;
+    e.preventDefault();
+    pos.current.x = t.clientX - d.offsetX;
+    pos.current.y = t.clientY - d.offsetY;
+    apply();
+  }, [apply]);
+
+  const onTouchEnd = useCallback(() => {
+    drag.current = null;
+    document.removeEventListener("touchmove", onTouchMove);
+    document.removeEventListener("touchend", onTouchEnd);
+    document.removeEventListener("touchcancel", onTouchEnd);
+  }, [onTouchMove]);
+
+  const onTouchStart = useCallback((e) => {
+    if (HAS_POINTER) return; // 有 Pointer Events 時交給 onPointerDown，避免重複處理
+    if (e.target.closest("button, input, select, textarea, a")) return;
+    const t = e.touches && e.touches[0];
+    if (!t) return;
+    drag.current = { pointerId: "touch", offsetX: t.clientX - pos.current.x, offsetY: t.clientY - pos.current.y };
+    document.addEventListener("touchmove", onTouchMove, { passive: false });
+    document.addEventListener("touchend", onTouchEnd);
+    document.addEventListener("touchcancel", onTouchEnd);
+  }, [onTouchMove, onTouchEnd]);
+
   // 掛上後先夾一次；旋轉螢幕/視窗縮放/手機鍵盤彈出時也重新夾回畫面內
   useEffect(() => {
     const id = requestAnimationFrame(apply);
@@ -86,8 +117,11 @@ export default function useDraggable(initial = { x: 20, y: 80 }) {
       document.removeEventListener("pointermove", onPointerMove);
       document.removeEventListener("pointerup", onPointerUp);
       document.removeEventListener("pointercancel", onPointerUp);
+      document.removeEventListener("touchmove", onTouchMove);
+      document.removeEventListener("touchend", onTouchEnd);
+      document.removeEventListener("touchcancel", onTouchEnd);
     };
-  }, [apply, onPointerMove, onPointerUp]);
+  }, [apply, onPointerMove, onPointerUp, onTouchMove, onTouchEnd]);
 
   // panelRef 用 callback ref：視窗每次重新打開（重新掛載）都立刻夾回畫面內
   const setPanelRef = useCallback((el) => {
@@ -99,6 +133,7 @@ export default function useDraggable(initial = { x: 20, y: 80 }) {
     panelRef: setPanelRef,
     handleProps: {
       onPointerDown,
+      onTouchStart,
       // touch-action: none 讓瀏覽器不要把拖動手勢拿去捲動頁面
       style: { touchAction: "none", cursor: "move" },
     },

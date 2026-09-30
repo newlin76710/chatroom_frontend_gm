@@ -4,7 +4,7 @@ import "./MessageList.css";
 import { safeText } from "../../shared/utils";
 import { roomConfig } from "../../shared/roomConfig";
 import { countryZh } from "../../shared/countryZh";
-import { isCherryRoom, getCherryTitle, getCherryLevelIcon } from "../../shared/cherryLevel";
+import { hasLevelTitles, resolveLevelTitle, resolveLevelInfo } from "../../shared/levelTitles";
 
 const FONT_SIZE_REM = { small: 0.85, medium: 1, large: 1.15, xlarge: 1.35 };
 
@@ -49,8 +49,11 @@ const MessageRow = memo(function MessageRow({
   scrollToBottomOnImageLoad,
   // eslint-disable-next-line no-unused-vars -- 只用來讓 React.memo 判斷「這則訊息要不要因為在線名單變動而重新解析顏色」，本身不參與畫面渲染。
   rosterToken,
+  senderTitle = "",
 }) {
   const userName = safeText(m.user?.name);
+  // 後台「等級稱謂」：滑鼠移到頭像或暱稱上才用提示框顯示，不佔訊息版面
+  const titleTip = senderTitle ? `【${senderTitle}】${userName}` : undefined;
   const targetName = safeText(m.target);
   const emotionText = safeText(m.emotion);
   let messageText = safeText(m.message);
@@ -139,8 +142,8 @@ const MessageRow = memo(function MessageRow({
     ? (legacyUI ? "(密)" : "(私聊)")
     : "";
 
-  // 櫻桃房：61 級以上（有稱號）的人進場，改成特別歡呼橫幅
-  if (isSystem && relatedType === "enter" && isCherryRoom()) {
+  // 金幣/櫻桃房：後台「等級稱謂設定」開啟進場歡呼、且該等級區間有勾歡呼（或有專屬稱謂）的人進場，改成特別歡呼橫幅
+  if (isSystem && relatedType === "enter" && hasLevelTitles()) {
     let enterLevel = enterLevelCache.get(m);
     if (enterLevel === undefined) {
       const u = lookupUser(relatedUser);
@@ -149,15 +152,15 @@ const MessageRow = memo(function MessageRow({
         enterLevelCache.set(m, enterLevel);
       }
     }
-    const cherryTitle = enterLevel ? getCherryTitle(enterLevel) : null;
-    if (cherryTitle && !cherryTitle.noCheer) {
+    const info = enterLevel ? resolveLevelInfo(relatedUser, enterLevel) : null;
+    if (info && info.cheer && (info.title || info.icon)) {
       return (
         <div className="message-row cherry-enter-message">
-          <div className={`cherry-enter-banner cherry-enter-${cherryTitle.tone}`}>
+          <div className={`cherry-enter-banner cherry-enter-${info.tone}`}>
             <span className="cherry-enter-burst">🎉</span>
             <span className="cherry-enter-text">
               熱烈歡迎
-              <span className="cherry-enter-title">{getCherryLevelIcon(enterLevel)} {cherryTitle.title}</span>
+              <span className="cherry-enter-title">{info.icon} {info.title}</span>
               <span className="cherry-enter-name" style={{ color: getUserColor(relatedUser) }} onClick={() => onSelectUser(relatedUser)}>
                 {relatedUser}
               </span>
@@ -211,6 +214,7 @@ const MessageRow = memo(function MessageRow({
           src={m.user?.avatar || getAiAvatar(userName) || "/avatars/g01.gif"}
           alt={userName}
           className="message-avatar"
+          title={titleTip}
         />
       )}
 
@@ -274,7 +278,7 @@ const MessageRow = memo(function MessageRow({
           </>
         ) : (!isSystem && emotionText) ? (
           <>
-            <span style={{ fontWeight: "bold", cursor: "pointer", color: getUserColor(userName) }} onClick={() => onSelectUser(userName)}>
+            <span style={{ fontWeight: "bold", cursor: "pointer", color: getUserColor(userName) }} onClick={() => onSelectUser(userName)} title={titleTip}>
               {userName}
             </span>
             <span> {emotionText}{targetName ? "地對 " : "的說"}</span>
@@ -290,7 +294,7 @@ const MessageRow = memo(function MessageRow({
           </>
         ) : (
           <>
-            <span style={{ fontWeight: "bold", cursor: isSystem ? "default" : "pointer", color: isSystem ? color : getUserColor(userName) }} onClick={() => !isSystem && onSelectUser(userName)}>
+            <span style={{ fontWeight: "bold", cursor: isSystem ? "default" : "pointer", color: isSystem ? color : getUserColor(userName) }} onClick={() => !isSystem && onSelectUser(userName)} title={isSystem ? undefined : titleTip}>
               {userName}
             </span>
             {targetName && (
@@ -336,6 +340,8 @@ function MessageList({
   scrollLockedRef,         // 從 ChatApp 傳入的 ref，點擊時同步更新
   ownMessageLeft = roomConfig.own_message_left,
   legacyUI = false,
+  // eslint-disable-next-line no-unused-vars -- 後台改等級稱謂時由 ChatApp 遞增，讓 memo 過的 MessageList 重新算稱謂
+  levelTitlesVersion = 0,
 }) {
   const AML = roomConfig.admin_max_level || 99;
   const containerRef = useRef(null);
@@ -420,6 +426,9 @@ function MessageList({
   const visible = messages.filter((m) => m && (m.mode !== "private" || m.user?.name === name || m.target === name || m.monitored));
   // 只把最近 RENDER_WINDOW 則實際掛載到 DOM；其餘仍完整保留在 state，只是不佔用畫面/DOM 節點。
   const windowed = visible.length > RENDER_WINDOW ? visible.slice(-RENDER_WINDOW) : visible;
+  // 等級稱謂：等級用在線名單（伺服器權威值）查，不採信訊息裡前端自帶的等級；
+  // 專屬稱謂按帳號比對，發言者離線後仍會顯示
+  const titlesOn = hasLevelTitles();
 
   return (
     <div ref={containerRef} className="message-list">
@@ -433,6 +442,13 @@ function MessageList({
         const isSystemMsg = m.user?.name === "系統";
         const isTxOrGift = m.type === "transaction" || m.type === "gift";
         const rosterToken = (isSystemMsg || isTxOrGift) ? userList : STABLE_ROSTER_TOKEN;
+        let senderTitle = "";
+        if (titlesOn && !isSystemMsg && !isTxOrGift && m.user?.name) {
+          const sender = lookupUser(m.user.name);
+          if (sender?.type !== "AI") {
+            senderTitle = resolveLevelTitle(m.user.name, sender && sender.type !== "guest" ? sender.level : 0);
+          }
+        }
         return (
           <MessageRow
             key={m.id ?? i}
@@ -447,6 +463,7 @@ function MessageList({
             onSelectUser={handleSelectUser}
             scrollToBottomOnImageLoad={scrollToBottomOnImageLoad}
             rosterToken={rosterToken}
+            senderTitle={senderTitle}
           />
         );
       })}

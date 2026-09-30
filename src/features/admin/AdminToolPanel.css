@@ -42,12 +42,25 @@
 
 /* 平板/手機：寬度不超出螢幕、高度用可視區域（扣掉網址列/鍵盤），內容區可觸控捲動 */
 @media (max-width: 1024px), (pointer: coarse) {
+  /* 不用 min()/dvh 當唯一寫法：舊版手機瀏覽器不認得時整行會被丟掉，退回桌機 650px 寬、
+     ✖ 就跑到畫面外。先寫一般 vw/vh 當保底，支援的瀏覽器再用 dvh 覆蓋。
+     高度上限 80vh、內容區內部捲動，標題列（含 ✖）永遠留在可視範圍內。 */
   .admin-tool .admin-popup {
-    width: min(650px, calc(100vw - 16px));
-    max-height: min(480px, calc(100dvh - 16px));
+    width: calc(100vw - 16px);
+    max-width: 650px;
+    max-height: 80vh;
+  }
+  @supports (height: 100dvh) {
+    .admin-tool .admin-popup { max-height: 80dvh; }
   }
   .admin-tool .admin-popup.small {
-    width: min(260px, calc(100vw - 16px));
+    max-width: 260px;
+  }
+  .admin-tool .admin-popup-header {
+    flex: 0 0 auto;
+  }
+  .admin-tool .admin-content {
+    min-height: 0;
   }
   .admin-tool .admin-popup-header {
     padding: 10px 12px;
@@ -302,4 +315,26 @@
   font-size: 12px;
   color: red;
   margin-top: 4px;
+}
+
+/* 分頁內的子分頁（例：等級管理 → 使用者等級 / 等級稱謂/圖案） */
+.admin-tool .admin-subtabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 6px;
+}
+.admin-tool .admin-subtabs button {
+  padding: 4px 12px;
+  font-size: 12px;
+  border: 1px solid #1976d2;
+  border-radius: 14px;
+  background: #fff;
+  color: #1976d2;
+  cursor: pointer;
+}
+.admin-tool .admin-subtabs button.active {
+  background: #1976d2;
+  color: #fff;
 }

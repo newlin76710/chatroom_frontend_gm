@@ -146,3 +146,24 @@
   box-shadow: 0 3px 0 #4a1268;
 }
 .cmg-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.cmg-dist-note {
+  font-size: 0.72rem;
+  color: #ddd;
+  margin: 0 0 8px;
+  line-height: 1.4;
+}
+.cmg-dist-note strong { color: #ffd166; margin: 0 2px; }
+.cmg-dist-row { display: flex; gap: 6px; margin-bottom: 6px; }
+.cmg-dist-btn {
+  flex: 1;
+  padding: 5px 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid #ba68c8;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.cmg-dist-selected { background: linear-gradient(180deg, #e1a4ee 0%, #ba68c8 100%); color: #2a0535; border-color: transparent; }
