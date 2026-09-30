@@ -5,6 +5,61 @@ import { roomConfig } from "../../shared/roomConfig";
 
 const MAX_SING_DURATION = 5000;
 const BASE_SING_DURATION = 480;
+const MIC_TIMEOUT_MS = 10000;   // 等麥克風權限/裝置回應的上限（LINE 等 App 內建瀏覽器可能永遠不回應）
+const TOKEN_TIMEOUT_MS = 15000; // 送出上麥後等 LiveKit token 的上限
+const MIC_CONSTRAINTS = { audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } };
+
+// 取得麥克風：逾時就放棄；逾時後才拿到的串流立刻關掉，避免麥克風一直被佔用
+function acquireMic() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    const err = new Error("getUserMedia unsupported");
+    err.name = "NotSupportedError";
+    return Promise.reject(err);
+  }
+  return new Promise((resolve, reject) => {
+    let done = false;
+    const timer = setTimeout(() => {
+      done = true;
+      const err = new Error("getUserMedia timeout");
+      err.name = "TimeoutError";
+      reject(err);
+    }, MIC_TIMEOUT_MS);
+    navigator.mediaDevices.getUserMedia(MIC_CONSTRAINTS).then(
+      (stream) => {
+        clearTimeout(timer);
+        if (done) { stream.getTracks().forEach((t) => t.stop()); return; }
+        done = true;
+        resolve(stream);
+      },
+      (err) => {
+        clearTimeout(timer);
+        if (done) return;
+        done = true;
+        reject(err);
+      }
+    );
+  });
+}
+
+function micErrorMessage(err) {
+  switch (err?.name) {
+    case "NotAllowedError":
+    case "SecurityError":
+      return "麥克風權限被拒絕，請在瀏覽器設定中允許使用麥克風後再上麥";
+    case "NotFoundError":
+    case "OverconstrainedError":
+    case "DevicesNotFoundError":
+      return "找不到麥克風裝置，無法上麥";
+    case "NotReadableError":
+      return "麥克風被其他程式佔用，請關閉其他使用麥克風的程式後再試";
+    case "NotSupportedError":
+      return "這個瀏覽器無法使用麥克風（LINE 等 App 內建瀏覽器請改用 Safari 或 Chrome 開啟）";
+    case "TimeoutError":
+      return "麥克風沒有回應，請確認已允許使用麥克風後再試";
+    default:
+      return "上麥失敗，請稍後再試";
+  }
+}
 
 const SongRoom = forwardRef(function SongRoom({ room, name, socket, currentSinger, myLevel, onSelectTarget }, ref) {
   const [lkRoom, setLkRoom] = useState(null);
@@ -14,7 +69,8 @@ const SongRoom = forwardRef(function SongRoom({ room, name, socket, currentSinge
   const [queue, setQueue] = useState([]);
   const [panelOpen, setPanelOpen] = useState(false);
   useEffect(() => { singingRef.current = singing; }, [singing]);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isProcessing, setIsProcessingState] = useState(false);
+  const setIsProcessing = (v) => { processingRef.current = v; setIsProcessingState(v); };
   const [addedSeconds, setAddedSeconds] = useState(0);
   const inQueue = queue.includes(name);
   const roomRef = useRef(null);
@@ -26,6 +82,9 @@ const SongRoom = forwardRef(function SongRoom({ room, name, socket, currentSinge
   const micTrackRef = useRef(null);
   const micSourceRef = useRef(null);
   const micStreamRef = useRef(null);
+  const pendingStreamRef = useRef(null);  // 上麥前先取得的麥克風串流，拿到 token 後交給 startSing 使用
+  const tokenTimerRef = useRef(null);
+  const processingRef = useRef(false);    // socket handler 是掛載時的 closure，用 ref 讀最新的處理中狀態
   const panelRef = useRef(null);
   const posRef = useRef({ dragging: false, offsetX: 0, offsetY: 0 });
   const startDrag = (clientX, clientY) => {
@@ -94,7 +153,7 @@ const SongRoom = forwardRef(function SongRoom({ room, name, socket, currentSinge
     if (!socket) return;
 
     const handleForceStopSing = () => stopSing();
-    const handleYourTurn = () => { setWaiting(false); grabMic(); };
+    const handleYourTurn = () => { setWaiting(false); grabMic({ fromTurn: true }); };
     const handleMicStateUpdate = (data) => {
       setQueue(data.queue);
       setMyPosition(data.queue.indexOf(name) + 1);
@@ -114,6 +173,38 @@ const SongRoom = forwardRef(function SongRoom({ room, name, socket, currentSinge
       }
     };
   }, [socket, name]);
+
+  const stopPendingStream = () => {
+    pendingStreamRef.current?.getTracks().forEach((t) => t.stop());
+    pendingStreamRef.current = null;
+  };
+
+  const cleanupLocalAudio = async () => {
+    const lk = roomRef.current;
+    clearTimeout(tokenTimerRef.current);
+    stopPendingStream();
+
+    try { await lk?.localParticipant.setMicrophoneEnabled(false); } catch (err) { console.warn("[LiveKit] failed to disable microphone", err); }
+    try {
+      if (micTrackRef.current) await lk?.localParticipant.unpublishTrack(micTrackRef.current);
+    } catch (err) {
+      console.warn("[LiveKit] failed to unpublish microphone track", err);
+    }
+    micSourceRef.current?.disconnect();
+    micSourceRef.current = null;
+    micStreamRef.current?.getTracks().forEach((track) => track.stop());
+    micStreamRef.current = null;
+    micTrackRef.current?.mediaStreamTrack?.stop();
+    micTrackRef.current?.stop();
+    micTrackRef.current = null;
+    try { await lk?.disconnect(); } catch (err) { console.warn("[LiveKit] failed to disconnect", err); }
+    roomRef.current = null;
+    setLkRoom(null);
+    try { await audioCtxRef.current?.suspend(); } catch (err) { console.warn("[Audio] failed to suspend context", err); }
+    try { await audioCtxRef.current?.close(); } catch (err) { console.warn("[Audio] failed to close context", err); }
+    audioCtxRef.current = null;
+    destRef.current = null;
+  };
 
   const startSing = async (jwtToken) => {
     try {
@@ -158,12 +249,16 @@ const SongRoom = forwardRef(function SongRoom({ room, name, socket, currentSinge
       const dest = audioCtx.createMediaStreamDestination();
       destRef.current = dest;
 
-      let micStream;
-      try {
-        micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
-      } catch (micErr) {
-        console.error(`[LiveKit] getUserMedia failed: ${micErr?.message}`, { room, singer: name, ts: new Date().toISOString() });
-        throw micErr;
+      // 上麥前已經先確認過麥克風；LiveKit 斷線重連補發 token 時才需要重新取得
+      let micStream = pendingStreamRef.current;
+      pendingStreamRef.current = null;
+      if (!micStream || micStream.getAudioTracks().every((t) => t.readyState === "ended")) {
+        try {
+          micStream = await acquireMic();
+        } catch (micErr) {
+          console.error(`[LiveKit] getUserMedia failed: ${micErr?.message}`, { room, singer: name, ts: new Date().toISOString() });
+          throw micErr;
+        }
       }
       const micSource = audioCtx.createMediaStreamSource(micStream);
       micSource.connect(dest);
@@ -186,31 +281,25 @@ const SongRoom = forwardRef(function SongRoom({ room, name, socket, currentSinge
 
     } catch (err) {
       console.error(`[LiveKit] startSing failed: ${err?.message}`, { room, singer: name, ts: new Date().toISOString() });
+      // 伺服器已先保留麥位；本機無麥克風或權限失敗時必須歸還，避免卡在上麥狀態。
+      intentionalStopRef.current = true;
+      await cleanupLocalAudio();
+      setSinging(false);
+      if (livekitTokenHandlerRef.current) {
+        socket.off("livekit-token", livekitTokenHandlerRef.current);
+        livekitTokenHandlerRef.current = null;
+      }
+      socket.emit("stopSing", { room, singer: name });
+      alert(micErrorMessage(err));
     }
   };
 
+  // 下麥：不管是不是還在「處理中」都要能執行，避免卡在台上下不來
   const stopSing = async () => {
-    if (isProcessing) return;
     setIsProcessing(true);
     intentionalStopRef.current = true;
     try {
-      const lk = roomRef.current;
-      await lk?.localParticipant.setMicrophoneEnabled(false);
-      if (micTrackRef.current) await lk?.localParticipant.unpublishTrack(micTrackRef.current);
-      micSourceRef.current?.disconnect();
-      micSourceRef.current = null;
-      micStreamRef.current?.getTracks().forEach(t => t.stop());
-      micStreamRef.current = null;
-      micTrackRef.current?.mediaStreamTrack?.stop();
-      micTrackRef.current?.stop();
-      micTrackRef.current = null;
-      await lk?.disconnect();
-      roomRef.current = null;
-      setLkRoom(null);
-      await audioCtxRef.current?.suspend();
-      await audioCtxRef.current?.close();
-      audioCtxRef.current = null;
-      destRef.current = null;
+      await cleanupLocalAudio();
       if (livekitTokenHandlerRef.current) {
         socket.off("livekit-token", livekitTokenHandlerRef.current);
         livekitTokenHandlerRef.current = null;
@@ -224,16 +313,51 @@ const SongRoom = forwardRef(function SongRoom({ room, name, socket, currentSinge
     }
   };
 
-  const grabMic = () => {
-    if (isProcessing || singing) return;
+  // fromTurn：排麥輪到我（伺服器已經把我設成台上歌手），失敗時要把麥位讓出來
+  const grabMic = async ({ fromTurn = false } = {}) => {
+    if (processingRef.current || singingRef.current) return;
+    if (!fromTurn && currentSinger === name) return;
 
     setIsProcessing(true);
 
+    // 先確認這台裝置真的能用麥克風，拿不到就不通知伺服器，其他人也不會看到你上麥
+    let stream;
+    try {
+      stream = await acquireMic();
+    } catch (err) {
+      console.warn(`[Mic] 無法取得麥克風: ${err?.name} ${err?.message}`);
+      setIsProcessing(false);
+      if (fromTurn) socket.emit("stopSing", { room, singer: name });
+      alert(micErrorMessage(err));
+      return;
+    }
+    stopPendingStream();
+    pendingStreamRef.current = stream;
+
     socket.emit("grabMic", { room, singer: name });
+
+    // 等 token 逾時：歸還麥位，避免停在「處理中」、全場卻看到你在台上
+    clearTimeout(tokenTimerRef.current);
+    tokenTimerRef.current = setTimeout(async () => {
+      if (singingRef.current) return;
+      console.warn("[LiveKit] 等待 token 逾時，自動下麥");
+      intentionalStopRef.current = true;
+      await cleanupLocalAudio();
+      if (livekitTokenHandlerRef.current) {
+        socket.off("livekit-token", livekitTokenHandlerRef.current);
+        livekitTokenHandlerRef.current = null;
+      }
+      setSinging(false);
+      setIsProcessing(false);
+      socket.emit("stopSing", { room, singer: name });
+      alert("連線逾時，上麥失敗，請稍後再試");
+    }, TOKEN_TIMEOUT_MS);
+
     if (livekitTokenHandlerRef.current) {
       socket.off("livekit-token", livekitTokenHandlerRef.current);
     }
     livekitTokenHandlerRef.current = async ({ token }) => {
+      clearTimeout(tokenTimerRef.current);
       try {
         // 重連情境：先清掉舊的 LiveKit 連線
         if (roomRef.current) {
@@ -274,6 +398,7 @@ const SongRoom = forwardRef(function SongRoom({ room, name, socket, currentSinge
   };
 
   const otherSinger = currentSinger && currentSinger !== name;
+  const isCurrentSinger = currentSinger === name;
 
   // 讓外部（例如舊版介面的「功能選單」）可以觸發開啟/關閉語音
   useImperativeHandle(ref, () => ({
@@ -282,16 +407,16 @@ const SongRoom = forwardRef(function SongRoom({ room, name, socket, currentSinge
       otherSinger ? joinQueue() : grabMic();
     },
     stopVoice: () => {
-      if (singing) stopSing();
+      if (singing || isCurrentSinger) stopSing();
       else if (inQueue) leaveQueue();
     },
   }));
 
   return (
     <div className="songroom-container">
-      <button className="songroom-button" disabled={isProcessing}
-        onClick={singing ? stopSing : inQueue ? leaveQueue : otherSinger ? joinQueue : grabMic}>
-        {isProcessing ? "⏳ 處理中" : singing ? "🛑 下麥" : inQueue ? `🎤 取消排麥` : otherSinger ? "🎶 排麥" : "🎤 上麥"}
+      <button className="songroom-button" disabled={isProcessing && !(singing || isCurrentSinger)}
+        onClick={singing || isCurrentSinger ? stopSing : inQueue ? leaveQueue : otherSinger ? joinQueue : () => grabMic()}>
+        {singing || isCurrentSinger ? "🛑 下麥" : isProcessing ? "⏳ 處理中" : inQueue ? `🎤 取消排麥` : otherSinger ? "🎶 排麥" : "🎤 上麥"}
       </button>
 
       <div ref={panelRef} className="queue-panel">

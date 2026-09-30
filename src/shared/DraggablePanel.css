@@ -8,7 +8,8 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  z-index: 999999;
+  /* 比 🛡 管理視窗（999999）高一層：這些面板大多是從管理視窗裡打開的 */
+  z-index: 1000000;
   max-width: 95vw;
   max-height: 85vh;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -48,4 +49,21 @@
   display: flex;
   flex-direction: column;
   color: #222;
+}
+
+/* 手機：寬度貼齊畫面（左右各留 8px）、高度用可視區域，標題列與 ✖ 一定在畫面內 */
+@media (max-width: 768px) {
+  .draggable-panel {
+    max-width: calc(100vw - 16px);
+    max-height: 85vh;
+  }
+  @supports (height: 100dvh) {
+    .draggable-panel { max-height: 85dvh; }
+  }
+  .draggable-panel-header button {
+    font-size: 18px;
+    min-width: 36px;
+    min-height: 32px;
+  }
+  .draggable-panel-body { padding: 10px; }
 }

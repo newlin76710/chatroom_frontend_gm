@@ -1,57 +1,39 @@
 // DraggablePanel.jsx
-// 共用的可自由拖曳浮動視窗，取代原本蓋住整個聊天室的全螢幕遮罩（.admin-overlay/.admin-modal）
-import { useRef } from "react";
+// 共用的可自由拖曳浮動視窗（各種紀錄面板、等級稱謂管理等），取代原本蓋住整個聊天室的全螢幕遮罩。
+// 用 createPortal 掛到 <body>：這些面板常常是從 🛡 管理視窗裡打開的，如果留在管理視窗的 DOM 裡，
+// iOS Safari 會被外層捲動區（-webkit-overflow-scrolling: touch）裁切，標題列跟 ✖ 被切掉、下方內容看不到。
+// 拖曳改用 useDraggable（滑鼠 + 觸控通用，並夾在畫面內）。
+import { useState } from "react";
+import { createPortal } from "react-dom";
+import useDraggable from "./hooks/useDraggable";
 import "./DraggablePanel.css";
 
 // 每開一個新面板就錯開一點初始位置，避免多個面板疊在同一個點上
 let openCount = 0;
 
 export default function DraggablePanel({ title, onClose, children, width = 1400 }) {
-  const panelRef = useRef(null);
-  const pos = useRef(null);
-  if (!pos.current) {
+  // 只在面板第一次掛上時決定初始位置（寫在 render 裡會每次重繪都往下錯開）
+  const [start] = useState(() => {
     const step = (openCount++ % 6) * 24;
-    pos.current = { x: 40 + step, y: 40 + step, offsetX: 0, offsetY: 0, dragging: false };
-  }
+    return { x: 40 + step, y: 40 + step };
+  });
+  const { panelRef, handleProps, initialStyle } = useDraggable(start);
 
-  const onMouseDown = (e) => {
-    if (e.target.closest("button")) return;
-    e.preventDefault();
-    pos.current.dragging = true;
-    pos.current.offsetX = e.clientX - pos.current.x;
-    pos.current.offsetY = e.clientY - pos.current.y;
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
-  };
-  const onMouseMove = (e) => {
-    if (!pos.current.dragging) return;
-    e.preventDefault();
-    pos.current.x = e.clientX - pos.current.offsetX;
-    pos.current.y = e.clientY - pos.current.offsetY;
-    if (panelRef.current) {
-      panelRef.current.style.left = pos.current.x + "px";
-      panelRef.current.style.top = pos.current.y + "px";
-    }
-  };
-  const onMouseUp = () => {
-    pos.current.dragging = false;
-    document.removeEventListener("mousemove", onMouseMove);
-    document.removeEventListener("mouseup", onMouseUp);
-  };
-
-  return (
+  if (typeof document === "undefined") return null;
+  return createPortal(
     <div
       ref={panelRef}
       className="draggable-panel"
-      style={{ left: pos.current.x, top: pos.current.y, width }}
+      style={{ ...initialStyle, width }}
     >
-      <div className="draggable-panel-header" onMouseDown={onMouseDown}>
+      <div className="draggable-panel-header" {...handleProps}>
         {typeof title === "string" ? <h3>{title}</h3> : title}
         <button onClick={onClose}>✖</button>
       </div>
       <div className="draggable-panel-body">
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
