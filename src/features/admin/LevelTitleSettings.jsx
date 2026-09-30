@@ -39,12 +39,6 @@ export function LevelTitleEditor({ settings, setSettings }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8, color: "#222" }}>
-      <span style={note}>
-        僅金幣房、櫻桃房開放，還沒設定過時預設使用櫻桃房原始的稱謂/圖案。等級圖案顯示在在線名單；
-        滑鼠移到頭像、圖案或暱稱上會以提示框顯示【稱謂】。區間由上往下比對，第一個符合的生效；
-        稱謂、圖案、歡迎詞都留空的區間不會存。
-      </span>
-
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>
         <input type="checkbox" checked={!!lt.cheer_enabled} onChange={(e) => setLT({ cheer_enabled: e.target.checked })} />
         啟用進場歡呼（有勾「歡呼」的區間、或有個人專屬稱謂的玩家進場時，聊天室顯示「熱烈歡迎 ○○ 駕到！」橫幅）

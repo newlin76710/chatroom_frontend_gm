@@ -59,7 +59,7 @@ export default function LevelTitlePanel({ token }) {
           {!settings ? (
             <div style={{ padding: 12, color: "#888" }}>讀取中…</div>
           ) : (
-            <div style={{ padding: "8px 12px", display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ padding: "8px 12px", display: "flex", flexDirection: "column", gap: 12, flex: 1, minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
               <LevelTitleEditor settings={settings} setSettings={setSettings} />
               <button
                 onClick={save}
