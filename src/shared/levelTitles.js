@@ -1,8 +1,8 @@
 // levelTitles.js — 金幣房／櫻桃房共用的「等級稱謂設定」（roomConfig.level_titles，在 🛡 管理 → 房間設定 裡編輯）
 // 格式、查詢規則跟後端 chatroom_backend/src/share/levelTitles.js 一致：
-//   ranges：[{ min, max, title, icon, tone, cheer }] 等級區間的稱謂／等級圖案／進場歡呼配色／該區間進場是否歡呼
-//   users ：[{ username, title, icon }] 按帳號指定專屬稱謂／圖案（優先於區間）
-//   cheer_enabled：進場歡呼橫幅總開關
+//   ranges：[{ min, max, title, icon, tone, cheer, welcome }] 等級區間的稱謂／圖案／歡呼配色／是否歡呼／進場歡迎詞
+//   users ：[{ username, title, icon, welcome }] 按帳號指定專屬稱謂／圖案／歡迎詞（優先於區間）
+//   cheer_enabled：進場歡呼橫幅總開關；welcome_enabled：進場歡迎詞總開關（歡迎詞由後端廣播）
 // 後端 /api/room-config 回傳的已經是「實際生效」的設定（櫻桃房沒設定過會帶預設表）；
 // 沒設定過時兩種房間的預設都是櫻桃房原始設定；這裡的 DEFAULT_CHERRY_LEVEL_TITLES 只給還沒拿到後端設定時當後備。
 import { roomConfig } from "./roomConfig";
@@ -15,13 +15,21 @@ export const TONE_OPTIONS = [
   { value: "member", label: "一般" },
 ];
 
+export const DEFAULT_WELCOME = "歡迎【{title}】{username} 尊榮降臨！";
+
+// 進場歡迎詞的呈現方式：一般文字，或跟進場歡呼同款的動畫橫幅
+export const WELCOME_STYLE_OPTIONS = [
+  { value: "plain", label: "一般文字" },
+  ...TONE_OPTIONS.map((t) => ({ value: t.value, label: `橫幅・${t.label}` })),
+];
+
 export const DEFAULT_CHERRY_LEVEL_TITLES = {
   ranges: [
-    { min: 99, max: 99, title: "總站長", icon: "👑", tone: "boss", cheer: true },
-    { min: 98, max: 98, title: "副總站長", icon: "💎", tone: "boss", cheer: true },
-    { min: 97, max: 97, title: "小站長", icon: "🏆", tone: "boss", cheer: true },
-    { min: 96, max: 96, title: "指揮官", icon: "🔱", tone: "staff", cheer: true },
-    { min: 91, max: 95, title: "書記官", icon: "🔱", tone: "staff", cheer: true },
+    { min: 99, max: 99, title: "總站長", icon: "👑", tone: "boss", cheer: true, welcome: DEFAULT_WELCOME, welcome_style: "boss" },
+    { min: 98, max: 98, title: "副總站長", icon: "💎", tone: "boss", cheer: true, welcome: DEFAULT_WELCOME, welcome_style: "boss" },
+    { min: 97, max: 97, title: "小站長", icon: "🏆", tone: "boss", cheer: true, welcome: DEFAULT_WELCOME, welcome_style: "boss" },
+    { min: 96, max: 96, title: "指揮官", icon: "🔱", tone: "staff", cheer: true, welcome: DEFAULT_WELCOME, welcome_style: "staff" },
+    { min: 91, max: 95, title: "書記官", icon: "🔱", tone: "staff", cheer: true, welcome: DEFAULT_WELCOME, welcome_style: "staff" },
     { min: 81, max: 90, title: "金天使", icon: "⭐", tone: "gold", cheer: true },
     { min: 71, max: 80, title: "大天使", icon: "🌺", tone: "angel", cheer: true },
     { min: 61, max: 70, title: "小天使", icon: "🍒", tone: "angel", cheer: true },
@@ -34,6 +42,7 @@ export const DEFAULT_CHERRY_LEVEL_TITLES = {
   ],
   users: [],
   cheer_enabled: true,
+  welcome_enabled: false,
 };
 
 // 只有金幣房、櫻桃房開放等級稱謂

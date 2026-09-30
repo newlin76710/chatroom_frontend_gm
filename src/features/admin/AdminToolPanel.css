@@ -316,25 +316,3 @@
   color: red;
   margin-top: 4px;
 }
-
-/* 分頁內的子分頁（例：等級管理 → 使用者等級 / 等級稱謂/圖案） */
-.admin-tool .admin-subtabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 8px;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 6px;
-}
-.admin-tool .admin-subtabs button {
-  padding: 4px 12px;
-  font-size: 12px;
-  border: 1px solid #1976d2;
-  border-radius: 14px;
-  background: #fff;
-  color: #1976d2;
-  cursor: pointer;
-}
-.admin-tool .admin-subtabs button.active {
-  background: #1976d2;
-  color: #fff;
-}

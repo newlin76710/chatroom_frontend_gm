@@ -83,7 +83,6 @@ const DEFAULT = {
   littlemary_auto_end_hour: 24,
   littlemary_auto_end_minute: 0,
   flower_effect_enabled: true,
-  flower_effect_threshold: 999,
   flower_effect_burst_limit: 1,
   flower_effect_cooldown_minutes: 5,
   car_effect_enabled: true,
@@ -128,9 +127,6 @@ const DEFAULT = {
   fishing_pool_rate: 30,
   fishing_fish_rtp: 60,
   fishing_fish_speed: 100,
-  fishing_boss_payout_pct: 80,
-  fishing_boss_threshold: 50000,
-  fishing_boss_hp: 300,
   fishing_boss_tiers: [
     { name: "巨型魷魚王", emoji: "🦑", threshold: 5000,   hp: 100,  payout_pct: 20 },
     { name: "鋼牙鱷王",   emoji: "🐊", threshold: 20000,  hp: 300,  payout_pct: 30 },
@@ -209,9 +205,6 @@ const DEFAULT = {
   roulette_open_minute:      0,
   roulette_close_hour:       24,
   roulette_close_minute:     0,
-  roulette_num_multiplier:   36,
-  roulette_bh_multiplier:    2,
-  roulette_combo_multiplier: 4,
   roulette_max_bet:          50,
   roulette_house_edge:       100,
   blackjack_enabled:         true,
@@ -252,7 +245,6 @@ const DEFAULT = {
   pusher_jackpot_rate:       30,
   pusher_jackpot_payout_pct: 60,
   pusher_plate_speed:        "normal",
-  pusher_target_rtp:         75,
   race_enabled:              true,
   race_open_hour:            0,
   race_open_minute:          0,
@@ -1662,15 +1654,11 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                   <option value="fast">快</option>
                 </select>
               </Row>
-              <Row label="目標回收率 RTP">
-                <input type="number" min={40} max={95} style={{ width: 80 }}
-                  value={settings.pusher_target_rtp}
-                  onChange={e => setInt("pusher_target_rtp", e.target.value)} />
-                <span className="field-note">
-                  %，40-95。系統會持續追蹤實際投入/回收比例，自動微調推板助推力，讓長期回收率收斂到這個數字
-                  {settings.pusher_current_rtp != null && `（目前實際約 ${settings.pusher_current_rtp}%）`}
-                </span>
-              </Row>
+              {settings.pusher_current_rtp != null && (
+                <Row label="目前實際回收率">
+                  <span className="field-note">約 {settings.pusher_current_rtp}%（累計回收 ÷ 累計投入，唯讀）</span>
+                </Row>
+              )}
             </section>
 
             {/* ─── 遊戲廳：21點 ────────────────────────────────── */}

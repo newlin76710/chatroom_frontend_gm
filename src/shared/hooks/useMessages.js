@@ -85,6 +85,8 @@ export function useMessages() {
         message: text,
         timestamp: new Date().toLocaleTimeString(),
         ...(type ? { type } : {}),
+        // 進場歡迎詞：後端帶來的動畫樣式與主角暱稱（MessageList 依此顯示橫幅）
+        ...(type === "welcome" ? { welcomeStyle: m.style, welcomeUser: m.username } : {}),
       })
     );
   }, []);

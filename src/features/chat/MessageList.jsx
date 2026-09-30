@@ -173,6 +173,25 @@ const MessageRow = memo(function MessageRow({
     }
   }
 
+  // 進場歡迎詞：後台為這個等級區間/帳號選了動畫橫幅時，改用跟進場歡呼同款的橫幅呈現
+  if (isSystem && m.type === "welcome" && m.welcomeStyle && m.welcomeStyle !== "plain") {
+    return (
+      <div className="message-row cherry-enter-message">
+        <div className={`cherry-enter-banner cherry-enter-${m.welcomeStyle}`}>
+          <span className="cherry-enter-burst">✨</span>
+          <span
+            className="cherry-enter-text"
+            style={{ cursor: m.welcomeUser ? "pointer" : "default" }}
+            onClick={() => m.welcomeUser && onSelectUser(m.welcomeUser)}
+          >
+            {messageText}
+          </span>
+          <span className="cherry-enter-burst">✨</span>
+        </div>
+      </div>
+    );
+  }
+
   if (isSurprise) {
     return (
       <div className="message-row surprise-message" style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>

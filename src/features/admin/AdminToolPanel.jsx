@@ -23,7 +23,6 @@ import { roomConfig } from "../../shared/roomConfig";
 export default function AdminToolPanel({ myName, myLevel, token, userList, initialOpen = false }) {
   const [open, setOpen] = useState(initialOpen);
   const [tab, setTab] = useState("login"); // default
-  const [levelSubTab, setLevelSubTab] = useState("users"); // 等級管理子分頁：users | titles
 
   // ─── 可自由拖曳（滑鼠 + 手機/平板觸控，不受聊天輸入區位置限制） ───────────
   const { panelRef, handleProps, initialStyle } = useDraggable({ x: 20, y: 80 });
@@ -136,15 +135,9 @@ export default function AdminToolPanel({ myName, myLevel, token, userList, initi
             {tab === "message" && <MessageLogPanel myName={myName} myLevel={myLevel} token={token} userList={userList}/>}
             {tab === "level" && (
               <>
-                {/* 等級稱謂/圖案只開放金幣房、櫻桃房 */}
-                {isTitleRoom() && (
-                  <div className="admin-subtabs">
-                    <button className={levelSubTab === "users" ? "active" : ""} onClick={() => setLevelSubTab("users")}>使用者等級</button>
-                    <button className={levelSubTab === "titles" ? "active" : ""} onClick={() => setLevelSubTab("titles")}>等級稱謂/圖案</button>
-                  </div>
-                )}
-                {(levelSubTab === "users" || !isTitleRoom()) && <AdminLevelPanel token={token} myLevel={myLevel} />}
-                {levelSubTab === "titles" && isTitleRoom() && <LevelTitlePanel token={token} />}
+                <AdminLevelPanel token={token} myLevel={myLevel} />
+                {/* 等級稱謂/圖案/歡迎詞只開放金幣房、櫻桃房；跟捕魚紀錄一樣是按鈕開獨立彈窗 */}
+                {isTitleRoom() && <LevelTitlePanel token={token} />}
               </>
             )}
             {tab === "ip" && <AdminIPPanel token={token} myLevel={myLevel} />}

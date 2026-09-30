@@ -27,7 +27,7 @@ npm run preview   # 預覽打包結果
 |---|---|
 | `features/auth/` | `Login.jsx`：訪客/帳號登入、註冊、編輯資料、忘記密碼（`?mode=`） |
 | `features/chat/` | `ChatApp.jsx`（中樞，監聽大部分 socket 事件、延遲載入重的面板）、`MessageList.jsx`、`UserList.jsx`、`SongRoom.jsx`/`Listener.jsx`（LiveKit 唱/聽）、紅包 `RedEnvelopeGame.jsx`、慶典 `CelebrationModeGame.jsx`、商城、排行榜、留言板等 |
-| `features/admin/` | `AdminToolPanel.jsx`（🛡 管理，分頁容器）、`AdminSettingsModal.jsx`（⚙️ 遊戲/經濟設定）、`AdminRoomSettingsPanel.jsx`（房間設定）、`AdminLevelPanel.jsx` + `LevelTitlePanel.jsx`（等級管理 / 等級稱謂）、各種紀錄面板 |
+| `features/admin/` | `AdminToolPanel.jsx`（🛡 管理，分頁容器）、`AdminSettingsModal.jsx`（⚙️ 遊戲/經濟設定）、`AdminRoomSettingsPanel.jsx`（房間設定）、等級管理分頁的 `AdminLevelPanel.jsx` + `LevelTitlePanel.jsx`（按鈕開獨立彈窗，編輯器在 `LevelTitleSettings.jsx`）、各種紀錄面板（多數是「按鈕 → `DraggablePanel` 彈窗」的寫法） |
 | `features/games/` | 排程小遊戲：金蘋果系列、接櫻桃、撒櫻桃、挖寶 `DigTreasureGame.jsx`、捕魚 `FishingGame.jsx`、小瑪莉、跑馬燈 |
 | `features/casino/` | 賭場/遊樂場（21點、輪盤、骰寶、拉霸、百家樂、賽車、殭屍、推幣機＝Phaser + Matter）。`PusherPhysics.js` 是沒人引用的死碼 |
 | `shared/` | `socket.js`、`roomConfig.js`、`levelTitles.js`、`FloatingPortal.jsx`、`hooks/useDraggable.js`、`hooks/useUserState.js`、`hooks/useMessages.js`、`utils.js`、`constants.js` |
@@ -48,10 +48,11 @@ npm run preview   # 預覽打包結果
 - **紅包／慶典分配**：份數＝大廳顯示總人數（含虛擬帳號與發起人；隱身者不算；AI 只在 `openai` 開啟時算）。只有其他真人玩家會實際入帳。紅包的均分/隨機由後台決定；慶典由發起人自己選（`startCelebration` 帶 `mode`），可自訂金額（上限 `celebration_max_amount`）。
 - **挖寶**：`dig_times` 多時段字串（同撒櫻桃）＋ `dig_hole_count` 格數，`digGameStart` 會帶 `holeCount`。
 - **捕魚**：魚的位置由伺服器給的 `spawnAt`/`duration` 加上校正後的伺服器時間算出。池塘尺寸用 `ResizeObserver` 追蹤，時鐘用 `fishingTimeSync` 來回校正。游速 `fishing_fish_speed` 由後端換算。
-- **等級稱謂／圖案／進場歡呼**（`roomConfig.level_titles`，只有金幣房、櫻桃房開放）：透過 `shared/levelTitles.js` 的 `resolveLevelInfo()` 查詢。
+- **等級稱謂／圖案／進場歡呼／進場歡迎詞**（`roomConfig.level_titles`，只有金幣房、櫻桃房開放）：在「🛡 管理 → 等級管理 → 🏷️ 等級稱謂/圖案管理」彈窗編輯，透過 `shared/levelTitles.js` 的 `resolveLevelInfo()` 查詢。
+  - 每個等級區間、每個帳號都可以設定稱謂、圖案、歡迎詞；帳號設定優先於區間。
   - 稱謂只在滑鼠移到頭像、圖案或暱稱時以提示框顯示。
   - 在線名單的等級圖案用這份設定。
   - 「熱烈歡迎」進場橫幅要 `cheer_enabled` 開啟且該區間有勾歡呼才顯示。
-  - 沒設定過時，後端回傳櫻桃房原始表當預設。
+  - 進場歡迎詞要 `welcome_enabled` 開啟，且該區間或帳號有填歡迎詞；由後端在 `joinRoom` 時廣播 `systemMessage` 物件（`type: "welcome"`、`style`、`username`）。`style` 不是 `plain` 時，`MessageList` 用進場歡呼同款的 `cherry-enter-*` 動畫橫幅呈現（`useMessages` 會把 `style` 存成 `welcomeStyle`）。
+  - 沒設定過時，後端回傳櫻桃房原始表當預設（91 級以上附預設歡迎詞，歡迎詞總開關預設關閉）。
   - 後台修改後，`ChatApp` 的 `levelTitlesVersion` 會遞增，觸發重繪。
-- **高階進場歡迎詞**由後端在 `joinRoom` 時廣播，前端不用另外處理。
