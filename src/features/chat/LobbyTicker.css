@@ -3,6 +3,8 @@
   align-items: center;
   gap: 6px;
   height: 30px;
+  /* 放在 .chat-left 的直向 flex 裡，加上 overflow: hidden 會讓它可以被壓到 0 高；固定不縮 */
+  flex-shrink: 0;
   padding: 0 6px;
   overflow: hidden;
   background: linear-gradient(90deg, #3a1d00, #6b3a00 50%, #3a1d00);
