@@ -87,6 +87,8 @@ export function useMessages() {
         ...(type ? { type } : {}),
         // 進場歡迎詞：後端帶來的動畫樣式與主角暱稱（MessageList 依此顯示橫幅）
         ...(type === "welcome" ? { welcomeStyle: m.style, welcomeUser: m.username } : {}),
+        // 進場訊息的 IP/國家：後端只送給最高管理員（MessageList 也只在 AML 等級才顯示）
+        ...(typeof m === "object" && (m.ip || m.country) ? { ip: m.ip, country: m.country } : {}),
       })
     );
   }, []);

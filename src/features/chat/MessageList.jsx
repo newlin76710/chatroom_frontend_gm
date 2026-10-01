@@ -154,6 +154,13 @@ const MessageRow = memo(function MessageRow({
     ? (legacyUI ? "(密)" : "(私聊)")
     : "";
 
+  // 最高管理員才看得到 IP/國家（聊天訊息與進場訊息都會帶）
+  const ipLabel = Number(level) === Number(AML) && (m.ip || m.country) && (
+    <span style={{ color: "#B84A4A", marginLeft: 4 }}>
+      ({m.ip ? `IP: ${m.ip}${m.country ? " " : ""}` : ""}{m.country ? `${countryFlag(m.country.countryCode)} ${countryZh(m.country.countryCode) ?? m.country.country}` : ""})
+    </span>
+  );
+
   // 進場歡迎：後台為這個等級區間/帳號選了動畫橫幅時，用橫幅呈現（plain 就照一般系統訊息顯示）
   if (isSystem && m.type === "welcome" && m.welcomeStyle && m.welcomeStyle !== "plain") {
     return (
@@ -169,6 +176,7 @@ const MessageRow = memo(function MessageRow({
           </span>
           <span className="cherry-enter-burst">🎉</span>
         </div>
+        {ipLabel}
       </div>
     );
   }
@@ -326,11 +334,7 @@ const MessageRow = memo(function MessageRow({
           </>
         )}
 
-        {Number(level) === Number(AML) && (m.ip || m.country) && (
-          <span style={{ color: "#B84A4A", marginLeft: 4 }}>
-            ({m.ip ? `IP: ${m.ip}${m.country ? " " : ""}` : ""}{m.country ? `${countryFlag(m.country.countryCode)} ${countryZh(m.country.countryCode) ?? m.country.country}` : ""})
-          </span>
-        )}
+        {ipLabel}
         <span style={{ fontSize: legacyUI ? "0.65rem" : "0.7rem", color: "#888", marginLeft: legacyUI ? 4 : 6, whiteSpace: "nowrap" }}>{timestamp}</span>
       </div>
     </div>
