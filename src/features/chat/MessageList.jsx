@@ -95,6 +95,19 @@ const MessageRow = memo(function MessageRow({
     }
   }
 
+  // 進場歡迎詞（plain）：文字是後台自訂的，不一定符合「XXX 進入聊天室」，改用後端帶來的暱稱切出可點的名字
+  let welcomeBefore = null;
+  let welcomeAfter = "";
+  if (isSystem && m.type === "welcome" && m.welcomeUser && !relatedUser) {
+    const idx = messageText.indexOf(m.welcomeUser);
+    if (idx >= 0) {
+      relatedUser = m.welcomeUser;
+      relatedType = "enter";
+      welcomeBefore = messageText.slice(0, idx);
+      welcomeAfter = messageText.slice(idx + m.welcomeUser.length);
+    }
+  }
+
   // 處理系統訊息：【莊家：xxx】/【主持：xxx】標籤（推牌、跑馬燈開局公告）
   let dealerLabel = null;
   let dealerName = null;
@@ -250,6 +263,15 @@ const MessageRow = memo(function MessageRow({
               {dealerName}
             </span>
             <span style={{ color: "#ff9900" }}>】{legacyUI ? boldAmounts(dealerRest) : dealerRest}</span>
+          </>
+        ) : isSystem && welcomeBefore !== null ? (
+          <>
+            <span>系統：</span>
+            <span style={{ color: "#ff9900" }}>{welcomeBefore}</span>
+            <span style={{ fontWeight: "bold", cursor: "pointer", color: getUserColor(relatedUser) }} onClick={() => onSelectUser(relatedUser)}>
+              {relatedUser}
+            </span>
+            <span style={{ color: "#ff9900" }}>{welcomeAfter}</span>
           </>
         ) : isSystem && relatedUser ? (
           <>
