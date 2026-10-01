@@ -212,22 +212,6 @@
   margin-top: -2px;
 }
 .fg-tier-large .fg-fish-mult { font-size: 14px; color: #ffb3e6; }
-.fg-fish-hp {
-  width: 56px;
-  height: 5px;
-  border-radius: 3px;
-  background: rgba(0, 0, 0, 0.55);
-  overflow: hidden;
-  margin-bottom: 2px;
-  order: -1;
-}
-.fg-tier-large .fg-fish-hp { width: 90px; height: 7px; }
-.fg-fish-hp i {
-  display: block;
-  height: 100%;
-  background: linear-gradient(90deg, #ff3b3b, #ffb13b, #7dff5c);
-  transition: width 0.2s;
-}
 /* 被打中的白光閃一下：套在外層（.fg-fish/.fg-boss），不能套在 emoji 本身——
    否則會蓋掉 BOSS 的黃金濾鏡、大型魚的光暈跟漂浮動畫 */
 .fg-hit { animation: fg-hit 0.18s ease; }

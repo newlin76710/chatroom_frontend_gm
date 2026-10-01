@@ -1398,7 +1398,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
               <Row label="魚種回饋率">
                 <input type="number" min={1} max={100} style={{ width: 70 }} value={settings.fishing_fish_rtp}
                   onChange={e => setInt("fishing_fish_rtp", e.target.value)} />
-                <span className="field-note">%（一般魚的期望回饋，決定魚的血量：越高魚越好打死；由系統直接發放；預設 60）</span>
+                <span className="field-note">%（一般魚每一竿的期望回饋：每竿打死魚的機率 = 回饋率 × 竿係數 ÷ 倍率，越高越容易打死；由系統直接發放；預設 60）</span>
               </Row>
               <Row label="魚隻游動速度">
                 <input type="number" min={20} max={300} step={10} style={{ width: 70 }} value={settings.fishing_fish_speed}
@@ -1423,7 +1423,7 @@ export default function AdminSettingsModal({ open, onClose, token, BACKEND, myLe
                       ? "已達 100% 以上，系統會倒貼！請調低「下注滾入血池」或「魚種回饋率」。"
                       : `系統理論上最少回收約 ${100 - high}%。`}
                     <span style={{ display: "block", fontSize: 12, opacity: 0.8 }}>
-                      一般魚常常在打死前就游走，實際回饋會比理論值更低；上面是保守估算的上限。
+                      一般魚每一竿都獨立判定、當下結算，魚沒打死就游走不影響回饋率，長期實際回饋會貼近這個數字。
                     </span>
                   </div>
                 );

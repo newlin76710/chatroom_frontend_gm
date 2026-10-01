@@ -288,10 +288,11 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
         void el.offsetWidth;
         el.classList.add("fg-hit");
       }
-      spawnFx(`fg-dmg${mine ? " fg-dmg-mine" : ""}${shotRod >= 3 ? " fg-dmg-king" : ""}`, pos.x + (Math.random() * 30 - 15), pos.y - 20, `-${damage}`, 900);
+      // 一般魚沒有血量（每竿獨立判定擊殺，伺服器傳 damage 0），只有 BOSS 才飄傷害數字
+      if (damage > 0) spawnFx(`fg-dmg${mine ? " fg-dmg-mine" : ""}${shotRod >= 3 ? " fg-dmg-king" : ""}`, pos.x + (Math.random() * 30 - 15), pos.y - 20, `-${damage}`, 900);
       if (!mine) spawnFx("fg-net fg-net-other", pos.x, pos.y, undefined, 500);
     };
-    const onCatch = ({ fishId, shooter, payout, isBoss, name: fname, emoji, mult, tier, nextBoss: nb }) => {
+    const onCatch = ({ fishId, shooter, payout, isBoss, name: fname, emoji, mult, tier, nextBoss: nb, crit, hits }) => {
       const pos = targetScreenPos(fishId) || { x: sizeRef.current.w / 2, y: sizeRef.current.h / 2 };
       const mine = shooter === nameRef.current;
       if (isBoss) {
@@ -311,9 +312,11 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
         coinBurst(pos.x, pos.y, big ? 36 : tier === "mid" ? 18 : 9, big);
         spawnFx(`fg-payout${mine ? " fg-payout-mine" : ""}${big ? " fg-payout-big" : ""}`, pos.x, pos.y - 30,
           `${emoji} +${fmt(payout)}`, 1600);
-        if (big || (mine && tier === "mid")) {
+        if (big || crit || (mine && tier === "mid")) {
           spawnFx("fg-catch-banner", sizeRef.current.w / 2, sizeRef.current.h * 0.3,
-            `${mine ? "大豐收！" : `${shooter} 釣起`} ${emoji}${fname} ×${mult}`, 2200);
+            crit
+              ? `⚡暴擊！${mine ? "" : `${shooter} `}${hits} 竿秒殺 ${emoji}${fname} ×${mult}`
+              : `${mine ? "大豐收！" : `${shooter} 釣起`} ${emoji}${fname} ×${mult}`, 2200);
           if (big) shake(false);
         }
       }
@@ -468,9 +471,6 @@ export default function FishingGame({ socket, token, name, apples, setApples, op
                 onPointerDown={(e) => shoot(f.id, e)}
               >
                 <span className="fg-fish-emoji" style={{ transform: f.dir === 1 ? "scaleX(-1)" : "none" }}>{f.emoji}</span>
-                {f.tier !== "small" && (
-                  <span className="fg-fish-hp"><i style={{ width: `${(f.hp / f.maxHp) * 100}%` }} /></span>
-                )}
                 <span className="fg-fish-mult">×{f.mult}</span>
               </div>
             ))}

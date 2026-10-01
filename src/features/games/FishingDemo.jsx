@@ -36,9 +36,8 @@ function createFakeServer(me) {
       let r = Math.random() * total, t = FISH[0];
       for (const x of FISH) { r -= x.w; if (r <= 0) { t = x; break; } }
       const mult = Math.round(rand(t.min, t.max) * 10) / 10;
-      const maxHp = Math.round(mult / 0.6 * 10);
       const d = t.tier === "large" ? rand(15000, 19000) : t.tier === "mid" ? rand(12000, 15000) : rand(9000, 12000);
-      const f = { id: `f${++seq}`, key: t.key, name: t.name, emoji: t.emoji, tier: t.tier, mult, hp: maxHp, maxHp,
+      const f = { id: `f${++seq}`, key: t.key, name: t.name, emoji: t.emoji, tier: t.tier, mult, hp: 1, maxHp: 1, hits: 0,
         spawnAt: now, duration: Math.round(d), dir: Math.random() < 0.5 ? 1 : -1,
         y: Math.round(rand(t.tier === "large" ? 22 : 12, t.tier === "large" ? 70 : 82)), amp: Math.round(rand(2, 7)) };
       fish.set(f.id, f);
@@ -58,10 +57,15 @@ function createFakeServer(me) {
     if (!target) return;
     const bet = BETS[useBait ? 0 : rod];
     pool += Math.floor(bet * 0.3);
-    const dmg = fishId === "boss"
-      ? Math.round(10 * (bet / BETS[0]) * rand(0.6, 1.4))
-      : Math.round(10 * [1, 1.05, 1.1, 1.2, 1.25][rod] * rand(0.6, 1.4));
-    target.hp = Math.max(0, target.hp - dmg);
+    // 跟後端一致：BOSS 扣血；一般魚沒有血量，每竿獨立判定（機率 = 回饋率 60% × 竿係數 ÷ 倍率）
+    let dmg = 0;
+    if (fishId === "boss") {
+      dmg = Math.round(10 * (bet / BETS[0]) * rand(0.6, 1.4));
+      target.hp = Math.max(0, target.hp - dmg);
+    } else {
+      target.hits = (target.hits || 0) + 1;
+      if (Math.random() < Math.min(1, (0.6 * [1, 1.05, 1.1, 1.2, 1.25][rod]) / target.mult)) target.hp = 0;
+    }
     fire("fishingHit", { fishId, shooter: me, damage: dmg, hp: target.hp, maxHp: target.maxHp, rod, pool });
     fire("fishingShotAck", {});
     if (target.hp <= 0) {
@@ -70,7 +74,8 @@ function createFakeServer(me) {
       if (isBoss) { payout = Math.floor((pool * boss.payoutPct) / 100); pool -= payout; nextTier = (boss.tier + 1) % 4; boss = null; }
       else { payout = Math.round(bet * target.mult); fish.delete(fishId); }
       fire("fishingCatch", { fishId, shooter: me, payout, isBoss, name: target.name, emoji: target.emoji, mult: target.mult,
-        tier: isBoss ? "boss" : target.tier, pool, nextBoss: isBoss ? nextBossOf(nextTier) : undefined });
+        tier: isBoss ? "boss" : target.tier, pool, nextBoss: isBoss ? nextBossOf(nextTier) : undefined,
+        crit: !isBoss && target.tier !== "small" && target.hits <= Math.max(1, Math.round(target.mult / 5)), hits: target.hits });
     }
   };
   return {

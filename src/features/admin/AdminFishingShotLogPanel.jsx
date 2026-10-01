@@ -161,7 +161,8 @@ export default function AdminFishingShotLogPanel({ token }) {
                         ? <span style={{ color: "#d9480f" }}>🍤 免費魚餌</span>
                         : <>{ROD_NAMES[l.rod_idx] || `第 ${l.rod_idx + 1} 支`}・{fmt(l.rod_bet)}</>}
                     </td>
-                    <td style={{ textAlign: "right" }}>{fmt(l.damage)}</td>
+                    {/* 一般魚改成每竿機率擊殺後沒有傷害（存 0），只有 BOSS 有 */}
+                    <td style={{ textAlign: "right" }}>{l.damage > 0 ? fmt(l.damage) : "—"}</td>
                     <td>{l.killed ? "✅ 打死" : "—"}</td>
                     <td style={{ textAlign: "right" }}>{l.payout > 0 ? fmt(l.payout) : "—"}</td>
                     <td style={{ textAlign: "right" }}>{fmt(l.pool_contribution)}</td>
