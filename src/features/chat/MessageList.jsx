@@ -70,7 +70,22 @@ const MessageRow = memo(function MessageRow({
   // 處理系統訊息：進入 & 升級卡
   let relatedUser = null;
   let relatedType = null;
-  if (isSystem && messageText) {
+
+  // 進場歡迎詞（plain）：文字是後台自訂的（例如「歡迎會員 XXX 進入聊天室」），
+  // 要先用後端帶來的暱稱切出可點的名字，不能讓下面「XXX 進入聊天室」的規則把整串當成暱稱
+  let welcomeBefore = null;
+  let welcomeAfter = "";
+  if (isSystem && m.type === "welcome" && m.welcomeUser) {
+    const idx = messageText.indexOf(m.welcomeUser);
+    if (idx >= 0) {
+      relatedUser = m.welcomeUser;
+      relatedType = "enter";
+      welcomeBefore = messageText.slice(0, idx);
+      welcomeAfter = messageText.slice(idx + m.welcomeUser.length);
+    }
+  }
+
+  if (isSystem && messageText && !relatedUser) {
     const patterns = [
       { regex: /^(.+?) 進入聊天室$/, type: "enter" },
       { regex: /^(.+?) 使用升級卡/, type: "levelUp" },
@@ -92,19 +107,6 @@ const MessageRow = memo(function MessageRow({
         messageText = messageText.trim();         // 去掉前後多餘空白
         break; // 找到第一個就停
       }
-    }
-  }
-
-  // 進場歡迎詞（plain）：文字是後台自訂的，不一定符合「XXX 進入聊天室」，改用後端帶來的暱稱切出可點的名字
-  let welcomeBefore = null;
-  let welcomeAfter = "";
-  if (isSystem && m.type === "welcome" && m.welcomeUser && !relatedUser) {
-    const idx = messageText.indexOf(m.welcomeUser);
-    if (idx >= 0) {
-      relatedUser = m.welcomeUser;
-      relatedType = "enter";
-      welcomeBefore = messageText.slice(0, idx);
-      welcomeAfter = messageText.slice(idx + m.welcomeUser.length);
     }
   }
 
