@@ -7,9 +7,11 @@ export default function VideoPlayer({ video, extractVideoID, onClose }) {
   const lastVideoIdRef = useRef(null);
   const closedRef = useRef(false);
 
-  // 點播區也能放圖片（kind: "image"）：直接顯示，不經過 YouTube 播放器
-  const imageUrl = video?.kind === "image" ? video.url : null;
-  const videoId = video && !imageUrl ? extractVideoID(video.url) : null;
+  // 點播區也能放圖片（kind: "image"）：直接顯示，不經過 YouTube 播放器。
+  // 沒帶 kind（後端還沒更新會把它丟掉）時，解析不出 YouTube ID 的 http(s) 網址也當成圖片
+  const parsedVideoId = video ? extractVideoID(video.url) : null;
+  const imageUrl = video && (video.kind === "image" || (!parsedVideoId && /^https?:\/\//i.test(video.url || ""))) ? video.url : null;
+  const videoId = imageUrl ? null : parsedVideoId;
 
   /* ===== Player Ready ===== */
   const onPlayerReady = (event) => {
@@ -142,7 +144,7 @@ export default function VideoPlayer({ video, extractVideoID, onClose }) {
       ) : (
         <div className="video-placeholder">
           <div className="placeholder-text">
-            🎧 音樂點播中...
+            🎬 影片・圖片點播中...
             <br />
             歡樂聊天盡在尋夢園
           </div>

@@ -81,7 +81,36 @@ const checkImageUrl = (url) => new Promise((resolve) => {
   img.src = url;
 });
 // 播放區關閉後記住「這一則」不再自動跳出：影片用影片 ID，圖片用網址
-const mediaKey = (v) => (v ? (v.kind === "image" ? v.url : extractVideoID(v.url)) : null);
+// （沒帶 kind 的舊版後端：解析不出 YouTube ID 的就是圖片，跟 VideoPlayer 的判斷一致）
+const mediaKey = (v) => (v ? (v.kind === "image" ? v.url : extractVideoID(v.url) || v.url) : null);
+
+// 上傳圖片前先在瀏覽器縮圖（長邊 1600px、JPEG），手機原圖動輒 5MB 以上；GIF 縮了會失去動畫，原檔上傳
+const UPLOAD_MAX_BYTES = 3 * 1024 * 1024;
+const UPLOAD_MAX_SIDE = 1600;
+async function prepareImageUpload(file) {
+  if (file.type === "image/gif") return file;
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = reject;
+      el.src = url;
+    });
+    const scale = Math.min(1, UPLOAD_MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+    if (scale === 1 && file.size <= 800 * 1024 && /^image\/(jpeg|png|webp)$/.test(file.type)) return file;
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(img.naturalWidth * scale);
+    canvas.height = Math.round(img.naturalHeight * scale);
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff"; // 透明 PNG 轉 JPEG 時背景補白，不要變黑
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return await new Promise((resolve) => canvas.toBlob((b) => resolve(b || file), "image/jpeg", 0.85));
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
 
 const getUserColorByGender = (g) => GENDER_COLORS[g] ?? GENDER_COLORS.default;
 
@@ -189,6 +218,7 @@ export default function ChatApp() {
   const [userList, setUserList] = useState([]);
   const [currentVideo, setCurrentVideo] = useState(null);
   const [videoUrl, setVideoUrl] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [closedVideoId, setClosedVideoId] = useState(null);
   const [chatMode, setChatMode] = useState(() => (sessionStorage.getItem("invisible") === "true" ? "private" : "public"));
   const [userListCollapsed, setUserListCollapsed] = useState(false);
@@ -274,6 +304,7 @@ export default function ChatApp() {
   const versionReportInFlightRef = useRef(false);
   const versionReloadingRef = useRef(false);
   const videoUrlInputRef = useRef(null);
+  const imageFileInputRef = useRef(null);
   const songRoomRef = useRef(null);
   const listenerRef = useRef(null);
   const [quickPhraseOpenSignal, setQuickPhraseOpenSignal] = useState(0);
@@ -1310,6 +1341,31 @@ export default function ChatApp() {
     setVideoUrl("");
   }, [socket, room, videoUrl, name]);
 
+  // ─── 點播區上傳圖片：存到後端（/api/media），拿到網址後跟貼連結一樣點播 ─────────
+  const uploadImage = useCallback(async (file) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { alert("請選擇圖片檔"); return; }
+    setUploadingImage(true);
+    try {
+      const blob = await prepareImageUpload(file);
+      if (blob.size > UPLOAD_MAX_BYTES) { alert("圖片太大（上限 3MB）"); return; }
+      const res = await fetch(`${BACKEND}/api/media/upload?room=${encodeURIComponent(room)}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": blob.type || file.type },
+        body: blob,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.path) { alert(data.error || "上傳失敗，請稍後再試"); return; }
+      socket.emit("playVideo", { room, url: `${BACKEND}${data.path}`, user: { name }, kind: "image" });
+      setShowSongRequestModal(false);
+    } catch {
+      alert("上傳失敗，請稍後再試");
+    } finally {
+      setUploadingImage(false);
+      if (imageFileInputRef.current) imageFileInputRef.current.value = "";
+    }
+  }, [socket, room, name, token]);
+
   // ─── 讀取轉帳上限設定 ────────────────────────────────────────────────────
   useEffect(() => {
     if (!token) return;
@@ -1437,7 +1493,7 @@ export default function ChatApp() {
       }),
     },
     ...(!invisible ? [
-      { label: "點播歌曲", onClick: () => setShowSongRequestModal(true) },
+      { label: "點播影片/圖片", onClick: () => setShowSongRequestModal(true) },
       { label: "開始聽", onClick: () => listenerRef.current?.startListen() },
       { label: "結束聽", onClick: () => listenerRef.current?.stopListen() },
       { label: "排麥", onClick: () => songRoomRef.current?.startVoice() },
@@ -1553,7 +1609,10 @@ export default function ChatApp() {
                           onChange={(e) => setVideoUrl(e.target.value)}
                           placeholder="貼上YouTube或圖片連結"
                         />
-                        <button onClick={playVideo}>🎵 點播</button>
+                        <button onClick={playVideo} title="貼上 YouTube 連結或圖片連結後點播">🎬 點播影片/圖片</button>
+                        <button onClick={() => imageFileInputRef.current?.click()} disabled={uploadingImage} title="從電腦或手機選一張圖片上傳到點播區">
+                          {uploadingImage ? "上傳中…" : "📷 上傳圖片"}
+                        </button>
                       </div>
                     )}
                     {!invisible && (
@@ -1564,8 +1623,8 @@ export default function ChatApp() {
                   <>
                     {!legacyChatUI && (
                       <div className="video-request">
-                        <button disabled title="登入會員即可使用點播功能" style={{ opacity: 0.5, cursor: "not-allowed" }}>
-                          🎵 點播（限會員）
+                        <button disabled title="登入會員即可點播影片或圖片" style={{ opacity: 0.5, cursor: "not-allowed" }}>
+                          🎬 點播影片/圖片（限會員）
                         </button>
                       </div>
                     )}
@@ -1820,10 +1879,19 @@ export default function ChatApp() {
                 </div>
               )}
 
+              {/* 點播區上傳圖片用的檔案選擇器（新舊版介面共用） */}
+              <input
+                ref={imageFileInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={(e) => uploadImage(e.target.files?.[0])}
+              />
+
               {showSongRequestModal && (
                 <div className="song-request-modal-overlay" onClick={() => setShowSongRequestModal(false)}>
                   <div className="song-request-modal" onClick={(e) => e.stopPropagation()}>
-                    <div className="song-request-modal-title">🎵 點播歌曲</div>
+                    <div className="song-request-modal-title">🎬 點播影片/圖片</div>
                     <input
                       autoFocus
                       className="song-request-modal-input"
@@ -1838,6 +1906,9 @@ export default function ChatApp() {
                     />
                     <div className="song-request-modal-actions">
                       <button onClick={() => setShowSongRequestModal(false)}>取消</button>
+                      <button onClick={() => imageFileInputRef.current?.click()} disabled={uploadingImage}>
+                        {uploadingImage ? "上傳中…" : "📷 上傳圖片"}
+                      </button>
                       <button
                         className="song-request-modal-submit"
                         onClick={() => { playVideo(); setShowSongRequestModal(false); }}
