@@ -383,46 +383,98 @@ body {
 }
 
 .song-request-modal {
-  background: #1a1a1a;
-  border: 1px solid #666;
-  border-radius: 8px;
-  padding: 16px;
-  width: 300px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(180deg, #23202b, #17151c);
+  border: 1px solid rgba(255, 213, 74, 0.35);
+  border-radius: 14px;
+  padding: 18px 18px 16px;
+  width: min(360px, calc(100vw - 32px));
+  box-sizing: border-box;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  font-size: 14px;
 }
 
 .song-request-modal-title {
   color: #ffd54a;
+  background: transparent;
+  font-size: 16px;
   font-weight: bold;
-  margin-bottom: 10px;
+  white-space: nowrap;
+  margin-bottom: 12px;
 }
 
 .song-request-modal-input {
   width: 100%;
   box-sizing: border-box;
-  padding: 6px 8px;
-  border-radius: 4px;
-  border: 1px solid #555;
-  background: #111;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid #4a4656;
+  background: #0f0e13;
   color: #fff;
-  margin-bottom: 12px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.song-request-modal-input:focus {
+  border-color: #ffd54a;
+  box-shadow: 0 0 0 3px rgba(255, 213, 74, 0.18);
+}
+
+/* 📷 上傳圖片：獨立一整列的虛線按鈕，跟「取消/送出」分開，不會擠在一起斷行 */
+.song-request-modal-upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 9px 12px;
+  border: 1px dashed #7a7290;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #ddd6f0;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.song-request-modal-upload:hover:not(:disabled) {
+  background: rgba(255, 213, 74, 0.08);
+  border-color: #ffd54a;
+}
+.song-request-modal-upload:disabled { opacity: 0.6; cursor: default; }
+
+.song-request-modal-hint {
+  margin: 8px 2px 0;
+  color: #8f899e;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .song-request-modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+  margin-top: 14px;
 }
 
 .song-request-modal-actions button {
-  padding: 6px 12px;
+  padding: 8px 18px;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
+  font-size: 14px;
+  white-space: nowrap;
   cursor: pointer;
+  transition: filter 0.2s;
+}
+.song-request-modal-actions button:hover { filter: brightness(1.12); }
+
+.song-request-modal-cancel {
+  background: #3a3646;
+  color: #ddd;
 }
 
 .song-request-modal-submit {
-  background: #6200ee;
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
   color: #fff;
   font-weight: bold;
 }
@@ -486,6 +538,12 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+/* 點播影片/圖片、上傳圖片按鈕：文字不斷行 */
+.video-request button {
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .video-request input {

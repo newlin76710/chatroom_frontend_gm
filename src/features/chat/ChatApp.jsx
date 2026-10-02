@@ -1904,11 +1904,16 @@ export default function ChatApp() {
                         setShowSongRequestModal(false);
                       }}
                     />
+                    <button
+                      className="song-request-modal-upload"
+                      onClick={() => imageFileInputRef.current?.click()}
+                      disabled={uploadingImage}
+                    >
+                      {uploadingImage ? "上傳中…" : "📷 從手機/電腦上傳圖片"}
+                    </button>
+                    <div className="song-request-modal-hint">可貼 YouTube 影片、圖片連結，或直接上傳圖片（3MB 內）</div>
                     <div className="song-request-modal-actions">
-                      <button onClick={() => setShowSongRequestModal(false)}>取消</button>
-                      <button onClick={() => imageFileInputRef.current?.click()} disabled={uploadingImage}>
-                        {uploadingImage ? "上傳中…" : "📷 上傳圖片"}
-                      </button>
+                      <button className="song-request-modal-cancel" onClick={() => setShowSongRequestModal(false)}>取消</button>
                       <button
                         className="song-request-modal-submit"
                         onClick={() => { playVideo(); setShowSongRequestModal(false); }}
