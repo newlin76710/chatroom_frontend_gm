@@ -25,5 +25,8 @@ export const GENDER_COLORS = {
 // 系統頭像路徑
 export const SYSTEM_AVATAR = "/avatars/system.png";
 
+// 會員留言板（../board 專案，ekboard）：在線名單「互動 → 留言」連過去
+export const BOARD_URL = "https://board.ek21.com";
+
 // 高級會員徽章 / 丟雪球互動的等級門檻
 export const SNOWBALL_MIN_LEVEL = 50;

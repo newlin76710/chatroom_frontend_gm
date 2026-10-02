@@ -7,7 +7,9 @@ export default function VideoPlayer({ video, extractVideoID, onClose }) {
   const lastVideoIdRef = useRef(null);
   const closedRef = useRef(false);
 
-  const videoId = video ? extractVideoID(video.url) : null;
+  // 點播區也能放圖片（kind: "image"）：直接顯示，不經過 YouTube 播放器
+  const imageUrl = video?.kind === "image" ? video.url : null;
+  const videoId = video && !imageUrl ? extractVideoID(video.url) : null;
 
   /* ===== Player Ready ===== */
   const onPlayerReady = (event) => {
@@ -91,6 +93,21 @@ export default function VideoPlayer({ video, extractVideoID, onClose }) {
       } catch { }
     };
   }, []);
+
+  if (imageUrl) {
+    return (
+      <div className="video-player-float video-image-mode">
+        <a href={imageUrl} target="_blank" rel="noopener noreferrer" title="開新視窗看原圖">
+          <img className="video-image" src={imageUrl} alt="點播圖片" referrerPolicy="no-referrer" />
+        </a>
+        <div className="video-info">
+          <span>🖼️ 點播圖片（由 {video.user?.name || "未知"} 點播）</span>
+          {/* 圖片沒有播放器要銷毀，只通知父層收起；不能動 closedRef，否則之後點播的影片會播不出來 */}
+          <button className="close-btn" onClick={() => onClose?.()}>✖</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`video-player-float ${!videoId ? "placeholder" : ""}`}>

@@ -1,9 +1,9 @@
 // UserList.jsx
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { getAiAvatar } from "../../shared/aiConfig";
 import "./UserList.css";
 import { roomConfig } from "../../shared/roomConfig";
-import { SNOWBALL_MIN_LEVEL } from "../../shared/constants";
+import { SNOWBALL_MIN_LEVEL, BOARD_URL } from "../../shared/constants";
 import { getLevelTitleConfig, resolveLevelInfo } from "../../shared/levelTitles";
 
 // 單一使用者列抽成獨立、模組層級的 memo 元件，且只吃基本型別 (string/number/boolean) 當 props。
@@ -12,6 +12,33 @@ import { getLevelTitleConfig, resolveLevelInfo } from "../../shared/levelTitles"
 // 改吃基本型別後，即使外層陣列/物件參照改變，只要這個使用者實際顯示的值沒變，
 // React.memo 的淺層比較就能正確跳過這一列的重新渲染。
 const NO_LEVEL_INFO = { title: "", icon: "" };
+
+// 「互動 → 留言」：到留言板查這位會員名下的板（新版會員板＋舊版同名/已連結的板，最主要的排第一），快取 1 分鐘
+const BOARD_CACHE_MS = 60_000;
+const boardCache = new Map(); // name → { at, boards }
+async function fetchMemberBoards(name) {
+  const hit = boardCache.get(name);
+  if (hit && Date.now() - hit.at < BOARD_CACHE_MS) return hit.boards;
+  const res = await fetch(`${BOARD_URL}/api/chat-boards?name=${encodeURIComponent(name)}`);
+  const data = await res.json();
+  const boards = Array.isArray(data?.boards) ? data.boards : [];
+  boardCache.set(name, { at: Date.now(), boards });
+  return boards;
+}
+
+// 選單打開時才去查（不是每個名單列都查）；查完直接渲染成連結，點了是使用者手勢開新分頁，不會被擋
+function useMemberBoards(name, enabled) {
+  const [state, setState] = useState({ name: null, boards: null });
+  useEffect(() => {
+    if (!enabled) return;
+    let alive = true;
+    fetchMemberBoards(name)
+      .then((boards) => alive && setState({ name, boards }))
+      .catch(() => alive && setState({ name, boards: [] }));
+    return () => { alive = false; };
+  }, [name, enabled]);
+  return state.name === name ? state.boards : null; // null = 查詢中
+}
 
 const UserRow = React.memo(function UserRow({
   name,
@@ -54,6 +81,9 @@ const UserRow = React.memo(function UserRow({
   const color = gender === "男" ? "#A7C7E7" : gender === "女" ? "#F8C8DC" : "#00aa00";
   // 後台「等級稱謂」：不直接顯示在名字前，滑鼠移到頭像/等級圖案/暱稱上才用提示框顯示
   const titleTip = levelTitle ? `【${levelTitle}】${name}（Lv.${level}）` : undefined;
+  // 留言板只有正式帳號會有（訪客、AI、系統假人都沒有）
+  const canHaveBoard = type !== "guest" && type !== "virtual" && !isAI;
+  const memberBoards = useMemberBoards(name, isMenuOpen && canHaveBoard);
 
   return (
     <div
@@ -160,6 +190,23 @@ const UserRow = React.memo(function UserRow({
                 >
                   ❄️ 丟雪球
                 </button>
+              )}
+
+              {canHaveBoard && memberBoards === null && (
+                <button className="ul-admin-board" disabled onClick={(e) => e.stopPropagation()}>📝 留言…</button>
+              )}
+              {/* 點了直接開新視窗到她的留言板；名下有多個板時開最主要的那個（新版板 → 已連結舊板 → 最近有留言的同名舊板） */}
+              {canHaveBoard && memberBoards?.length > 0 && (
+                <a
+                  className="ul-admin-board"
+                  href={`${BOARD_URL}/b/${memberBoards[0].id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={`${memberBoards[0].title}（板號 ${memberBoards[0].id}）`}
+                  onClick={(e) => { e.stopPropagation(); onToggleMenu(null); }}
+                >
+                  📝 留言
+                </a>
               )}
 
               {hasFilterToggle && (

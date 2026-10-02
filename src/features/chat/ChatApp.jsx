@@ -71,6 +71,18 @@ const extractVideoID = (url) => {
   return match ? match[1] : null;
 };
 
+// 點播區也能放圖片：不是 YouTube 的 http(s) 連結，先實際載入一次確認是圖片才送出
+const isHttpUrl = (url) => /^https?:\/\/\S+$/i.test(url || "");
+const checkImageUrl = (url) => new Promise((resolve) => {
+  const img = new Image();
+  const timer = setTimeout(() => { img.src = ""; resolve(false); }, 8000);
+  img.onload = () => { clearTimeout(timer); resolve(img.naturalWidth > 0); };
+  img.onerror = () => { clearTimeout(timer); resolve(false); };
+  img.src = url;
+});
+// 播放區關閉後記住「這一則」不再自動跳出：影片用影片 ID，圖片用網址
+const mediaKey = (v) => (v ? (v.kind === "image" ? v.url : extractVideoID(v.url)) : null);
+
 const getUserColorByGender = (g) => GENDER_COLORS[g] ?? GENDER_COLORS.default;
 
 function compareVersions(a = "", b = "") {
@@ -518,8 +530,7 @@ export default function ChatApp() {
     };
     const handleVideoUpdate = (v) => {
       if (!v) { setCurrentVideo(null); return; }
-      const id = extractVideoID(v.url);
-      if (closedVideoIdRef.current === id) return;
+      if (closedVideoIdRef.current === mediaKey(v)) return;
       setCurrentVideo(v);
     };
     const handleTransfer = (msg) => addTransactionMessage(msg, userListRef.current);
@@ -1281,14 +1292,21 @@ export default function ChatApp() {
   }, [messageHistory]);
 
   // ─── 點播影片 ─────────────────────────────────────────────────────────────
-  const playVideo = useCallback(() => {
-    const id = extractVideoID(videoUrl);
-    if (!id) { alert("無法解析 YouTube 連結"); return; }
-    socket.emit("playVideo", {
-      room,
-      url: `https://www.youtube.com/watch?v=${id}`,
-      user: { name },
-    });
+  const playVideo = useCallback(async () => {
+    const url = videoUrl.trim();
+    const id = extractVideoID(url);
+    if (id) {
+      socket.emit("playVideo", {
+        room,
+        url: `https://www.youtube.com/watch?v=${id}`,
+        user: { name },
+      });
+      setVideoUrl("");
+      return;
+    }
+    if (!isHttpUrl(url) || url.length > 1000) { alert("請貼上 YouTube 或圖片連結"); return; }
+    if (!(await checkImageUrl(url))) { alert("無法載入這張圖片，請確認是圖片的直接連結（例如結尾是 .jpg / .png / .gif）"); return; }
+    socket.emit("playVideo", { room, url, user: { name }, kind: "image" });
     setVideoUrl("");
   }, [socket, room, videoUrl, name]);
 
@@ -1533,7 +1551,7 @@ export default function ChatApp() {
                           style={{ width: 130 }}
                           value={videoUrl}
                           onChange={(e) => setVideoUrl(e.target.value)}
-                          placeholder="貼上YouTube連結"
+                          placeholder="貼上YouTube或圖片連結"
                         />
                         <button onClick={playVideo}>🎵 點播</button>
                       </div>
@@ -1811,7 +1829,7 @@ export default function ChatApp() {
                       className="song-request-modal-input"
                       value={videoUrl}
                       onChange={(e) => setVideoUrl(e.target.value)}
-                      placeholder="貼上YouTube連結"
+                      placeholder="貼上YouTube或圖片連結"
                       onKeyDown={(e) => {
                         if (e.key !== "Enter") return;
                         playVideo();
@@ -1983,7 +2001,7 @@ export default function ChatApp() {
                 video={currentVideo}
                 extractVideoID={extractVideoID}
                 onClose={() => {
-                  setClosedVideoId(extractVideoID(currentVideo?.url));
+                  setClosedVideoId(mediaKey(currentVideo));
                   setCurrentVideo(null);
                 }}
               />
